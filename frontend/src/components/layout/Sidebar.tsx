@@ -35,7 +35,7 @@ const navigationGroups = [
     {
         label: "Vận hành",
         items: [
-            { label: "Hỗ trợ", icon: TicketCheck, path: "/tickets" },
+            { label: "Hỗ trợ", icon: TicketCheck, path: "/support" },
             { label: "Phân tích", icon: BarChart3, path: "/analytics" },
         ],
     },

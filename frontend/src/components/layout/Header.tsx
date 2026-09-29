@@ -8,13 +8,21 @@ interface HeaderProps {
 
 function getPageName(pathname: string) {
     if (pathname === "/dashboard") return "Tổng quan";
+    
+    // Lead Routes
     if (pathname === "/leads/new") return "Lead / Thêm mới";
     if (/^\/leads\/\d+\/edit$/.test(pathname)) return "Lead / Chỉnh sửa";
     if (/^\/leads\/\d+$/.test(pathname)) return "Lead / Chi tiết";
     if (pathname.startsWith("/leads")) return "Lead";
+
+    // Support Routes (/support)
+    if (pathname === "/support/new") return "Hỗ trợ / Tạo mới";
+    if (/^\/support\/[^\/]+\/edit$/.test(pathname)) return "Hỗ trợ / Chỉnh sửa";
+    if (/^\/support\/[^\/]+$/.test(pathname)) return "Hỗ trợ / Chi tiết";
+    if (pathname.startsWith("/support")) return "Hỗ trợ";
+
     if (pathname.startsWith("/customers")) return "Khách hàng";
     if (pathname.startsWith("/deals")) return "Cơ hội";
-    if (pathname.startsWith("/tickets")) return "Hỗ trợ";
     if (pathname.startsWith("/analytics")) return "Phân tích";
     if (pathname.startsWith("/settings")) return "Cài đặt";
     return "Nova CRM";
@@ -25,6 +33,8 @@ export default function Header({ sidebarCollapsed }: HeaderProps) {
     const location = useLocation();
     const searchRef = useRef<HTMLInputElement>(null);
     const [search, setSearch] = useState("");
+
+    const isSupportPage = location.pathname.startsWith("/support");
 
     useEffect(() => {
         const handleShortcut = (event: KeyboardEvent) => {
@@ -40,7 +50,19 @@ export default function Header({ sidebarCollapsed }: HeaderProps) {
     const handleSearch = (event: FormEvent) => {
         event.preventDefault();
         const keyword = search.trim();
-        navigate(keyword ? `/leads?search=${encodeURIComponent(keyword)}` : "/leads");
+        if (isSupportPage) {
+            navigate(keyword ? `/support?search=${encodeURIComponent(keyword)}` : "/support");
+        } else {
+            navigate(keyword ? `/leads?search=${encodeURIComponent(keyword)}` : "/leads");
+        }
+    };
+
+    const handleCreateNew = () => {
+        if (isSupportPage) {
+            navigate("/support/new");
+        } else {
+            navigate("/leads/new");
+        }
     };
 
     return (
@@ -60,7 +82,7 @@ export default function Header({ sidebarCollapsed }: HeaderProps) {
                         type="search"
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Tìm Lead theo tên, email, số điện thoại..."
+                        placeholder={isSupportPage ? "Tìm Ticket theo mã, tiêu đề..." : "Tìm Lead theo tên, email, số điện thoại..."}
                         className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
                     />
                 </form>
@@ -68,12 +90,13 @@ export default function Header({ sidebarCollapsed }: HeaderProps) {
                 <div className="flex shrink-0 items-center gap-1.5">
                     <button
                         type="button"
-                        onClick={() => navigate("/leads/new")}
+                        onClick={handleCreateNew}
                         className="mr-2 flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 text-xs font-semibold text-white shadow-sm shadow-blue-200 transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-blue-200"
                     >
                         <Plus size={16} />
-                        <span className="hidden 2xl:inline">Tạo Lead</span>
+                        <span className="hidden 2xl:inline">{isSupportPage ? "Tạo Ticket" : "Tạo Lead"}</span>
                     </button>
+
                     <button type="button" title="Lịch" aria-label="Lịch" className="hidden h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-blue-50 hover:text-blue-600 lg:flex">
                         <CalendarDays size={18} />
                     </button>
