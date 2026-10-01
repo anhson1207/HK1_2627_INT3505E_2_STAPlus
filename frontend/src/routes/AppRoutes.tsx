@@ -6,6 +6,23 @@ import LeadCreatePage from "../pages/leads/LeadCreatePage";
 import LeadDetailPage from "../pages/leads/LeadDetailPage";
 import LeadEditPage from "../pages/leads/LeadEditPage";
 
+
+// Support Pages
+import SupportPage from "../pages/support/SupportPage";
+import TicketCreatePage from "../pages/support/TicketCreatePage";
+import TicketDetailPage from "../pages/support/TicketDetailPage";
+import TicketEditPage from "../pages/support/TicketEditPage";
+
+
+
+
+
+import SalesPage from "../pages/sales/SalesPage";
+import DealCreatePage from "../pages/sales/DealCreatePage";
+import DealDetailPage from "../pages/sales/DealDetailPage";
+import DealEditPage from "../pages/sales/DealEditPage";
+
+
 function DashboardPage() {
     return <div>Dashboard</div>;
 }
@@ -31,6 +48,19 @@ export default function AppRoutes() {
                     <Route path="/leads/new" element={<LeadCreatePage />} />
                     <Route path="/leads/:id" element={<LeadDetailPage />} />
                     <Route path="/leads/:id/edit" element={<LeadEditPage />} />
+
+                    <Route path="/support" element={<SupportPage />} />
+
+                    <Route path="/support/new" element={<TicketCreatePage />} />
+                    <Route path="/support/:id" element={<TicketDetailPage />} />
+                    <Route path="/support/:id/edit" element={<TicketEditPage />} />
+
+                    <Route path="/sales" element={<SalesPage />} />
+                    <Route path="/sales/new" element={<DealCreatePage />} />
+                    <Route path="/sales/:id" element={<DealDetailPage />} />
+                    <Route path="/sales/:id/edit" element={<DealEditPage />} />
+
+                    
 
                     <Route path="/customers" element={<CustomerListPage />} />
                 </Route>
