@@ -1,0 +1,7 @@
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { MonthlyRevenue } from "../../types/analytics";
+import { formatVND } from "../../utils/currency";
+
+export default function RevenueChart({ data }: { data: MonthlyRevenue[] }) {
+    return <section className="rounded-xl border border-slate-200 bg-white p-5"><div className="mb-5"><h2 className="font-semibold text-slate-900">Revenue Trend</h2><p className="mt-1 text-xs text-slate-500">Doanh thu theo tháng</p></div>{data.length === 0 ? <div className="flex h-72 items-center justify-center text-sm text-slate-400">Chưa có dữ liệu</div> : <div className="h-72 w-full"><ResponsiveContainer width="100%" height="100%"><AreaChart data={data} margin={{ left: 8, right: 8 }}><defs><linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3B82F6" stopOpacity={0.28} /><stop offset="95%" stopColor="#3B82F6" stopOpacity={0.02} /></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} /><XAxis dataKey="month" tick={{ fontSize: 11, fill: "#64748B" }} axisLine={false} tickLine={false} /><YAxis tickFormatter={(value: number) => `${Math.round(value / 1_000_000)}tr`} tick={{ fontSize: 11, fill: "#64748B" }} axisLine={false} tickLine={false} width={46} /><Tooltip formatter={(value) => [formatVND(Number(value)), "Doanh thu"]} /><Area type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={2.5} fill="url(#revenueGradient)" /></AreaChart></ResponsiveContainer></div>}</section>;
+}
