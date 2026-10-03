@@ -22,8 +22,8 @@ function getPageName(pathname: string) {
 
     // Support Routes (/support)
     if (pathname === "/support/new") return "Hỗ trợ / Tạo mới";
-    if (/^\/support\/[^\/]+\/edit$/.test(pathname)) return "Hỗ trợ / Chỉnh sửa";
-    if (/^\/support\/[^\/]+$/.test(pathname)) return "Hỗ trợ / Chi tiết";
+    if (/^\/support\/[^/]+\/edit$/.test(pathname)) return "Hỗ trợ / Chỉnh sửa";
+    if (/^\/support\/[^/]+$/.test(pathname)) return "Hỗ trợ / Chi tiết";
     if (pathname.startsWith("/support")) return "Hỗ trợ";
 
     if (pathname.startsWith("/customers")) return "Khách hàng";
@@ -68,14 +68,6 @@ export default function Header({ sidebarCollapsed }: HeaderProps) {
             navigate(keyword ? `/support?search=${encodeURIComponent(keyword)}` : "/support");
         } else {
             navigate(keyword ? `/leads?search=${encodeURIComponent(keyword)}` : "/leads");
-        }
-    };
-
-    const handleCreateNew = () => {
-        if (isSupportPage) {
-            navigate("/support/new");
-        } else {
-            navigate("/leads/new");
         }
     };
 

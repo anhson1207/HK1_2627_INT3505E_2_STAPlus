@@ -1,9 +1,17 @@
 import React, { useState } from "react";
 import Form, { FormField } from "../shared/Form";
 
+export interface SupportTicketFormData {
+    subject: string;
+    customerName: string;
+    priority: "Low" | "Medium" | "High" | "Urgent";
+    status: "Open" | "In Progress" | "Resolved" | "Closed";
+    description: string;
+}
+
 interface TicketFormProps {
-    initialValues?: any;
-    onSubmit: (data: any) => void;
+    initialValues?: Partial<SupportTicketFormData>;
+    onSubmit: (data: SupportTicketFormData) => void;
     onCancel: () => void;
 }
 
@@ -12,13 +20,14 @@ export const TicketForm: React.FC<TicketFormProps> = ({
     onSubmit,
     onCancel,
 }) => {
-    const [formData, setFormData] = useState(
-        initialValues || {
+    const [formData, setFormData] = useState<SupportTicketFormData>(
+        {
             subject: "",
             customerName: "",
             priority: "Medium",
             status: "Open",
             description: "",
+            ...initialValues,
         }
     );
 
@@ -69,7 +78,7 @@ export const TicketForm: React.FC<TicketFormProps> = ({
                         onChange={(event) =>
                             setFormData({
                                 ...formData,
-                                priority: event.target.value,
+                            priority: event.target.value as SupportTicketFormData["priority"],
                             })
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none"
