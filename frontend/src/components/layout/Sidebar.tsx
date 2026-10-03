@@ -53,8 +53,8 @@ const navigationGroups: NavigationGroup[] = [
     {
         label: "Vận hành",
         items: [
-            { label: "Hỗ trợ", icon: TicketCheck, path: "/tickets", roles: ["ADMIN", "SUPPORT"] },
-            { label: "Phân tích", icon: BarChart3, path: "/analytics", roles: ["ADMIN", "SALES"] },
+            { label: "Hỗ trợ", icon: TicketCheck, path: "/support" },
+            { label: "Phân tích", icon: BarChart3, path: "/analytics" },
         ],
     },
 ];

@@ -13,13 +13,21 @@ interface HeaderProps {
 
 function getPageName(pathname: string) {
     if (pathname === "/dashboard") return "Tổng quan";
+    
+    // Lead Routes
     if (pathname === "/leads/new") return "Lead / Thêm mới";
     if (/^\/leads\/\d+\/edit$/.test(pathname)) return "Lead / Chỉnh sửa";
     if (/^\/leads\/\d+$/.test(pathname)) return "Lead / Chi tiết";
     if (pathname.startsWith("/leads")) return "Lead";
+
+    // Support Routes (/support)
+    if (pathname === "/support/new") return "Hỗ trợ / Tạo mới";
+    if (/^\/support\/[^\/]+\/edit$/.test(pathname)) return "Hỗ trợ / Chỉnh sửa";
+    if (/^\/support\/[^\/]+$/.test(pathname)) return "Hỗ trợ / Chi tiết";
+    if (pathname.startsWith("/support")) return "Hỗ trợ";
+
     if (pathname.startsWith("/customers")) return "Khách hàng";
     if (pathname.startsWith("/deals")) return "Cơ hội";
-    if (pathname.startsWith("/tickets")) return "Hỗ trợ";
     if (pathname.startsWith("/analytics")) return "Phân tích";
     if (pathname.startsWith("/settings")) return "Cài đặt";
     return "Nova CRM";
@@ -40,6 +48,8 @@ export default function Header({ sidebarCollapsed }: HeaderProps) {
     };
     const avatarLabel = user?.fullName.trim().split(/\s+/).at(-1)?.charAt(0).toLocaleUpperCase("vi") ?? "U";
 
+    const isSupportPage = location.pathname.startsWith("/support");
+
     useEffect(() => {
         const handleShortcut = (event: KeyboardEvent) => {
             if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase() === "k") {
@@ -54,7 +64,19 @@ export default function Header({ sidebarCollapsed }: HeaderProps) {
     const handleSearch = (event: FormEvent) => {
         event.preventDefault();
         const keyword = search.trim();
-        navigate(keyword ? `/leads?search=${encodeURIComponent(keyword)}` : "/leads");
+        if (isSupportPage) {
+            navigate(keyword ? `/support?search=${encodeURIComponent(keyword)}` : "/support");
+        } else {
+            navigate(keyword ? `/leads?search=${encodeURIComponent(keyword)}` : "/leads");
+        }
+    };
+
+    const handleCreateNew = () => {
+        if (isSupportPage) {
+            navigate("/support/new");
+        } else {
+            navigate("/leads/new");
+        }
     };
 
     const handleOpenUserMenu = (event: MouseEvent<HTMLElement>) => {
