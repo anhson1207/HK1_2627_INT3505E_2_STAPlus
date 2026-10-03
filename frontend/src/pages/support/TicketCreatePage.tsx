@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TicketForm } from '../../components/support/TicketForm';
+import { TicketForm, type SupportTicketFormData } from '../../components/support/TicketForm';
 
 export const TicketCreatePage: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: SupportTicketFormData) => {
     console.log('Dữ liệu tạo Ticket mới:', data);
     // Sau khi lưu xong, quay lại trang danh sách Support
     navigate('/support');

@@ -1,13 +1,13 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { TicketForm } from '../../components/support/TicketForm';
+import { TicketForm, type SupportTicketFormData } from '../../components/support/TicketForm';
 
 export const TicketEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   // Mock data nạp vào form sửa
-  const initialValues = {
+  const initialValues: SupportTicketFormData = {
     subject: 'Lỗi không xuất được báo cáo Excel hàng tháng',
     customerName: 'Nguyễn Văn A',
     priority: 'High',
@@ -15,7 +15,7 @@ export const TicketEditPage: React.FC = () => {
     description: 'Khách hàng phản hồi khi bấm vào nút "Xuất Excel" ở trang Báo cáo thì hệ thống báo lỗi 500 Server Error.'
   };
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: SupportTicketFormData) => {
     console.log(`Cập nhật Ticket ${id}:`, data);
     navigate(`/support/${id}`);
   };

@@ -53,8 +53,8 @@ const navigationGroups: NavigationGroup[] = [
     {
         label: "Vận hành",
         items: [
-            { label: "Hỗ trợ", icon: TicketCheck, path: "/support" },
-            { label: "Phân tích", icon: BarChart3, path: "/analytics" },
+            { label: "Hỗ trợ", icon: TicketCheck, path: "/support", roles: ["ADMIN", "SUPPORT"] },
+            { label: "Phân tích", icon: BarChart3, path: "/analytics", roles: ["ADMIN", "SALES"] },
         ],
     },
 ];
@@ -71,7 +71,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     const visibleGroups = navigationGroups
         .map((group) => ({
             ...group,
-            items: group.items.filter((item) => role && item.roles.includes(role)),
+            items: group.items.filter((item) => Boolean(role && item.roles?.includes(role))),
         }))
         .filter((group) => group.items.length > 0);
 
