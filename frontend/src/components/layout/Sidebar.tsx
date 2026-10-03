@@ -10,38 +10,71 @@ import {
     UserRound,
     Users,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
+
+import { useAuthStore } from "../../stores/authStore";
+import type { UserRole } from "../../types/auth";
 
 interface SidebarProps {
     collapsed: boolean;
     onToggle: () => void;
 }
 
-const navigationGroups = [
+interface NavigationItem {
+    label: string;
+    icon: LucideIcon;
+    path: string;
+    roles: readonly UserRole[];
+}
+
+interface NavigationGroup {
+    label: string;
+    items: NavigationItem[];
+}
+
+const ALL_ROLES: readonly UserRole[] = ["ADMIN", "SALES", "SUPPORT"];
+
+const navigationGroups: NavigationGroup[] = [
     {
         label: "Tổng quan",
         items: [
-            { label: "Trang chủ", icon: LayoutDashboard, path: "/dashboard" },
+            { label: "Trang chủ", icon: LayoutDashboard, path: "/dashboard", roles: ALL_ROLES },
         ],
     },
     {
         label: "Kinh doanh",
         items: [
-            { label: "Lead", icon: UserRound, path: "/leads" },
-            { label: "Khách hàng", icon: Users, path: "/customers" },
-            { label: "Cơ hội", icon: BriefcaseBusiness, path: "/deals" },
+            { label: "Lead", icon: UserRound, path: "/leads", roles: ["ADMIN", "SALES"] },
+            { label: "Khách hàng", icon: Users, path: "/customers", roles: ALL_ROLES },
+            { label: "Cơ hội", icon: BriefcaseBusiness, path: "/deals", roles: ["ADMIN", "SALES"] },
         ],
     },
     {
         label: "Vận hành",
         items: [
-            { label: "Hỗ trợ", icon: TicketCheck, path: "/tickets" },
-            { label: "Phân tích", icon: BarChart3, path: "/analytics" },
+            { label: "Hỗ trợ", icon: TicketCheck, path: "/tickets", roles: ["ADMIN", "SUPPORT"] },
+            { label: "Phân tích", icon: BarChart3, path: "/analytics", roles: ["ADMIN", "SALES"] },
         ],
     },
 ];
 
+const settingsNavigation: NavigationItem = {
+    label: "Cài đặt",
+    icon: Settings,
+    path: "/settings",
+    roles: ["ADMIN"],
+};
+
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+    const role = useAuthStore((state) => state.user?.role);
+    const visibleGroups = navigationGroups
+        .map((group) => ({
+            ...group,
+            items: group.items.filter((item) => role && item.roles.includes(role)),
+        }))
+        .filter((group) => group.items.length > 0);
+
     return (
         <aside
             className={`fixed inset-y-0 left-0 z-30 flex flex-col border-r border-slate-200/80 bg-white text-slate-700 shadow-[4px_0_24px_rgba(15,23,42,0.025)] transition-[width] duration-300 ${collapsed ? "w-[80px]" : "w-[248px]"}`}
@@ -61,7 +94,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </div>
 
             <nav className="flex-1 overflow-y-auto px-3 pb-3 pt-5">
-                {navigationGroups.map((group) => (
+                {visibleGroups.map((group) => (
                     <div key={group.label} className="mb-4">
                         {!collapsed && (
                             <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
@@ -101,14 +134,16 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </nav>
 
             <div className="border-t border-slate-100 p-3">
-                <NavLink
-                    to="/settings"
-                    title={collapsed ? "Cài đặt" : undefined}
-                    className={({ isActive }) => `mb-1 flex h-10 items-center rounded-xl text-[13px] font-medium transition ${collapsed ? "justify-center" : "gap-3 px-3"} ${isActive ? "bg-blue-50 text-blue-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}
-                >
-                    <Settings size={18} className="text-slate-400" />
-                    {!collapsed && <span>Cài đặt</span>}
-                </NavLink>
+                {role && settingsNavigation.roles.includes(role) && (
+                    <NavLink
+                        to={settingsNavigation.path}
+                        title={collapsed ? settingsNavigation.label : undefined}
+                        className={({ isActive }) => `mb-1 flex h-10 items-center rounded-xl text-[13px] font-medium transition ${collapsed ? "justify-center" : "gap-3 px-3"} ${isActive ? "bg-blue-50 text-blue-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}
+                    >
+                        <Settings size={18} className="text-slate-400" />
+                        {!collapsed && <span>{settingsNavigation.label}</span>}
+                    </NavLink>
+                )}
                 <button
                     type="button"
                     title={collapsed ? "Trợ giúp" : undefined}

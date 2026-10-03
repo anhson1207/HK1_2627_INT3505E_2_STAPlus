@@ -1,6 +1,11 @@
-import { Bell, CalendarDays, ChevronDown, CircleHelp, Plus, Search } from "lucide-react";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { ListItemIcon, Menu, MenuItem } from "@mui/material";
+import { Bell, CalendarDays, ChevronDown, CircleHelp, LogOut, Plus, Search, UserRound } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+
+import RoleGuard from "../auth/RoleGuard";
+import { useAuthStore } from "../../stores/authStore";
+import type { UserRole } from "../../types/auth";
 
 interface HeaderProps {
     sidebarCollapsed: boolean;
@@ -25,6 +30,15 @@ export default function Header({ sidebarCollapsed }: HeaderProps) {
     const location = useLocation();
     const searchRef = useRef<HTMLInputElement>(null);
     const [search, setSearch] = useState("");
+    const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(null);
+    const { user, logout } = useAuthStore();
+
+    const roleLabels: Record<UserRole, string> = {
+        ADMIN: "Quản trị viên",
+        SALES: "Nhân viên kinh doanh",
+        SUPPORT: "Nhân viên hỗ trợ",
+    };
+    const avatarLabel = user?.fullName.trim().split(/\s+/).at(-1)?.charAt(0).toLocaleUpperCase("vi") ?? "U";
 
     useEffect(() => {
         const handleShortcut = (event: KeyboardEvent) => {
@@ -43,6 +57,16 @@ export default function Header({ sidebarCollapsed }: HeaderProps) {
         navigate(keyword ? `/leads?search=${encodeURIComponent(keyword)}` : "/leads");
     };
 
+    const handleOpenUserMenu = (event: MouseEvent<HTMLElement>) => {
+        setUserMenuAnchor(event.currentTarget);
+    };
+
+    const handleLogout = async () => {
+        setUserMenuAnchor(null);
+        await logout();
+        navigate("/login", { replace: true, state: { message: "Đăng xuất thành công" } });
+    };
+
     return (
         <header
             className={`fixed right-0 top-0 z-20 h-[72px] border-b border-slate-200/80 bg-white/95 shadow-[0_3px_18px_rgba(15,23,42,0.025)] backdrop-blur transition-[left] duration-300 ${sidebarCollapsed ? "left-[80px]" : "left-[248px]"}`}
@@ -53,27 +77,31 @@ export default function Header({ sidebarCollapsed }: HeaderProps) {
                     <p className="mt-0.5 truncate text-sm font-semibold text-slate-800">{getPageName(location.pathname)}</p>
                 </div>
 
-                <form onSubmit={handleSearch} className="mx-auto flex h-10 w-full max-w-[520px] items-center rounded-xl border border-slate-200 bg-slate-50/80 px-3 transition focus-within:border-blue-300 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-50">
-                    <Search size={17} className="mr-2.5 shrink-0 text-slate-400" />
-                    <input
-                        ref={searchRef}
-                        type="search"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Tìm Lead theo tên, email, số điện thoại..."
-                        className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-                    />
-                </form>
+                <RoleGuard allowedRoles={["ADMIN", "SALES"]} fallback={<div className="mx-auto flex-1" />}>
+                    <form onSubmit={handleSearch} className="mx-auto flex h-10 w-full max-w-[520px] items-center rounded-xl border border-slate-200 bg-slate-50/80 px-3 transition focus-within:border-blue-300 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-50">
+                        <Search size={17} className="mr-2.5 shrink-0 text-slate-400" />
+                        <input
+                            ref={searchRef}
+                            type="search"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            placeholder="Tìm Lead theo tên, email, số điện thoại..."
+                            className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                        />
+                    </form>
+                </RoleGuard>
 
                 <div className="flex shrink-0 items-center gap-1.5">
-                    <button
-                        type="button"
-                        onClick={() => navigate("/leads/new")}
-                        className="mr-2 flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 text-xs font-semibold text-white shadow-sm shadow-blue-200 transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-blue-200"
-                    >
-                        <Plus size={16} />
-                        <span className="hidden 2xl:inline">Tạo Lead</span>
-                    </button>
+                    <RoleGuard allowedRoles={["ADMIN", "SALES"]}>
+                        <button
+                            type="button"
+                            onClick={() => navigate("/leads/new")}
+                            className="mr-2 flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 text-xs font-semibold text-white shadow-sm shadow-blue-200 transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-blue-200"
+                        >
+                            <Plus size={16} />
+                            <span className="hidden 2xl:inline">Tạo Lead</span>
+                        </button>
+                    </RoleGuard>
                     <button type="button" title="Lịch" aria-label="Lịch" className="hidden h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-blue-50 hover:text-blue-600 lg:flex">
                         <CalendarDays size={18} />
                     </button>
@@ -85,19 +113,30 @@ export default function Header({ sidebarCollapsed }: HeaderProps) {
                         <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-500 ring-2 ring-white" />
                     </button>
 
-                    <div className="ml-2 flex items-center gap-2.5 border-l border-slate-200 pl-3">
+                    <button type="button" onClick={handleOpenUserMenu} aria-label="Mở menu người dùng" className="ml-2 flex items-center gap-2.5 rounded-lg border-l border-slate-200 py-1 pl-3 text-left">
                         <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 text-sm font-bold text-white shadow-sm shadow-indigo-200">
-                            S
+                            {avatarLabel}
                             <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
                         </div>
                         <div className="hidden leading-tight 2xl:block">
-                            <p className="whitespace-nowrap text-xs font-semibold text-slate-800">Nguyễn Anh Sơn</p>
-                            <p className="mt-0.5 text-[10px] text-slate-400">Quản trị viên</p>
+                            <p className="whitespace-nowrap text-xs font-semibold text-slate-800">{user?.fullName ?? "Người dùng"}</p>
+                            <p className="mt-0.5 text-[10px] text-slate-400">{user ? roleLabels[user.role] : ""}</p>
                         </div>
                         <ChevronDown size={14} className="hidden text-slate-400 2xl:block" />
-                    </div>
+                    </button>
                 </div>
             </div>
+
+            <Menu anchorEl={userMenuAnchor} open={Boolean(userMenuAnchor)} onClose={() => setUserMenuAnchor(null)} anchorOrigin={{ vertical: "bottom", horizontal: "right" }} transformOrigin={{ vertical: "top", horizontal: "right" }}>
+                <MenuItem disabled>
+                    <ListItemIcon><UserRound size={17} /></ListItemIcon>
+                    {user?.email}
+                </MenuItem>
+                <MenuItem onClick={() => void handleLogout()}>
+                    <ListItemIcon><LogOut size={17} /></ListItemIcon>
+                    Đăng xuất
+                </MenuItem>
+            </Menu>
         </header>
     );
 }
