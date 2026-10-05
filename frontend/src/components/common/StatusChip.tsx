@@ -31,6 +31,14 @@ const statusConfig: Record<
         label: "Thất bại",
         color: "error",
     },
+    ACTIVE: {
+        label: "Đang hoạt động",
+        color: "success",
+    },
+    INACTIVE: {
+        label: "Ngừng hoạt động",
+        color: "default",
+    },
 };
 
 export default function StatusChip({ status }: StatusChipProps) {

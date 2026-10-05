@@ -22,12 +22,12 @@ export default function UserMenu() {
                 className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-gray-100"
             >
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
-                    {user.name.charAt(0)}
+                    {user.fullName.charAt(0)}
                 </div>
 
                 <div className="hidden text-left md:block">
                     <p className="text-sm font-semibold text-gray-800">
-                        {user.name}
+                        {user.fullName}
                     </p>
 
                     <p className="text-xs text-gray-500">

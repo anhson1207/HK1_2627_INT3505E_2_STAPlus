@@ -1,45 +1,31 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { CircularProgress } from "@mui/material";
+import { useEffect, useRef } from "react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 import { useAuthStore } from "../stores/authStore";
-import { routePermissions } from "../config/routePermissions";
-import { hasRole } from "../utils/permissions";
 
-interface ProtectedRouteProps {
-    children: React.ReactNode;
-}
-
-export default function ProtectedRoute({
-    children,
-}: ProtectedRouteProps) {
-    const user = useAuthStore((state) => state.user);
+export default function ProtectedRoute() {
     const location = useLocation();
+    const restoredRef = useRef(false);
+    const { isAuthenticated, isLoading, restoreSession } = useAuthStore();
 
-    if (!user) {
-        return <Navigate to="/login" replace />;
+    useEffect(() => {
+        if (restoredRef.current) return;
+        restoredRef.current = true;
+        void restoreSession();
+    }, [restoreSession]);
+
+    if (isLoading) {
+        return (
+            <div className="fixed inset-0 flex items-center justify-center bg-[#F7F9FC]">
+                <CircularProgress size={34} />
+            </div>
+        );
     }
 
-    // const allowedRoles = routePermissions[location.pathname];
-
-    // if (!allowedRoles) {
-    //     return <>{children}</>;
-    // }
-    const matchedRoute = Object.keys(routePermissions).find(
-        (route) =>
-            location.pathname === route ||
-            location.pathname.startsWith(`${route}/`)
-    );
-
-    const allowedRoles = matchedRoute
-        ? routePermissions[matchedRoute]
-        : undefined;
-
-    if (!allowedRoles) {
-        return <>{children}</>;
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace state={{ from: location.pathname }} />;
     }
 
-    if (!hasRole(user, allowedRoles)) {
-        return <Navigate to="/dashboard" replace />;
-    }
-
-    return <>{children}</>;
+    return <Outlet />;
 }
