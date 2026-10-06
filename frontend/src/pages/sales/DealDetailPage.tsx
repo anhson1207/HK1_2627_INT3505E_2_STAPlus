@@ -27,22 +27,22 @@ export const DealDetailPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-(--crm-surface-subtle) p-6">
             <div className="mb-6 flex items-center justify-between">
                 <div>
                     <button
                         type="button"
                         onClick={() => navigate("/sales")}
-                        className="mb-3 text-sm text-gray-500 hover:text-gray-800"
+                        className="mb-3 text-sm text-(--crm-text-secondary) hover:text-(--crm-heading)"
                     >
                         ← Quay lại
                     </button>
 
-                    <h1 className="text-xl font-bold text-gray-800">
+                    <h1 className="crm-page-title">
                         {deal.name}
                     </h1>
 
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-(--crm-text-secondary)">
                         {deal.dealNumber}
                     </p>
                 </div>
@@ -50,7 +50,7 @@ export const DealDetailPage: React.FC = () => {
                 <button
                     type="button"
                     onClick={() => navigate(`/sales/${deal.id}/edit`)}
-                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="rounded-md border border-(--crm-border) bg-(--crm-surface) px-4 py-2 text-sm font-medium text-(--crm-text) hover:bg-(--crm-surface-subtle)"
                 >
                     Chỉnh sửa
                 </button>

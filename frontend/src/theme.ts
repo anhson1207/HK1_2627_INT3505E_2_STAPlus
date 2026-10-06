@@ -3,35 +3,35 @@ import { createTheme } from "@mui/material/styles";
 export const theme = createTheme({
     palette: {
         primary: {
-            main: "#3B82F6",
-            dark: "#2563EB",
-            light: "#EFF6FF",
+            main: "#007f9b",
+            dark: "#006278",
+            light: "#bee3e8",
         },
         success: {
-            main: "#22C55E",
+            main: "#00a86b",
         },
         warning: {
-            main: "#F59E0B",
+            main: "#d98c00",
         },
         error: {
-            main: "#EF4444",
+            main: "#d83a52",
         },
         background: {
-            default: "#F8FAFC",
+            default: "#f6f7fb",
             paper: "#FFFFFF",
         },
         text: {
-            primary: "#0F172A",
-            secondary: "#64748B",
+            primary: "#323338",
+            secondary: "#676879",
         },
-        divider: "#E2E8F0",
+        divider: "#e6e9ef",
     },
 
     typography: {
-        fontFamily: '"Be Vietnam Pro", sans-serif',
+        fontFamily: 'Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
 
         h1: {
-            fontSize: "28px",
+            fontSize: "24px",
             fontWeight: 600,
         },
 
@@ -63,7 +63,7 @@ export const theme = createTheme({
             styleOverrides: {
                 root: {
                     textTransform: "none",
-                    borderRadius: 7,
+                    borderRadius: 6,
                     boxShadow: "none",
                 },
             },
@@ -72,7 +72,7 @@ export const theme = createTheme({
         MuiCard: {
             styleOverrides: {
                 root: {
-                    border: "1px solid #E2E8F0",
+                    border: "1px solid #e6e9ef",
                     boxShadow: "none",
                     borderRadius: 8,
                 },

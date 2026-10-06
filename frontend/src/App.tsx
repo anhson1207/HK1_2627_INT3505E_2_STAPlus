@@ -1,5 +1,5 @@
 import AppRoutes from "./routes/AppRoutes";
 
 export default function App() {
-    return <AppRoutes />;
+    return <div className="crm-theme"><AppRoutes /></div>;
 }

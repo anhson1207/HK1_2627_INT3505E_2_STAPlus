@@ -66,17 +66,17 @@ export default function ReminderForm({ initialData, onSubmit, onCancel, serverEr
         setEntities([]);
     };
 
-    return <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+    return <form onSubmit={handleSubmit(onSubmit)} className="crm-form">
         {(serverError || entityError) && <Alert severity="error">{serverError || entityError}</Alert>}
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <Controller name="title" control={control} render={({ field }) => <TextField {...field} label="Tiêu đề" required fullWidth disabled={isSubmitting} error={!!errors.title} helperText={errors.title?.message} className="md:col-span-2" />} />
-            <Controller name="description" control={control} render={({ field }) => <TextField {...field} label="Mô tả" multiline minRows={3} fullWidth disabled={isSubmitting} error={!!errors.description} helperText={errors.description?.message} className="md:col-span-2" />} />
+        <div className="crm-form-grid">
+            <Controller name="title" control={control} render={({ field }) => <TextField {...field} label="Tiêu đề" required fullWidth disabled={isSubmitting} error={!!errors.title} helperText={errors.title?.message} className="crm-field--full" />} />
+            <Controller name="description" control={control} render={({ field }) => <TextField {...field} label="Mô tả" multiline minRows={3} fullWidth disabled={isSubmitting} error={!!errors.description} helperText={errors.description?.message} className="crm-field--full" />} />
             <Controller name="dueDate" control={control} render={({ field }) => <TextField {...field} type="date" label="Ngày đến hạn" required fullWidth disabled={isSubmitting} slotProps={{ inputLabel: { shrink: true } }} error={!!errors.dueDate} helperText={errors.dueDate?.message} />} />
             <Controller name="dueTime" control={control} render={({ field }) => <TextField {...field} type="time" label="Giờ đến hạn" required fullWidth disabled={isSubmitting} slotProps={{ inputLabel: { shrink: true } }} error={!!errors.dueTime} helperText={errors.dueTime?.message} />} />
             <Controller name="entityType" control={control} render={({ field }) => <TextField {...field} select label="Loại liên quan" required fullWidth disabled={isSubmitting} onChange={(event) => handleTypeChange(event.target.value as ReminderEntityType)} error={!!errors.entityType} helperText={errors.entityType?.message}><MenuItem value="LEAD">Lead</MenuItem><MenuItem value="CUSTOMER">Khách hàng</MenuItem><MenuItem value="DEAL">Deal</MenuItem></TextField>} />
             <Controller name="entityId" control={control} render={({ field }) => <TextField {...field} select label="Đối tượng liên quan" required fullWidth value={field.value || ""} onChange={(event) => field.onChange(Number(event.target.value))} disabled={isSubmitting || loadingEntities || Boolean(entityError)} error={!!errors.entityId} helperText={loadingEntities ? "Đang tải..." : errors.entityId?.message}>{entities.map((entity) => <MenuItem key={entity.id} value={entity.id}>{entity.name}</MenuItem>)}</TextField>} />
             <Controller name="ownerName" control={control} render={({ field }) => <TextField {...field} label="Người phụ trách" fullWidth disabled={isSubmitting} error={!!errors.ownerName} helperText={errors.ownerName?.message} />} />
         </div>
-        <div className="flex justify-end gap-3 border-t border-slate-200 pt-5"><Button variant="outlined" onClick={onCancel} disabled={isSubmitting}>Hủy</Button><Button type="submit" variant="contained" disabled={isSubmitting || loadingEntities || Boolean(entityError)} startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : undefined}>{isSubmitting ? "Đang lưu..." : submitLabel}</Button></div>
+        <div className="crm-form-footer"><Button variant="outlined" onClick={onCancel} disabled={isSubmitting}>Hủy</Button><Button type="submit" variant="contained" disabled={isSubmitting || loadingEntities || Boolean(entityError)} startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : undefined}>{isSubmitting ? "Đang lưu..." : submitLabel}</Button></div>
     </form>;
 }

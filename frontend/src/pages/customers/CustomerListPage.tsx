@@ -1,3 +1,4 @@
+import PageHeader from "../../components/common/PageHeader";
 import { Alert, CircularProgress } from "@mui/material";
 import { Plus, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -54,19 +55,13 @@ export default function CustomerListPage() {
 
     return (
         <div>
-            <div className="mb-6 flex items-start justify-between gap-4">
-                <div>
-                    <h1 className="text-[22px] font-semibold text-slate-900">Khách hàng</h1>
-                    <p className="mt-1 text-sm text-slate-500">Quản lý danh sách khách hàng</p>
-                </div>
-                <button type="button" onClick={() => navigate("/customers/new")} className="flex items-center gap-2 rounded-md bg-[#3B82F6] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#2563EB]">
+            <PageHeader title="Khách hàng" description="Quản lý danh sách khách hàng" actions={<button type="button" onClick={() => navigate("/customers/new")} className="crm-btn crm-btn--primary">
                     <Plus size={16} /> Thêm khách hàng
-                </button>
-            </div>
+                </button>} />
 
-            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                <div className="flex justify-end border-b border-slate-200 px-5 py-4">
-                    <button type="button" aria-label="Tải lại danh sách" onClick={() => setRefreshKey((value) => value + 1)} className="rounded-md border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800">
+            <div className="crm-board">
+                <div className="crm-toolbar crm-toolbar--board justify-end">
+                    <button type="button" aria-label="Tải lại danh sách" onClick={() => setRefreshKey((value) => value + 1)} className="crm-icon-btn ">
                         <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
                     </button>
                 </div>
@@ -82,19 +77,19 @@ export default function CustomerListPage() {
                 )}
 
                 {!error && !loading && (
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-3">
-                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                    <div className="crm-pagination">
+                        <div className="flex items-center gap-3 text-xs text-(--crm-text-secondary)">
                             <span>Hiển thị {from}–{to} trong tổng số {result.totalElements} khách hàng</span>
-                            <select aria-label="Số khách hàng mỗi trang" value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(0); }} className="rounded border border-slate-200 px-2 py-1 outline-none">
+                            <select aria-label="Số khách hàng mỗi trang" value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(0); }} className="rounded border border-(--crm-border) px-2 py-1 outline-none">
                                 {[10, 20, 50].map((size) => <option key={size} value={size}>{size}/trang</option>)}
                             </select>
                         </div>
                         <div className="flex items-center gap-1">
-                            <button type="button" disabled={page === 0} onClick={() => setPage((value) => value - 1)} className="rounded border border-slate-200 px-3 py-1.5 text-xs text-slate-600 disabled:cursor-not-allowed disabled:text-slate-300">Trước</button>
+                            <button type="button" disabled={page === 0} onClick={() => setPage((value) => value - 1)} className="rounded border border-(--crm-border) px-3 py-1.5 text-xs text-(--crm-text-secondary) disabled:cursor-not-allowed disabled:text-(--crm-text-disabled)">Trước</button>
                             {pageNumbers.map((pageNumber) => (
-                                <button type="button" key={pageNumber} onClick={() => setPage(pageNumber)} className={`rounded px-3 py-1.5 text-xs ${pageNumber === page ? "bg-[#3B82F6] text-white" : "border border-slate-200 text-slate-600"}`}>{pageNumber + 1}</button>
+                                <button type="button" key={pageNumber} onClick={() => setPage(pageNumber)} className={`rounded px-3 py-1.5 text-xs ${pageNumber === page ? "bg-(--crm-primary) text-(--crm-on-primary)" : "border border-(--crm-border) text-(--crm-text-secondary)"}`}>{pageNumber + 1}</button>
                             ))}
-                            <button type="button" disabled={page + 1 >= result.totalPages} onClick={() => setPage((value) => value + 1)} className="rounded border border-slate-200 px-3 py-1.5 text-xs text-slate-600 disabled:cursor-not-allowed disabled:text-slate-300">Sau</button>
+                            <button type="button" disabled={page + 1 >= result.totalPages} onClick={() => setPage((value) => value + 1)} className="rounded border border-(--crm-border) px-3 py-1.5 text-xs text-(--crm-text-secondary) disabled:cursor-not-allowed disabled:text-(--crm-text-disabled)">Sau</button>
                         </div>
                     </div>
                 )}

@@ -16,7 +16,7 @@ const rangeOptions: Array<{ value: AnalyticsRange; label: string }> = [
 
 export default function AnalyticsFilter({ value, onChange }: AnalyticsFilterProps) {
   return (
-    <label className="analytics-filter">
+    <label className="crm-filter-chip crm-range-filter">
       <CalendarDays size={17} aria-hidden="true" />
       <span className="sr-only">Khoảng thời gian</span>
       <select value={value} onChange={(event) => onChange(event.target.value as AnalyticsRange)}>

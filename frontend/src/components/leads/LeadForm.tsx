@@ -41,10 +41,10 @@ export default function LeadForm({
     });
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="crm-form">
             {serverError && <Alert severity="error">{serverError}</Alert>}
 
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="crm-form-grid">
                 <Controller
                     name="firstName"
                     control={control}
@@ -186,7 +186,7 @@ export default function LeadForm({
                 />
             </div>
 
-            <div className="flex justify-end gap-3 border-t border-slate-200 pt-5">
+            <div className="crm-form-footer">
                 <Button variant="outlined" onClick={onCancel} disabled={isSubmitting}>
                     Hủy
                 </Button>

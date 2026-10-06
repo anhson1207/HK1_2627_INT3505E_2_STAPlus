@@ -1,3 +1,4 @@
+import PageHeader from "../../components/common/PageHeader";
 import { Alert, Button, Skeleton } from "@mui/material";
 import { BadgeDollarSign, BriefcaseBusiness, TicketCheck, Trophy, UserRoundSearch, Users } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -79,11 +80,8 @@ export default function DashboardPage() {
   const supportActivities = activities.filter((activity) => activity.type === "CUSTOMER" || activity.type === "TICKET");
 
   return (
-    <div className="analytics-page">
-      <div className="analytics-page__header">
-        <div><h1>Dashboard</h1><p>Tổng quan hoạt động CRM</p></div>
-        <AnalyticsFilter value={range} onChange={setRange} />
-      </div>
+    <div className={`crm-dashboard ${canViewSales ? "" : "crm-dashboard--support"}`}>
+      <PageHeader title="Dashboard" description="Tổng quan hoạt động CRM" actions={<AnalyticsFilter value={range} onChange={setRange} />} />
 
       {error && <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => setRefreshKey((value) => value + 1)}>Thử lại</Button>}>{error}</Alert>}
 
@@ -91,16 +89,16 @@ export default function DashboardPage() {
         <DashboardSkeleton />
       ) : (
         <>
-          <div className={`kpi-grid ${canViewSales ? "" : "kpi-grid--compact"}`}>
-            {canViewSales && <KpiCard title="Tổng Lead" value={stats.totalLeads} icon={UserRoundSearch} trend="+12%" colorClassName="bg-blue-50 text-blue-600" />}
-            <KpiCard title="Khách hàng" value={stats.totalCustomers} icon={Users} trend="+8%" colorClassName="bg-cyan-50 text-cyan-600" />
-            {canViewSales && <KpiCard title="Tổng Deal" value={stats.totalDeals} icon={BriefcaseBusiness} trend="+5%" colorClassName="bg-violet-50 text-violet-600" />}
-            {canViewSales && <KpiCard title="Doanh thu" value={formatVND(stats.totalRevenue)} icon={BadgeDollarSign} trend="+18%" colorClassName="bg-emerald-50 text-emerald-600" />}
-            <KpiCard title="Ticket đang mở" value={stats.openTickets} icon={TicketCheck} colorClassName="bg-orange-50 text-orange-600" />
-            {canViewSales && <KpiCard title="Deal thắng" value={stats.wonDeals} icon={Trophy} trend="+10%" colorClassName="bg-amber-50 text-amber-600" />}
+          <div className={`crm-kpi-grid ${canViewSales ? "" : "crm-kpi-grid--compact"}`}>
+            {canViewSales && <KpiCard title="Tổng Lead" value={stats.totalLeads} icon={UserRoundSearch} trend="+12%" tone="teal" />}
+            <KpiCard title="Khách hàng" value={stats.totalCustomers} icon={Users} trend="+8%" tone="blue" />
+            {canViewSales && <KpiCard title="Tổng Deal" value={stats.totalDeals} icon={BriefcaseBusiness} trend="+5%" tone="purple" />}
+            {canViewSales && <KpiCard title="Doanh thu" value={formatVND(stats.totalRevenue)} icon={BadgeDollarSign} trend="+18%" tone="green" />}
+            <KpiCard title="Ticket đang mở" value={stats.openTickets} icon={TicketCheck} tone="rose" />
+            {canViewSales && <KpiCard title="Deal thắng" value={stats.wonDeals} icon={Trophy} trend="+10%" tone="amber" />}
           </div>
 
-          <div className="analytics-grid">
+          <div className="crm-widget-grid">
             {canViewSales && <RevenueChart data={revenue} />}
             {canViewSales && <PipelineChart data={pipeline} />}
             {canViewSales && <LeadSourceChart data={leadSources} />}
@@ -116,5 +114,5 @@ export default function DashboardPage() {
 }
 
 function DashboardSkeleton() {
-  return <div className="dashboard-skeleton"><div className="kpi-grid">{Array.from({ length: 6 }, (_, index) => <Skeleton key={index} variant="rounded" height={132} />)}</div><div className="analytics-grid">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} variant="rounded" height={340} />)}</div></div>;
+  return <div className="crm-stack"><div className="crm-kpi-grid">{Array.from({ length: 6 }, (_, index) => <Skeleton key={index} variant="rounded" height={132} />)}</div><div className="crm-widget-grid">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="crm-widget--half" variant="rounded" height={340} />)}</div></div>;
 }

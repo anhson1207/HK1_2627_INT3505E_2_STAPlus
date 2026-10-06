@@ -16,15 +16,15 @@ interface InformationRow {
 
 function InformationCard({ title, rows }: { title: string; rows: InformationRow[] }) {
     return (
-        <section className="rounded-lg border border-slate-200 bg-white p-5">
-            <h2 className="font-semibold text-slate-900">{title}</h2>
-            <div className="mt-4 space-y-4 border-t border-slate-100 pt-4">
+        <section className="crm-detail-card crm-detail-card__body">
+            <h2 className="font-semibold text-(--crm-heading)">{title}</h2>
+            <div className="mt-4 space-y-4 border-t border-(--crm-border-subtle) pt-4">
                 {rows.map(({ label, value, icon: Icon }) => (
                     <div key={label} className="flex gap-3">
-                        <Icon size={17} className="mt-0.5 shrink-0 text-slate-400" />
+                        <Icon size={17} className="mt-0.5 shrink-0 text-(--crm-text-muted)" />
                         <div className="min-w-0">
-                            <p className="text-xs text-slate-500">{label}</p>
-                            <p className="mt-0.5 break-words text-sm font-medium text-slate-800">{value}</p>
+                            <p className="crm-property__label">{label}</p>
+                            <p className="crm-property__value break-words">{value}</p>
                         </div>
                     </div>
                 ))}
@@ -40,7 +40,7 @@ export default function CustomerOverview({ customer }: CustomerOverviewProps) {
     }).format(new Date(customer.createdAt));
 
     return (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="crm-form-grid xl:grid-cols-3">
             <InformationCard
                 title="Thông tin liên hệ"
                 rows={[
@@ -50,17 +50,17 @@ export default function CustomerOverview({ customer }: CustomerOverviewProps) {
                 ]}
             />
 
-            <section className="rounded-lg border border-slate-200 bg-white p-5">
-                <h2 className="font-semibold text-slate-900">Thông tin doanh nghiệp</h2>
-                <div className="mt-4 space-y-4 border-t border-slate-100 pt-4">
+            <section className="crm-detail-card crm-detail-card__body">
+                <h2 className="font-semibold text-(--crm-heading)">Thông tin doanh nghiệp</h2>
+                <div className="mt-4 space-y-4 border-t border-(--crm-border-subtle) pt-4">
                     <div className="flex gap-3">
-                        <Building2 size={17} className="mt-0.5 shrink-0 text-slate-400" />
-                        <div><p className="text-xs text-slate-500">Công ty</p><p className="mt-0.5 text-sm font-medium text-slate-800">{customer.company}</p></div>
+                        <Building2 size={17} className="mt-0.5 shrink-0 text-(--crm-text-muted)" />
+                        <div><p className="crm-property__label">Công ty</p><p className="mt-0.5 text-sm font-medium text-(--crm-heading)">{customer.company}</p></div>
                     </div>
-                    <div><p className="mb-1.5 text-xs text-slate-500">Trạng thái</p><StatusChip status={customer.status} /></div>
+                    <div><p className="mb-1.5 text-xs text-(--crm-text-secondary)">Trạng thái</p><StatusChip status={customer.status} /></div>
                     <div className="flex gap-3">
-                        <UserRound size={17} className="mt-0.5 shrink-0 text-slate-400" />
-                        <div><p className="text-xs text-slate-500">Người phụ trách</p><p className="mt-0.5 text-sm font-medium text-slate-800">{customer.ownerName || "—"}</p></div>
+                        <UserRound size={17} className="mt-0.5 shrink-0 text-(--crm-text-muted)" />
+                        <div><p className="crm-property__label">Người phụ trách</p><p className="mt-0.5 text-sm font-medium text-(--crm-heading)">{customer.ownerName || "—"}</p></div>
                     </div>
                 </div>
             </section>

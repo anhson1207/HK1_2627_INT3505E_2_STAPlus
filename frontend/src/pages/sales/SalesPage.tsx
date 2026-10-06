@@ -45,14 +45,14 @@ export const SalesPage: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-(--crm-surface-subtle) p-6">
             <div className="mb-6 flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-bold text-gray-800">
+                    <h1 className="crm-page-title">
                         Cơ hội bán hàng
                     </h1>
 
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-(--crm-text-secondary)">
                         Quản lý pipeline và các cơ hội kinh doanh
                     </p>
                 </div>
@@ -60,7 +60,7 @@ export const SalesPage: React.FC = () => {
                 <button
                     type="button"
                     onClick={() => navigate("/sales/new")}
-                    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                    className="crm-btn crm-btn--primary"
                 >
                     + Tạo cơ hội
                 </button>

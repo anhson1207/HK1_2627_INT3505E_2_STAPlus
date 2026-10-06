@@ -63,10 +63,10 @@ export default function CustomerEditPage() {
     return (
         <div className="max-w-5xl">
             <div className="mb-6">
-                <h1 className="text-2xl font-semibold text-slate-900">Chỉnh sửa khách hàng</h1>
-                <p className="mt-1 text-sm text-slate-500">Cập nhật thông tin của {customer.name}</p>
+                <h1 className="crm-page-title">Chỉnh sửa khách hàng</h1>
+                <p className="crm-page-description">Cập nhật thông tin của {customer.name}</p>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-6">
+            <div className="crm-card crm-card__body">
                 <CustomerForm
                     initialData={customer}
                     onSubmit={handleSubmit}

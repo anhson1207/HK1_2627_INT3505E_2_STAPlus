@@ -51,9 +51,9 @@ export default function DealForm({ onSubmit, onCancel, initialData, submitLabel 
     }, []);
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="crm-form">
             {(serverError || customerError) && <Alert severity="error">{serverError || customerError}</Alert>}
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="crm-form-grid">
                 <Controller name="name" control={control} render={({ field }) => <TextField {...field} label="Tên Deal" required fullWidth disabled={isSubmitting} error={!!errors.name} helperText={errors.name?.message} />} />
                 <Controller name="customerId" control={control} render={({ field }) => (
                     <TextField {...field} value={field.value || ""} onChange={(event) => field.onChange(Number(event.target.value))} select label="Khách hàng" required fullWidth disabled={isSubmitting || loadingCustomers} error={!!errors.customerId} helperText={loadingCustomers ? "Đang tải khách hàng..." : errors.customerId?.message}>
@@ -65,9 +65,9 @@ export default function DealForm({ onSubmit, onCancel, initialData, submitLabel 
                 <Controller name="probability" control={control} render={({ field }) => <TextField {...field} onChange={(event) => field.onChange(Number(event.target.value))} label="Xác suất (%)" type="number" required fullWidth disabled={isSubmitting} error={!!errors.probability} helperText={errors.probability?.message} slotProps={{ htmlInput: { min: 0, max: 100 } }} />} />
                 <Controller name="expectedCloseDate" control={control} render={({ field }) => <TextField {...field} label="Ngày dự kiến đóng" type="date" required fullWidth disabled={isSubmitting} error={!!errors.expectedCloseDate} helperText={errors.expectedCloseDate?.message} slotProps={{ inputLabel: { shrink: true } }} />} />
                 <Controller name="ownerName" control={control} render={({ field }) => <TextField {...field} label="Người phụ trách" fullWidth disabled={isSubmitting} error={!!errors.ownerName} helperText={errors.ownerName?.message} />} />
-                <Controller name="description" control={control} render={({ field }) => <TextField {...field} label="Mô tả" multiline minRows={3} fullWidth disabled={isSubmitting} error={!!errors.description} helperText={errors.description?.message} className="md:col-span-2" />} />
+                <Controller name="description" control={control} render={({ field }) => <TextField {...field} label="Mô tả" multiline minRows={3} fullWidth disabled={isSubmitting} error={!!errors.description} helperText={errors.description?.message} className="crm-field--full" />} />
             </div>
-            <div className="flex justify-end gap-3 border-t border-slate-200 pt-5">
+            <div className="crm-form-footer">
                 <Button variant="outlined" onClick={onCancel} disabled={isSubmitting}>Hủy</Button>
                 <Button type="submit" variant="contained" disabled={isSubmitting || loadingCustomers || Boolean(customerError)} startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : undefined}>{isSubmitting ? "Đang lưu..." : submitLabel}</Button>
             </div>

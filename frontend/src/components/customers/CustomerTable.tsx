@@ -20,39 +20,39 @@ export default function CustomerTable({ customers, onView }: CustomerTableProps)
     if (customers.length === 0) {
         return (
             <div className="flex min-h-72 flex-col items-center justify-center px-6 text-center">
-                <div className="mb-3 rounded-full bg-slate-100 p-4 text-slate-400">
+                <div className="mb-3 rounded-full bg-(--crm-surface-hover) p-4 text-(--crm-text-muted)">
                     <Users size={28} />
                 </div>
-                <p className="font-medium text-slate-700">Chưa có khách hàng</p>
-                <p className="mt-1 text-sm text-slate-500">Thêm khách hàng mới để bắt đầu quản lý.</p>
+                <p className="font-medium text-(--crm-text)">Chưa có khách hàng</p>
+                <p className="crm-page-description">Thêm khách hàng mới để bắt đầu quản lý.</p>
             </div>
         );
     }
 
     return (
-        <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] border-collapse">
+        <div className="crm-table-wrap">
+            <table className="crm-table">
                 <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50">
+                    <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
                         {["Tên", "Công ty", "Email", "Số điện thoại", "Trạng thái", "Người phụ trách", "Ngày tạo"].map((label) => (
-                            <th key={label} className="px-4 py-3 text-left text-xs font-medium text-slate-500">{label}</th>
+                            <th key={label} className="px-4 py-3 text-left text-xs font-medium text-(--crm-text-secondary)">{label}</th>
                         ))}
                     </tr>
                 </thead>
                 <tbody>
                     {customers.map((customer) => (
-                        <tr key={customer.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50">
+                        <tr key={customer.id} className="border-b border-(--crm-border-subtle) last:border-b-0 hover:bg-(--crm-surface-subtle)">
                             <td className="px-4 py-4">
-                                <button type="button" onClick={() => onView(customer)} className="text-left text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline">
+                                <button type="button" onClick={() => onView(customer)} className="text-left text-sm font-medium text-(--crm-primary) hover:text-(--crm-primary) hover:underline">
                                     {customer.name}
                                 </button>
                             </td>
-                            <td className="px-4 py-4 text-sm text-slate-700">{customer.company}</td>
-                            <td className="px-4 py-4 text-sm text-slate-600">{customer.email}</td>
-                            <td className="px-4 py-4 text-sm text-slate-600">{customer.phone}</td>
+                            <td className="px-4 py-4 text-sm text-(--crm-text)">{customer.company}</td>
+                            <td className="px-4 py-4 text-sm text-(--crm-text-secondary)">{customer.email}</td>
+                            <td className="px-4 py-4 text-sm text-(--crm-text-secondary)">{customer.phone}</td>
                             <td className="px-4 py-4"><StatusChip status={customer.status} /></td>
-                            <td className="px-4 py-4 text-sm text-slate-600">{customer.ownerName || "—"}</td>
-                            <td className="px-4 py-4 text-sm text-slate-600">{formatDate(customer.createdAt)}</td>
+                            <td className="px-4 py-4 text-sm text-(--crm-text-secondary)">{customer.ownerName || "—"}</td>
+                            <td className="px-4 py-4 text-sm text-(--crm-text-secondary)">{formatDate(customer.createdAt)}</td>
                         </tr>
                     ))}
                 </tbody>

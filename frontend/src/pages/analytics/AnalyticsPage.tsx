@@ -1,3 +1,4 @@
+import PageHeader from "../../components/common/PageHeader";
 import { Alert, Button, Skeleton } from "@mui/material";
 import { useEffect, useState } from "react";
 
@@ -52,16 +53,13 @@ export default function AnalyticsPage() {
   }, [range, refreshKey]);
 
   return (
-    <div className="analytics-page">
-      <div className="analytics-page__header">
-        <div><h1>Analytics</h1><p>Phân tích chi tiết hiệu suất CRM</p></div>
-        <AnalyticsFilter value={range} onChange={setRange} />
-      </div>
+    <div className="crm-dashboard">
+      <PageHeader title="Analytics" description="Phân tích chi tiết hiệu suất CRM" actions={<AnalyticsFilter value={range} onChange={setRange} />} />
       {error && <Alert severity="error" action={<Button color="inherit" size="small" onClick={() => setRefreshKey((value) => value + 1)}>Thử lại</Button>}>{error}</Alert>}
       {loading ? (
-        <div className="analytics-grid">{Array.from({ length: 6 }, (_, index) => <Skeleton key={index} variant="rounded" height={340} />)}</div>
+        <div className="crm-widget-grid">{Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="crm-widget--half" variant="rounded" height={340} />)}</div>
       ) : (
-        <div className="analytics-grid">
+        <div className="crm-widget-grid">
           <RevenueChart data={revenue} />
           <PipelineChart data={pipeline} />
           <LeadSourceChart data={leadSources} />

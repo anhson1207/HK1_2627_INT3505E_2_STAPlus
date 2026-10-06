@@ -15,14 +15,14 @@ export default function Table<T>({
     onRowClick,
 }: TableProps<T>) {
     return (
-        <div className="w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
-            <table className="w-full border-collapse text-left text-sm">
-                <thead className="border-b border-gray-200 bg-gray-50">
+        <div className="crm-board crm-table-wrap">
+            <table className="crm-table">
+                <thead className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
                     <tr>
                         {columns.map((column) => (
                             <th
                                 key={String(column.key)}
-                                className="p-3 text-xs font-semibold uppercase text-gray-500"
+                                className="p-3 text-xs font-semibold uppercase text-(--crm-text-secondary)"
                             >
                                 {column.label}
                             </th>
@@ -30,21 +30,21 @@ export default function Table<T>({
                     </tr>
                 </thead>
 
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-(--crm-border-subtle)">
                     {data.map((item, index) => (
                         <tr
                             key={index}
                             onClick={() => onRowClick?.(item)}
                             className={
                                 onRowClick
-                                    ? "cursor-pointer transition-colors hover:bg-blue-50/40"
+                                    ? "cursor-pointer transition-colors hover:bg-(--crm-info-soft)/40"
                                     : ""
                             }
                         >
                             {columns.map((column) => (
                                 <td
                                     key={String(column.key)}
-                                    className="p-3 text-gray-700"
+                                    className="p-3 text-(--crm-text)"
                                 >
                                     {String(item[column.key])}
                                 </td>

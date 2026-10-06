@@ -15,8 +15,8 @@ const sections: Array<{ label: string; path: string; resource: CRMResource; icon
 
 export default function SettingsPage() {
     const role = useAuthStore((state) => state.user?.role);
-    return <div><div className="mb-6"><h1 className="text-[22px] font-semibold text-slate-900">Settings</h1><p className="mt-1 text-sm text-slate-500">Quản lý tài khoản và cấu hình CRM</p></div><div className="grid grid-cols-1 gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <nav aria-label="Các mục cài đặt" className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2 lg:flex-col lg:overflow-visible">{sections.filter((item) => canAccess(role, item.resource)).map(({ label, path, icon: Icon }) => <NavLink key={path} to={path} className={({ isActive }) => `flex shrink-0 items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-50"}`}><Icon size={17} />{label}</NavLink>)}</nav>
+    return <div><div className="mb-6"><h1 className="crm-page-title">Settings</h1><p className="crm-page-description">Quản lý tài khoản và cấu hình CRM</p></div><div className="grid grid-cols-1 gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
+        <nav aria-label="Các mục cài đặt" className="flex gap-1 overflow-x-auto rounded-xl border border-(--crm-border) bg-(--crm-surface) p-2 lg:flex-col lg:overflow-visible">{sections.filter((item) => canAccess(role, item.resource)).map(({ label, path, icon: Icon }) => <NavLink key={path} to={path} className={({ isActive }) => `flex shrink-0 items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition ${isActive ? "bg-(--crm-info-soft) text-(--crm-primary)" : "text-(--crm-text-secondary) hover:bg-(--crm-surface-subtle)"}`}><Icon size={17} />{label}</NavLink>)}</nav>
         <div className="min-w-0"><Outlet /></div>
     </div></div>;
 }

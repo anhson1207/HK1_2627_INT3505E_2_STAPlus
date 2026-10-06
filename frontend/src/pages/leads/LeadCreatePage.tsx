@@ -24,16 +24,16 @@ export default function LeadCreatePage() {
     return (
         <div className="max-w-5xl">
             <div className="mb-6">
-                <h1 className="text-2xl font-semibold text-slate-900">
+                <h1 className="crm-page-title">
                     Thêm Lead
                 </h1>
 
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="crm-page-description">
                     Tạo khách hàng tiềm năng mới
                 </p>
             </div>
 
-            <div className="rounded-lg border border-slate-200 bg-white p-6">
+            <div className="crm-card crm-card__body">
                 <LeadForm
                     onSubmit={handleSubmit}
                     onCancel={() => navigate("/leads")}

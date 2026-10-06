@@ -60,7 +60,7 @@ export default function LoginPage() {
 
     return (
         <AuthPageShell title="Đăng nhập" description="Đăng nhập vào không gian làm việc CRM.">
-            <form onSubmit={handleSubmit(handleLogin)} className="flex flex-col gap-5">
+            <form onSubmit={handleSubmit(handleLogin)} className="crm-form">
                 {error && (
                     <Alert
                         severity="error"
@@ -75,7 +75,7 @@ export default function LoginPage() {
                 )}
                 <Controller name="email" control={control} render={({ field }) => <TextField {...field} label="Email" type="email" fullWidth autoComplete="email" disabled={isLoading} error={!!errors.email} helperText={errors.email?.message} />} />
                 <Controller name="password" control={control} render={({ field }) => <TextField {...field} label="Mật khẩu" type="password" fullWidth autoComplete="current-password" disabled={isLoading} error={!!errors.password} helperText={errors.password?.message} />} />
-                <div className="text-right"><Link to="/forgot-password" className="text-sm font-medium text-blue-600 hover:underline">Quên mật khẩu?</Link></div>
+                <div className="text-right"><Link to="/forgot-password" className="text-sm font-medium text-(--crm-primary) hover:underline">Quên mật khẩu?</Link></div>
                 <Button type="submit" variant="contained" fullWidth size="large" disabled={isLoading} startIcon={isLoading ? <CircularProgress size={17} color="inherit" /> : undefined}>
                     {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
                 </Button>
@@ -83,7 +83,7 @@ export default function LoginPage() {
 
             <Divider sx={{ my: 3 }}>hoặc</Divider>
             <GoogleLoginButton onLogin={loginWithGoogle} onSuccess={() => navigate("/dashboard", { replace: true })} />
-            <p className="mt-5 text-center text-sm text-slate-500">Chưa có tài khoản? <Link to="/register" className="font-medium text-blue-600 hover:underline">Đăng ký</Link></p>
+            <p className="mt-5 text-center text-sm text-(--crm-text-secondary)">Chưa có tài khoản? <Link to="/register" className="font-medium text-(--crm-primary) hover:underline">Đăng ký</Link></p>
             <Snackbar open={Boolean(message)} autoHideDuration={3500} onClose={() => setMessage("")} message={message} />
         </AuthPageShell>
     );

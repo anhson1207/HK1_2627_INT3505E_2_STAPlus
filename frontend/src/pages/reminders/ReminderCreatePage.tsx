@@ -21,5 +21,5 @@ export default function ReminderCreatePage() {
             navigate("/reminders", { replace: true, state: { message: "Đã tạo nhắc việc" } });
         } catch (submitError) { setError(submitError instanceof Error ? submitError.message : "Không thể tạo nhắc việc."); }
     };
-    return <div className="max-w-4xl"><div className="mb-6"><h1 className="text-[22px] font-semibold text-slate-900">Tạo nhắc việc</h1><p className="mt-1 text-sm text-slate-500">Lên lịch follow-up cho Lead, khách hàng hoặc Deal</p></div><div className="rounded-xl border border-slate-200 bg-white p-6"><ReminderForm initialData={{ entityType, entityId }} onSubmit={submit} onCancel={() => navigate("/reminders")} submitLabel="Tạo nhắc việc" serverError={error} /></div></div>;
+    return <div className="max-w-4xl"><div className="mb-6"><h1 className="crm-page-title">Tạo nhắc việc</h1><p className="crm-page-description">Lên lịch follow-up cho Lead, khách hàng hoặc Deal</p></div><div className="crm-card crm-card__body"><ReminderForm initialData={{ entityType, entityId }} onSubmit={submit} onCancel={() => navigate("/reminders")} submitLabel="Tạo nhắc việc" serverError={error} /></div></div>;
 }

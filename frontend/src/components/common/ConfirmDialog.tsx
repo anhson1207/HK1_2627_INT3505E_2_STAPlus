@@ -30,11 +30,11 @@ export default function ConfirmDialog({
 }: ConfirmDialogProps) {
     return (
         <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="xs" fullWidth>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogContent>
+            <DialogTitle className="crm-modal__header">{title}</DialogTitle>
+            <DialogContent className="crm-modal__body">
                 <DialogContentText>{description}</DialogContentText>
             </DialogContent>
-            <DialogActions sx={{ padding: "0 24px 20px" }}>
+            <DialogActions className="crm-modal__footer">
                 <Button onClick={onClose} disabled={loading} color="inherit">
                     {cancelLabel}
                 </Button>
