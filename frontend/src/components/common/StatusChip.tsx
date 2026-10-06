@@ -1,58 +1,16 @@
-import { Chip } from "@mui/material";
+interface StatusChipProps { status: string }
 
-interface StatusChipProps {
-    status: string;
-}
-
-const statusConfig: Record<
-    string,
-    {
-        label: string;
-        color: "default" | "primary" | "success" | "warning" | "error";
-    }
-> = {
-    NEW: {
-        label: "Mới",
-        color: "primary",
-    },
-    CONTACTED: {
-        label: "Đã liên hệ",
-        color: "warning",
-    },
-    QUALIFIED: {
-        label: "Đủ điều kiện",
-        color: "success",
-    },
-    CONVERTED: {
-        label: "Đã chuyển đổi",
-        color: "success",
-    },
-    LOST: {
-        label: "Thất bại",
-        color: "error",
-    },
-    ACTIVE: {
-        label: "Đang hoạt động",
-        color: "success",
-    },
-    INACTIVE: {
-        label: "Ngừng hoạt động",
-        color: "default",
-    },
+const statusConfig: Record<string, { label: string; variant: string }> = {
+    NEW: { label: "Mới", variant: "new" },
+    CONTACTED: { label: "Đã liên hệ", variant: "contacted" },
+    QUALIFIED: { label: "Đủ điều kiện", variant: "qualified" },
+    CONVERTED: { label: "Đã chuyển đổi", variant: "won" },
+    LOST: { label: "Thất bại", variant: "lost" },
+    ACTIVE: { label: "Đang hoạt động", variant: "active" },
+    INACTIVE: { label: "Ngừng hoạt động", variant: "inactive" },
 };
 
 export default function StatusChip({ status }: StatusChipProps) {
-    const config = statusConfig[status] ?? {
-        label: status,
-        color: "default" as const,
-    };
-
-    return (
-        <Chip
-            label={config.label}
-            color={config.color}
-            size="small"
-            variant="outlined"
-        />
-    );
+    const config = statusConfig[status] ?? { label: status, variant: "inactive" };
+    return <span className={`crm-status crm-status--${config.variant}`}>{config.label}</span>;
 }

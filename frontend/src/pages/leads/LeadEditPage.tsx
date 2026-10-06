@@ -60,10 +60,10 @@ export default function LeadEditPage() {
     return (
         <div className="max-w-5xl">
             <div className="mb-6">
-                <h1 className="text-2xl font-semibold text-slate-900">Chỉnh sửa Lead</h1>
-                <p className="mt-1 text-sm text-slate-500">Cập nhật thông tin của {lead.firstName} {lead.lastName}</p>
+                <h1 className="crm-page-title">Chỉnh sửa Lead</h1>
+                <p className="crm-page-description">Cập nhật thông tin của {lead.firstName} {lead.lastName}</p>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-6">
+            <div className="crm-card crm-card__body">
                 <LeadForm
                     initialData={lead}
                     onSubmit={handleSubmit}

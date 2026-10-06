@@ -18,32 +18,32 @@ export default function CustomerDetail({ customer }: CustomerDetailProps) {
 
     return (
         <div className="space-y-5">
-            <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                <div className="border-b border-slate-200 px-5 py-4">
-                    <h2 className="font-semibold text-slate-900">Thông tin khách hàng</h2>
+            <section className="crm-detail-card">
+                <div className="crm-detail-card__header">
+                    <h2 className="font-semibold text-(--crm-heading)">Thông tin khách hàng</h2>
                 </div>
-                <div className="grid grid-cols-1 gap-px bg-slate-200 md:grid-cols-2">
+                <div className="crm-property-grid crm-detail-card__body">
                     {fields.map(({ label, value, icon: Icon }) => (
-                        <div key={label} className="flex gap-3 bg-white p-5">
-                            <Icon size={18} className="mt-0.5 shrink-0 text-slate-400" />
+                        <div key={label} className="flex gap-3 min-w-0">
+                            <Icon size={18} className="mt-0.5 shrink-0 text-(--crm-text-muted)" />
                             <div className="min-w-0">
-                                <p className="text-xs text-slate-500">{label}</p>
-                                <p className="mt-1 break-words text-sm font-medium text-slate-800">{value}</p>
+                                <p className="crm-property__label">{label}</p>
+                                <p className="mt-1 break-words text-sm font-medium text-(--crm-heading)">{value}</p>
                             </div>
                         </div>
                     ))}
-                    <div className="bg-white p-5">
-                        <p className="mb-2 text-xs text-slate-500">Trạng thái</p>
+                    <div className="min-w-0">
+                        <p className="mb-2 text-xs text-(--crm-text-secondary)">Trạng thái</p>
                         <StatusChip status={customer.status} />
                     </div>
                 </div>
             </section>
 
-            <section className="rounded-lg border border-slate-200 bg-white p-5">
-                <h2 className="font-semibold text-slate-900">Thông tin hệ thống</h2>
-                <div className="mt-4 border-t border-slate-100 pt-4">
-                    <p className="text-xs text-slate-500">Ngày tạo</p>
-                    <p className="mt-1 text-sm font-medium text-slate-800">
+            <section className="crm-card crm-card__body">
+                <h2 className="font-semibold text-(--crm-heading)">Thông tin hệ thống</h2>
+                <div className="mt-4 border-t border-(--crm-border-subtle) pt-4">
+                    <p className="crm-property__label">Ngày tạo</p>
+                    <p className="crm-property__value">
                         {new Intl.DateTimeFormat("vi-VN", { dateStyle: "long", timeStyle: "short" }).format(new Date(customer.createdAt))}
                     </p>
                 </div>

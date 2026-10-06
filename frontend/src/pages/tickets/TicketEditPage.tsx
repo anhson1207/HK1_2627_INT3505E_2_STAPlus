@@ -36,5 +36,5 @@ export default function TicketEditPage() {
 
     if (loading) return <div className="flex min-h-72 items-center justify-center"><CircularProgress /></div>;
     if (loadError || !ticket) return <Alert severity="error" action={<button type="button" className="font-medium" onClick={() => navigate("/tickets")}>Về danh sách</button>}>{loadError || "Không tìm thấy Ticket."}</Alert>;
-    return <div className="max-w-5xl"><div className="mb-6"><h1 className="text-2xl font-semibold text-slate-900">Chỉnh sửa Ticket #{ticket.id}</h1><p className="mt-1 text-sm text-slate-500">Cập nhật yêu cầu “{ticket.subject}”</p></div><div className="rounded-lg border border-slate-200 bg-white p-6"><TicketForm initialData={ticket} onSubmit={handleSubmit} onCancel={() => navigate(`/tickets/${ticketId}`)} submitLabel="Lưu thay đổi" serverError={submitError} /></div></div>;
+    return <div className="max-w-5xl"><div className="mb-6"><h1 className="crm-page-title">Chỉnh sửa Ticket #{ticket.id}</h1><p className="crm-page-description">Cập nhật yêu cầu “{ticket.subject}”</p></div><div className="crm-card crm-card__body"><TicketForm initialData={ticket} onSubmit={handleSubmit} onCancel={() => navigate(`/tickets/${ticketId}`)} submitLabel="Lưu thay đổi" serverError={submitError} /></div></div>;
 }

@@ -44,5 +44,5 @@ export default function ReminderEditPage() {
 
     if (loading) return <div className="flex min-h-64 items-center justify-center"><CircularProgress /></div>;
     if (loadError || !reminder) return <Alert severity="error" action={<Button color="inherit" onClick={() => navigate("/reminders")}>Về danh sách</Button>}>{loadError || "Không tìm thấy nhắc việc."}</Alert>;
-    return <div className="max-w-4xl"><div className="mb-6"><h1 className="text-[22px] font-semibold text-slate-900">Chỉnh sửa nhắc việc</h1><p className="mt-1 text-sm text-slate-500">{reminder.title}</p></div><div className="rounded-xl border border-slate-200 bg-white p-6"><ReminderForm initialData={{ ...reminder, ...toLocalInputParts(reminder.dueAt) }} onSubmit={submit} onCancel={() => navigate("/reminders")} submitLabel="Lưu thay đổi" serverError={submitError} /></div></div>;
+    return <div className="max-w-4xl"><div className="mb-6"><h1 className="crm-page-title">Chỉnh sửa nhắc việc</h1><p className="crm-page-description">{reminder.title}</p></div><div className="crm-card crm-card__body"><ReminderForm initialData={{ ...reminder, ...toLocalInputParts(reminder.dueAt) }} onSubmit={submit} onCancel={() => navigate("/reminders")} submitLabel="Lưu thay đổi" serverError={submitError} /></div></div>;
 }

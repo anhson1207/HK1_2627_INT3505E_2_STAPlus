@@ -39,7 +39,7 @@ export const TicketForm: React.FC<TicketFormProps> = ({
     return (
         <Form
             onSubmit={handleSubmit}
-            className="bg-white border border-gray-200 rounded-md p-6 max-w-3xl"
+            className="bg-(--crm-surface) border border-(--crm-border) rounded-md p-6 max-w-3xl"
         >
             <FormField label="Tiêu đề Yêu cầu *">
                 <input
@@ -51,7 +51,7 @@ export const TicketForm: React.FC<TicketFormProps> = ({
                             subject: event.target.value,
                         })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 border border-(--crm-border) rounded-md text-sm focus:ring-1 focus:ring-(--crm-primary-soft) focus:outline-none"
                     required
                 />
             </FormField>
@@ -67,7 +67,7 @@ export const TicketForm: React.FC<TicketFormProps> = ({
                                 customerName: event.target.value,
                             })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                        className="w-full px-3 py-2 border border-(--crm-border) rounded-md text-sm focus:ring-1 focus:ring-(--crm-primary-soft) focus:outline-none"
                         required
                     />
                 </FormField>
@@ -81,7 +81,7 @@ export const TicketForm: React.FC<TicketFormProps> = ({
                             priority: event.target.value as SupportTicketFormData["priority"],
                             })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                        className="w-full px-3 py-2 border border-(--crm-border) rounded-md text-sm bg-(--crm-surface) focus:ring-1 focus:ring-(--crm-primary-soft) focus:outline-none"
                     >
                         <option value="Low">Low</option>
                         <option value="Medium">Medium</option>
@@ -101,22 +101,22 @@ export const TicketForm: React.FC<TicketFormProps> = ({
                             description: event.target.value,
                         })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 border border-(--crm-border) rounded-md text-sm focus:ring-1 focus:ring-(--crm-primary-soft) focus:outline-none"
                 />
             </FormField>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <div className="flex justify-end gap-3 pt-4 border-t border-(--crm-border-subtle)">
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="px-4 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+                    className="px-4 py-1.5 text-sm border border-(--crm-border) rounded-md hover:bg-(--crm-surface-subtle)"
                 >
                     Hủy
                 </button>
 
                 <button
                     type="submit"
-                    className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+                    className="crm-btn crm-btn--primary"
                 >
                     Lưu Ticket
                 </button>

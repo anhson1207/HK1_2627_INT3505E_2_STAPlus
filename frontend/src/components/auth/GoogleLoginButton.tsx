@@ -37,9 +37,9 @@ export default function GoogleLoginButton({ onLogin, onSuccess }: GoogleLoginBut
                 <DialogTitle>Chọn tài khoản Google</DialogTitle>
                 <DialogContent>
                     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-                    <button type="button" disabled={loading} onClick={() => void handleSelectAccount()} className="flex w-full items-center gap-3 rounded-lg border border-slate-200 p-4 text-left transition hover:bg-slate-50 disabled:opacity-60">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">S</span>
-                        <span><span className="block text-sm font-semibold text-slate-800">Nguyễn Anh Sơn</span><span className="block text-xs text-slate-500">son@gmail.com</span></span>
+                    <button type="button" disabled={loading} onClick={() => void handleSelectAccount()} className="flex w-full items-center gap-3 rounded-lg border border-(--crm-border) p-4 text-left transition hover:bg-(--crm-surface-subtle) disabled:opacity-60">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-(--crm-info-soft) font-semibold text-(--crm-primary)">S</span>
+                        <span><span className="block text-sm font-semibold text-(--crm-heading)">Nguyễn Anh Sơn</span><span className="block text-xs text-(--crm-text-secondary)">son@gmail.com</span></span>
                         {loading && <CircularProgress size={18} className="ml-auto" />}
                     </button>
                 </DialogContent>

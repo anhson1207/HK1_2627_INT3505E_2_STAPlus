@@ -33,7 +33,7 @@ export default function RegisterPage() {
 
     return (
         <AuthPageShell title="Tạo tài khoản" description="Bắt đầu quản lý khách hàng cùng CRM.">
-            <form onSubmit={handleSubmit(handleRegister)} className="flex flex-col gap-5">
+            <form onSubmit={handleSubmit(handleRegister)} className="crm-form">
                 {error && <Alert severity="error">{error}</Alert>}
                 <Controller name="fullName" control={control} render={({ field }) => <TextField {...field} label="Họ tên" fullWidth autoComplete="name" disabled={isSubmitting} error={!!errors.fullName} helperText={errors.fullName?.message} />} />
                 <Controller name="email" control={control} render={({ field }) => <TextField {...field} label="Email" type="email" fullWidth autoComplete="email" disabled={isSubmitting} error={!!errors.email} helperText={errors.email?.message} />} />
@@ -43,7 +43,7 @@ export default function RegisterPage() {
                     {isSubmitting ? "Đang đăng ký..." : "Đăng ký"}
                 </Button>
             </form>
-            <p className="mt-5 text-center text-sm text-slate-500">Đã có tài khoản? <Link to="/login" className="font-medium text-blue-600 hover:underline">Đăng nhập</Link></p>
+            <p className="mt-5 text-center text-sm text-(--crm-text-secondary)">Đã có tài khoản? <Link to="/login" className="font-medium text-(--crm-primary) hover:underline">Đăng nhập</Link></p>
         </AuthPageShell>
     );
 }

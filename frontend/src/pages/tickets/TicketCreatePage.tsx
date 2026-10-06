@@ -13,5 +13,5 @@ export default function TicketCreatePage() {
         try { await ticketService.createTicket(data); navigate("/tickets", { replace: true, state: { message: "Tạo Ticket thành công" } }); }
         catch (submitError) { setError(getTicketErrorMessage(submitError)); }
     };
-    return <div className="max-w-5xl"><div className="mb-6"><h1 className="text-2xl font-semibold text-slate-900">Tạo Ticket</h1><p className="mt-1 text-sm text-slate-500">Ghi nhận yêu cầu hỗ trợ khách hàng</p></div><div className="rounded-lg border border-slate-200 bg-white p-6"><TicketForm onSubmit={handleSubmit} onCancel={() => navigate("/tickets")} submitLabel="Tạo Ticket" serverError={error} /></div></div>;
+    return <div className="max-w-5xl"><div className="mb-6"><h1 className="crm-page-title">Tạo Ticket</h1><p className="crm-page-description">Ghi nhận yêu cầu hỗ trợ khách hàng</p></div><div className="crm-card crm-card__body"><TicketForm onSubmit={handleSubmit} onCancel={() => navigate("/tickets")} submitLabel="Tạo Ticket" serverError={error} /></div></div>;
 }
