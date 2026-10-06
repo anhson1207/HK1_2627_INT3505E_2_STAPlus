@@ -13,10 +13,10 @@ export default function Card({
 }: CardProps) {
     return (
         <div
-            className={`rounded-md border border-gray-200 bg-white p-5 shadow-sm ${className}`}
+            className={`crm-card crm-card__body ${className}`}
         >
             {title && (
-                <h2 className="mb-4 text-sm font-semibold text-gray-800">
+                <h2 className="mb-4 text-sm font-semibold text-(--crm-heading)">
                     {title}
                 </h2>
             )}

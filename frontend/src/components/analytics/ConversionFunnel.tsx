@@ -8,10 +8,10 @@ export default function ConversionFunnel({ data }: ConversionFunnelProps) {
   const maxValue = Math.max(...data.map((item) => item.value), 1);
 
   return (
-    <section className="dashboard-card">
-      <div className="dashboard-card__header">
+    <section className="crm-widget crm-widget--half crm-card__body">
+      <div className="crm-widget__header">
         <div>
-          <p className="dashboard-card__eyebrow">Chuyển đổi</p>
+          <p className="crm-widget__eyebrow">Chuyển đổi</p>
           <h2>Phễu chuyển đổi</h2>
         </div>
       </div>

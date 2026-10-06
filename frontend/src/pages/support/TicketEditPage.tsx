@@ -21,10 +21,10 @@ export const TicketEditPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-(--crm-surface-subtle) min-h-screen">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-800">Chỉnh Sửa Ticket #{id}</h1>
-        <p className="text-xs text-gray-500">Cập nhật nội dung hoặc trạng thái yêu cầu hỗ trợ</p>
+        <h1 className="crm-page-title">Chỉnh Sửa Ticket #{id}</h1>
+        <p className="text-xs text-(--crm-text-secondary)">Cập nhật nội dung hoặc trạng thái yêu cầu hỗ trợ</p>
       </div>
 
       <TicketForm 

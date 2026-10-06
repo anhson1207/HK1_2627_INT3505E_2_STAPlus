@@ -22,10 +22,10 @@ export default function CustomerCreatePage() {
     return (
         <div className="max-w-5xl">
             <div className="mb-6">
-                <h1 className="text-2xl font-semibold text-slate-900">Thêm khách hàng</h1>
-                <p className="mt-1 text-sm text-slate-500">Tạo hồ sơ khách hàng mới</p>
+                <h1 className="crm-page-title">Thêm khách hàng</h1>
+                <p className="crm-page-description">Tạo hồ sơ khách hàng mới</p>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-6">
+            <div className="crm-card crm-card__body">
                 <CustomerForm onSubmit={handleSubmit} onCancel={() => navigate("/customers")} submitLabel="Tạo khách hàng" serverError={error} />
             </div>
         </div>

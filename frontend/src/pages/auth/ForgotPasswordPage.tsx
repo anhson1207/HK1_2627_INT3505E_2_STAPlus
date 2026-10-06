@@ -37,19 +37,19 @@ export default function ForgotPasswordPage() {
             {resetToken ? (
                 <div className="space-y-4">
                     <Alert severity="success">Link đặt lại mật khẩu đã được tạo.</Alert>
-                    <div className="rounded-lg border border-dashed border-amber-300 bg-amber-50 p-4 text-center">
-                        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-amber-700">Dev mode</p>
+                    <div className="rounded-lg border border-dashed border-(--crm-warning-soft) bg-(--crm-warning-soft) p-4 text-center">
+                        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-(--crm-warning)">Dev mode</p>
                         <Button variant="contained" onClick={() => navigate(`/reset-password?token=${encodeURIComponent(resetToken)}`)}>Mở trang đặt lại mật khẩu</Button>
                     </div>
                 </div>
             ) : (
-                <form onSubmit={handleSubmit(handleForgotPassword)} className="flex flex-col gap-5">
+                <form onSubmit={handleSubmit(handleForgotPassword)} className="crm-form">
                     {error && <Alert severity="error">{error}</Alert>}
                     <Controller name="email" control={control} render={({ field }) => <TextField {...field} label="Email" type="email" fullWidth autoComplete="email" disabled={isSubmitting} error={!!errors.email} helperText={errors.email?.message} />} />
                     <Button type="submit" variant="contained" fullWidth size="large" disabled={isSubmitting} startIcon={isSubmitting ? <CircularProgress size={17} color="inherit" /> : undefined}>{isSubmitting ? "Đang gửi..." : "Gửi link đặt lại"}</Button>
                 </form>
             )}
-            <p className="mt-5 text-center text-sm"><Link to="/login" className="font-medium text-blue-600 hover:underline">Quay lại đăng nhập</Link></p>
+            <p className="mt-5 text-center text-sm"><Link to="/login" className="font-medium text-(--crm-primary) hover:underline">Quay lại đăng nhập</Link></p>
         </AuthPageShell>
     );
 }

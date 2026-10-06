@@ -64,15 +64,15 @@ export default function LeadDetailPage() {
 
     return (
         <div className="max-w-5xl">
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                <button type="button" onClick={() => navigate("/leads")} className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800">
+            <div className="crm-page-header">
+                <button type="button" onClick={() => navigate("/leads")} className="flex items-center gap-2 text-sm text-(--crm-text-secondary) hover:text-(--crm-heading)">
                     <ArrowLeft size={17} /> Quay lại danh sách
                 </button>
                 <div className="flex gap-2">
-                    <button type="button" onClick={() => navigate(`/leads/${leadId}/edit`)} className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    <button type="button" onClick={() => navigate(`/leads/${leadId}/edit`)} className="crm-btn crm-btn--secondary">
                         <Pencil size={16} /> Chỉnh sửa
                     </button>
-                    <button type="button" onClick={() => setConfirmDelete(true)} className="flex items-center gap-2 rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
+                    <button type="button" onClick={() => setConfirmDelete(true)} className="crm-btn crm-btn--secondary crm-danger-action">
                         <Trash2 size={16} /> Xóa
                     </button>
                 </div>

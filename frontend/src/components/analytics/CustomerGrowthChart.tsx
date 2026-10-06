@@ -15,10 +15,10 @@ interface CustomerGrowthChartProps {
 
 export default function CustomerGrowthChart({ data }: CustomerGrowthChartProps) {
   return (
-    <section className="dashboard-card">
-      <div className="dashboard-card__header">
+    <section className="crm-widget crm-widget--half crm-card__body">
+      <div className="crm-widget__header">
         <div>
-          <p className="dashboard-card__eyebrow">Tăng trưởng</p>
+          <p className="crm-widget__eyebrow">Tăng trưởng</p>
           <h2>Khách hàng mới</h2>
         </div>
       </div>
@@ -29,17 +29,17 @@ export default function CustomerGrowthChart({ data }: CustomerGrowthChartProps) 
         <div className="chart-container">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 8, right: 10, left: -18, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#e5e7eb" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
-              <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
-              <Tooltip contentStyle={{ borderRadius: 12, borderColor: "#e2e8f0" }} />
+              <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--crm-border-subtle)" />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "var(--crm-text-secondary)", fontSize: 12 }} />
+              <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: "var(--crm-text-secondary)", fontSize: 12 }} />
+              <Tooltip contentStyle={{ borderRadius: "var(--crm-radius-md)", borderColor: "var(--crm-border-subtle)" }} />
               <Line
                 type="monotone"
                 dataKey="customers"
                 name="Khách hàng mới"
-                stroke="#2563eb"
+                stroke="var(--crm-primary)"
                 strokeWidth={3}
-                dot={{ r: 4, fill: "#ffffff", strokeWidth: 3 }}
+                dot={{ r: 4, fill: "var(--crm-surface)", strokeWidth: 3 }}
                 activeDot={{ r: 6 }}
               />
             </LineChart>

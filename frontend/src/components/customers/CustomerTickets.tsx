@@ -7,16 +7,16 @@ interface CustomerTicketsProps {
 }
 
 const priorityConfig: Record<CustomerTicketPriority, { label: string; className: string }> = {
-    LOW: { label: "Thấp", className: "bg-slate-100 text-slate-600" },
-    MEDIUM: { label: "Trung bình", className: "bg-amber-50 text-amber-700" },
-    HIGH: { label: "Cao", className: "bg-red-50 text-red-700" },
+    LOW: { label: "Thấp", className: "crm-status--inactive" },
+    MEDIUM: { label: "Trung bình", className: "crm-status--contacted" },
+    HIGH: { label: "Cao", className: "crm-status--proposal" },
 };
 
 const statusConfig: Record<CustomerTicketStatus, { label: string; className: string }> = {
-    OPEN: { label: "Đang mở", className: "bg-blue-50 text-blue-700" },
-    IN_PROGRESS: { label: "Đang xử lý", className: "bg-violet-50 text-violet-700" },
-    RESOLVED: { label: "Đã giải quyết", className: "bg-emerald-50 text-emerald-700" },
-    CLOSED: { label: "Đã đóng", className: "bg-slate-100 text-slate-600" },
+    OPEN: { label: "Đang mở", className: "crm-status--open" },
+    IN_PROGRESS: { label: "Đang xử lý", className: "crm-status--progress" },
+    RESOLVED: { label: "Đã giải quyết", className: "crm-status--resolved" },
+    CLOSED: { label: "Đã đóng", className: "crm-status--closed" },
 };
 
 const dateTimeFormatter = new Intl.DateTimeFormat("vi-VN", {
@@ -30,30 +30,30 @@ const dateTimeFormatter = new Intl.DateTimeFormat("vi-VN", {
 export default function CustomerTickets({ tickets }: CustomerTicketsProps) {
     if (tickets.length === 0) {
         return (
-            <div className="flex min-h-64 flex-col items-center justify-center rounded-lg border border-slate-200 bg-white px-6 text-center">
-                <div className="mb-3 rounded-full bg-slate-100 p-4 text-slate-400"><TicketCheck size={26} /></div>
-                <p className="font-medium text-slate-700">Chưa có Ticket hỗ trợ</p>
+            <div className="flex min-h-64 flex-col items-center justify-center rounded-lg border border-(--crm-border) bg-(--crm-surface) px-6 text-center">
+                <div className="mb-3 rounded-full bg-(--crm-surface-hover) p-4 text-(--crm-text-muted)"><TicketCheck size={26} /></div>
+                <p className="font-medium text-(--crm-text)">Chưa có Ticket hỗ trợ</p>
             </div>
         );
     }
 
     return (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-            <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] border-collapse">
-                    <thead><tr className="border-b border-slate-200 bg-slate-50">
-                        {["Ticket ID", "Subject", "Priority", "Status", "Created At"].map((label) => <th key={label} className="px-5 py-3 text-left text-xs font-medium text-slate-500">{label}</th>)}
+        <div className="crm-board">
+            <div className="crm-table-wrap">
+                <table className="crm-table">
+                    <thead><tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
+                        {["Ticket ID", "Subject", "Priority", "Status", "Created At"].map((label) => <th key={label} className="px-5 py-3 text-left text-xs font-medium text-(--crm-text-secondary)">{label}</th>)}
                     </tr></thead>
                     <tbody>{tickets.map((ticket) => {
                         const priority = priorityConfig[ticket.priority];
                         const status = statusConfig[ticket.status];
                         return (
-                            <tr key={ticket.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                                <td className="px-5 py-4 text-sm font-medium text-blue-600">#{ticket.id}</td>
-                                <td className="px-5 py-4 text-sm font-medium text-slate-800">{ticket.subject}</td>
-                                <td className="px-5 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${priority.className}`}>{priority.label}</span></td>
-                                <td className="px-5 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}>{status.label}</span></td>
-                                <td className="px-5 py-4 text-sm text-slate-600">{dateTimeFormatter.format(new Date(ticket.createdAt))}</td>
+                            <tr key={ticket.id} className="border-b border-(--crm-border-subtle) last:border-0 hover:bg-(--crm-surface-subtle)">
+                                <td className="px-5 py-4 text-sm font-medium text-(--crm-primary)">#{ticket.id}</td>
+                                <td className="px-5 py-4 text-sm font-medium text-(--crm-heading)">{ticket.subject}</td>
+                                <td className="px-5 py-4"><span className={`crm-status ${priority.className}`}>{priority.label}</span></td>
+                                <td className="px-5 py-4"><span className={`crm-status ${status.className}`}>{status.label}</span></td>
+                                <td className="px-5 py-4 text-sm text-(--crm-text-secondary)">{dateTimeFormatter.format(new Date(ticket.createdAt))}</td>
                             </tr>
                         );
                     })}</tbody>

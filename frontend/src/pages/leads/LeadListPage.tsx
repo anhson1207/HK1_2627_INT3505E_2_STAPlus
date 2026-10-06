@@ -1,3 +1,4 @@
+import PageHeader from "../../components/common/PageHeader";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Alert, CircularProgress, Snackbar } from "@mui/material";
 import { Plus, RefreshCw, Search } from "lucide-react";
@@ -87,24 +88,18 @@ export default function LeadListPage() {
 
     return (
         <div>
-            <div className="mb-6 flex items-start justify-between gap-4">
-                <div>
-                    <h1 className="text-[22px] font-semibold text-slate-900">Lead</h1>
-                    <p className="mt-1 text-sm text-slate-500">Quản lý khách hàng tiềm năng</p>
-                </div>
-                <button
+            <PageHeader title="Lead" description="Quản lý khách hàng tiềm năng" actions={<button
                     type="button"
                     onClick={() => navigate("/leads/new")}
-                    className="flex items-center gap-2 rounded-md bg-[#3B82F6] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#2563EB]"
+                    className="crm-btn crm-btn--primary"
                 >
                     <Plus size={16} /> Thêm Lead
-                </button>
-            </div>
+                </button>} />
 
-            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-5 py-4">
-                    <label className="flex h-9 min-w-64 flex-1 items-center rounded-md border border-slate-200 px-3 lg:max-w-[360px]">
-                        <Search size={16} className="mr-2 shrink-0 text-slate-400" />
+            <div className="crm-board">
+                <div className="crm-toolbar crm-toolbar--board">
+                    <label className="crm-search">
+                        <Search size={16} className="mr-2 shrink-0 text-(--crm-text-muted)" />
                         <input
                             type="search"
                             value={search}
@@ -116,7 +111,7 @@ export default function LeadListPage() {
                                 setPage(0);
                             }}
                             placeholder="Tìm theo tên, email, SĐT..."
-                            className="w-full text-sm outline-none placeholder:text-slate-400"
+                            className="w-full text-sm outline-none placeholder:text-(--crm-text-muted)"
                         />
                     </label>
 
@@ -124,7 +119,7 @@ export default function LeadListPage() {
                         aria-label="Lọc theo trạng thái"
                         value={status}
                         onChange={(event) => { setStatus(event.target.value as LeadStatus | ""); setPage(0); }}
-                        className="h-9 rounded-md border border-slate-200 px-3 text-sm text-slate-600 outline-none focus:border-blue-400"
+                        className="crm-filter-chip"
                     >
                         <option value="">Tất cả trạng thái</option>
                         {LEAD_STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -134,7 +129,7 @@ export default function LeadListPage() {
                         aria-label="Lọc theo nguồn"
                         value={source}
                         onChange={(event) => { setSource(event.target.value as LeadSource | ""); setPage(0); }}
-                        className="h-9 rounded-md border border-slate-200 px-3 text-sm text-slate-600 outline-none focus:border-blue-400"
+                        className="crm-filter-chip"
                     >
                         <option value="">Tất cả nguồn</option>
                         {LEAD_SOURCE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -144,7 +139,7 @@ export default function LeadListPage() {
                         type="button"
                         aria-label="Tải lại danh sách"
                         onClick={() => setRefreshKey((value) => value + 1)}
-                        className="ml-auto rounded-md border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+                        className="crm-icon-btn ml-auto"
                     >
                         <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
                     </button>
@@ -171,31 +166,31 @@ export default function LeadListPage() {
                 )}
 
                 {!error && !loading && (
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-3">
-                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                    <div className="crm-pagination">
+                        <div className="flex items-center gap-3 text-xs text-(--crm-text-secondary)">
                             <span>Hiển thị {from}–{to} trong tổng số {result.totalElements} Lead</span>
                             <select
                                 aria-label="Số Lead mỗi trang"
                                 value={pageSize}
                                 onChange={(event) => { setPageSize(Number(event.target.value)); setPage(0); }}
-                                className="rounded border border-slate-200 px-2 py-1 outline-none"
+                                className="rounded border border-(--crm-border) px-2 py-1 outline-none"
                             >
                                 {[10, 20, 50].map((size) => <option key={size} value={size}>{size}/trang</option>)}
                             </select>
                         </div>
                         <div className="flex items-center gap-1">
-                            <button type="button" disabled={page === 0} onClick={() => setPage((value) => value - 1)} className="rounded border border-slate-200 px-3 py-1.5 text-xs text-slate-600 disabled:cursor-not-allowed disabled:text-slate-300">Trước</button>
+                            <button type="button" disabled={page === 0} onClick={() => setPage((value) => value - 1)} className="rounded border border-(--crm-border) px-3 py-1.5 text-xs text-(--crm-text-secondary) disabled:cursor-not-allowed disabled:text-(--crm-text-disabled)">Trước</button>
                             {pageNumbers.map((pageNumber) => (
                                 <button
                                     type="button"
                                     key={pageNumber}
                                     onClick={() => setPage(pageNumber)}
-                                    className={`rounded px-3 py-1.5 text-xs ${pageNumber === page ? "bg-[#3B82F6] text-white" : "border border-slate-200 text-slate-600"}`}
+                                    className={`rounded px-3 py-1.5 text-xs ${pageNumber === page ? "bg-(--crm-primary) text-(--crm-on-primary)" : "border border-(--crm-border) text-(--crm-text-secondary)"}`}
                                 >
                                     {pageNumber + 1}
                                 </button>
                             ))}
-                            <button type="button" disabled={page + 1 >= result.totalPages} onClick={() => setPage((value) => value + 1)} className="rounded border border-slate-200 px-3 py-1.5 text-xs text-slate-600 disabled:cursor-not-allowed disabled:text-slate-300">Sau</button>
+                            <button type="button" disabled={page + 1 >= result.totalPages} onClick={() => setPage((value) => value + 1)} className="rounded border border-(--crm-border) px-3 py-1.5 text-xs text-(--crm-text-secondary) disabled:cursor-not-allowed disabled:text-(--crm-text-disabled)">Sau</button>
                         </div>
                     </div>
                 )}

@@ -14,7 +14,7 @@ export default function Form({
     return (
         <form
             onSubmit={onSubmit}
-            className={`space-y-4 ${className}`}
+            className={`crm-form ${className}`}
         >
             {children}
         </form>
@@ -31,8 +31,8 @@ export function FormField({
     children,
 }: FormFieldProps) {
     return (
-        <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700">
+        <div className="crm-field">
+            <label className="crm-label">
                 {label}
             </label>
 

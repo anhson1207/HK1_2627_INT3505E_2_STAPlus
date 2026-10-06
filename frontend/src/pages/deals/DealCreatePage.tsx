@@ -13,5 +13,5 @@ export default function DealCreatePage() {
         try { await dealService.createDeal(data); navigate("/deals", { replace: true }); }
         catch (submitError) { setError(getDealErrorMessage(submitError)); }
     };
-    return <div className="max-w-5xl"><div className="mb-6"><h1 className="text-2xl font-semibold text-slate-900">Thêm Deal</h1><p className="mt-1 text-sm text-slate-500">Tạo cơ hội bán hàng mới</p></div><div className="rounded-lg border border-slate-200 bg-white p-6"><DealForm onSubmit={handleSubmit} onCancel={() => navigate("/deals")} submitLabel="Tạo Deal" serverError={error} /></div></div>;
+    return <div className="max-w-5xl"><div className="mb-6"><h1 className="crm-page-title">Thêm Deal</h1><p className="crm-page-description">Tạo cơ hội bán hàng mới</p></div><div className="crm-card crm-card__body"><DealForm onSubmit={handleSubmit} onCancel={() => navigate("/deals")} submitLabel="Tạo Deal" serverError={error} /></div></div>;
 }

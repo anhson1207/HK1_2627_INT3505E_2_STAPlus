@@ -1,3 +1,4 @@
+import PageHeader from "../../components/common/PageHeader";
 import { closestCorners, DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { Alert, CircularProgress, Snackbar } from "@mui/material";
 import { BadgeDollarSign, BriefcaseBusiness, Plus, Target, Trophy } from "lucide-react";
@@ -66,19 +67,19 @@ export default function DealKanbanPage() {
     const lostDeals = deals.filter((deal) => deal.stage === "LOST").length;
     const winRate = wonDeals + lostDeals === 0 ? 0 : Math.round(wonDeals / (wonDeals + lostDeals) * 100);
     const summaries = [
-        { label: "Total Pipeline Value", value: formatVND(totalPipelineValue), icon: BriefcaseBusiness, color: "bg-blue-50 text-blue-600" },
-        { label: "Weighted Pipeline", value: formatVND(weightedPipeline), icon: BadgeDollarSign, color: "bg-violet-50 text-violet-600" },
-        { label: "Won Deals", value: String(wonDeals), icon: Trophy, color: "bg-emerald-50 text-emerald-600" },
-        { label: "Win Rate", value: `${winRate}%`, icon: Target, color: "bg-amber-50 text-amber-600" },
+        { label: "Total Pipeline Value", value: formatVND(totalPipelineValue), icon: BriefcaseBusiness, color: "bg-(--crm-info-soft) text-(--crm-primary)" },
+        { label: "Weighted Pipeline", value: formatVND(weightedPipeline), icon: BadgeDollarSign, color: "bg-(--crm-surface-selected) text-(--crm-purple)" },
+        { label: "Won Deals", value: String(wonDeals), icon: Trophy, color: "bg-(--crm-success-soft) text-(--crm-green-dark)" },
+        { label: "Win Rate", value: `${winRate}%`, icon: Target, color: "bg-(--crm-warning-soft) text-(--crm-warning)" },
     ];
 
     return (
         <div>
-            <div className="mb-6 flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-[22px] font-semibold text-slate-900">Sales Pipeline</h1><p className="mt-1 text-sm text-slate-500">Theo dõi Deal theo từng giai đoạn</p></div><div className="flex items-center gap-3"><DealViewToggle view="kanban" /><button type="button" onClick={() => navigate("/deals/new")} className="flex items-center gap-2 rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600"><Plus size={16} /> Thêm Deal</button></div></div>
+            <PageHeader title="Sales Pipeline" description="Theo dõi Deal theo từng giai đoạn" actions={<><DealViewToggle view="kanban" /><button type="button" onClick={() => navigate("/deals/new")} className="crm-btn crm-btn--primary"><Plus size={16} /> Thêm Deal</button></>} />
             {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>{error}</Alert>}
-            <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">{summaries.map(({ label, value, icon: Icon, color }) => <div key={label} className="rounded-lg border border-slate-200 bg-white p-4"><div className="flex items-start justify-between gap-3"><div><p className="text-xs text-slate-500">{label}</p><p className="mt-2 text-xl font-semibold text-slate-900">{value}</p></div><div className={`rounded-lg p-2.5 ${color}`}><Icon size={19} /></div></div></div>)}</div>
+            <div className="crm-kpi-grid mb-5">{summaries.map(({ label, value, icon: Icon, color }) => <div key={label} className="crm-kpi"><div className="flex items-start justify-between gap-3"><div><p className="crm-kpi__label">{label}</p><p className="crm-kpi__value">{value}</p></div><div className={`crm-kpi__icon ${color}`}><Icon size={19} /></div></div></div>)}</div>
             <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={(event) => void handleDragEnd(event)}>
-                <div className="overflow-x-auto pb-4"><div className="flex min-w-max items-stretch gap-4">{DEAL_STAGE_OPTIONS.map((stage) => <DealKanbanColumn key={stage.value} stage={stage.value} deals={deals.filter((deal) => deal.stage === stage.value)} onView={(deal) => navigate(`/deals/${deal.id}`)} />)}</div></div>
+                <div className="crm-kanban-scroll"><div className="crm-kanban">{DEAL_STAGE_OPTIONS.map((stage) => <DealKanbanColumn key={stage.value} stage={stage.value} deals={deals.filter((deal) => deal.stage === stage.value)} onView={(deal) => navigate(`/deals/${deal.id}`)} />)}</div></div>
             </DndContext>
             <Snackbar open={Boolean(message)} autoHideDuration={3000} onClose={() => setMessage("")} message={message} />
         </div>

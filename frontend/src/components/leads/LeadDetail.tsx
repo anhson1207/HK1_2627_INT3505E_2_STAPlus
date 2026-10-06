@@ -26,28 +26,28 @@ export default function LeadDetail({ lead }: LeadDetailProps) {
     ];
 
     return (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 p-6">
+        <div className="crm-detail-card">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-(--crm-border) p-6">
                 <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Lead #{lead.id}</p>
-                    <h2 className="mt-1 text-xl font-semibold text-slate-900">{lead.firstName} {lead.lastName}</h2>
+                    <p className="text-xs font-medium uppercase tracking-wide text-(--crm-text-muted)">Lead #{lead.id}</p>
+                    <h2 className="mt-1 text-xl font-semibold text-(--crm-heading)">{lead.firstName} {lead.lastName}</h2>
                 </div>
                 <StatusChip status={lead.status} />
             </div>
 
-            <div className="grid grid-cols-1 gap-px bg-slate-200 md:grid-cols-2">
+            <div className="crm-property-grid crm-detail-card__body">
                 {items.map(({ label, value, icon: Icon }) => (
-                    <div key={label} className="flex gap-3 bg-white p-5">
-                        <Icon size={18} className="mt-0.5 shrink-0 text-slate-400" />
+                    <div key={label} className="flex gap-3 min-w-0">
+                        <Icon size={18} className="mt-0.5 shrink-0 text-(--crm-text-muted)" />
                         <div>
-                            <p className="text-xs text-slate-500">{label}</p>
-                            <p className="mt-1 break-all text-sm font-medium text-slate-800">{value}</p>
+                            <p className="crm-property__label">{label}</p>
+                            <p className="mt-1 break-all text-sm font-medium text-(--crm-heading)">{value}</p>
                         </div>
                     </div>
                 ))}
-                <div className="bg-white p-5 md:col-span-2">
-                    <p className="text-xs text-slate-500">Nguồn Lead</p>
-                    <p className="mt-1 text-sm font-medium text-slate-800">{getLeadSourceLabel(lead.source)}</p>
+                <div className="crm-field--full">
+                    <p className="crm-property__label">Nguồn Lead</p>
+                    <p className="crm-property__value">{getLeadSourceLabel(lead.source)}</p>
                 </div>
             </div>
         </div>

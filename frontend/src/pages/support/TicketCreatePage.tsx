@@ -13,10 +13,10 @@ export const TicketCreatePage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-(--crm-surface-subtle) min-h-screen">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-800">Tạo Yêu Cầu Hỗ Trợ Mới</h1>
-        <p className="text-xs text-gray-500">Nhập thông tin chi tiết ticket theo chuẩn hệ thống Zoho CRM</p>
+        <h1 className="crm-page-title">Tạo Yêu Cầu Hỗ Trợ Mới</h1>
+        <p className="text-xs text-(--crm-text-secondary)">Nhập thông tin chi tiết ticket theo chuẩn hệ thống Zoho CRM</p>
       </div>
 
       <TicketForm 

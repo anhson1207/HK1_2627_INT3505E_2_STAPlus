@@ -49,7 +49,7 @@ export const DealForm: React.FC<DealFormProps> = ({
         <Form onSubmit={handleSubmit}>
             <div className="space-y-5">
                 <div>
-                    <label className="mb-1 block text-xs font-semibold text-gray-600">
+                    <label className="mb-1 block text-xs font-semibold text-(--crm-text-secondary)">
                         Tên cơ hội *
                     </label>
 
@@ -59,14 +59,14 @@ export const DealForm: React.FC<DealFormProps> = ({
                         onChange={(event) =>
                             handleChange("name", event.target.value)
                         }
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                        className="w-full rounded-md border border-(--crm-border) px-3 py-2 text-sm outline-none focus:border-(--crm-primary-soft)"
                         required
                     />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="mb-1 block text-xs font-semibold text-gray-600">
+                        <label className="mb-1 block text-xs font-semibold text-(--crm-text-secondary)">
                             Khách hàng *
                         </label>
 
@@ -79,13 +79,13 @@ export const DealForm: React.FC<DealFormProps> = ({
                                     event.target.value,
                                 )
                             }
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                            className="w-full rounded-md border border-(--crm-border) px-3 py-2 text-sm outline-none focus:border-(--crm-primary-soft)"
                             required
                         />
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-xs font-semibold text-gray-600">
+                        <label className="mb-1 block text-xs font-semibold text-(--crm-text-secondary)">
                             Giá trị
                         </label>
 
@@ -98,14 +98,14 @@ export const DealForm: React.FC<DealFormProps> = ({
                                     Number(event.target.value),
                                 )
                             }
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                            className="w-full rounded-md border border-(--crm-border) px-3 py-2 text-sm outline-none focus:border-(--crm-primary-soft)"
                         />
                     </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
                     <div>
-                        <label className="mb-1 block text-xs font-semibold text-gray-600">
+                        <label className="mb-1 block text-xs font-semibold text-(--crm-text-secondary)">
                             Giai đoạn
                         </label>
 
@@ -114,7 +114,7 @@ export const DealForm: React.FC<DealFormProps> = ({
                             onChange={(event) =>
                                 handleChange("stage", event.target.value)
                             }
-                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                            className="w-full rounded-md border border-(--crm-border) bg-(--crm-surface) px-3 py-2 text-sm"
                         >
                             <option value="New">New</option>
                             <option value="Qualified">Qualified</option>
@@ -126,7 +126,7 @@ export const DealForm: React.FC<DealFormProps> = ({
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-xs font-semibold text-gray-600">
+                        <label className="mb-1 block text-xs font-semibold text-(--crm-text-secondary)">
                             Xác suất (%)
                         </label>
 
@@ -141,12 +141,12 @@ export const DealForm: React.FC<DealFormProps> = ({
                                     Number(event.target.value),
                                 )
                             }
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                            className="w-full rounded-md border border-(--crm-border) px-3 py-2 text-sm"
                         />
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-xs font-semibold text-gray-600">
+                        <label className="mb-1 block text-xs font-semibold text-(--crm-text-secondary)">
                             Người phụ trách
                         </label>
 
@@ -156,23 +156,23 @@ export const DealForm: React.FC<DealFormProps> = ({
                             onChange={(event) =>
                                 handleChange("assignee", event.target.value)
                             }
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                            className="w-full rounded-md border border-(--crm-border) px-3 py-2 text-sm"
                         />
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
+                <div className="flex justify-end gap-3 border-t border-(--crm-border-subtle) pt-4">
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="rounded-md border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+                        className="rounded-md border border-(--crm-border) px-4 py-2 text-sm hover:bg-(--crm-surface-subtle)"
                     >
                         Hủy
                     </button>
 
                     <button
                         type="submit"
-                        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                        className="crm-btn crm-btn--primary"
                     >
                         Lưu cơ hội
                     </button>

@@ -13,21 +13,21 @@ export const DealCreatePage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-(--crm-surface-subtle) p-6">
             <div className="mb-6">
                 <button
                     type="button"
                     onClick={() => navigate("/sales")}
-                    className="mb-3 text-sm text-gray-500 hover:text-gray-800"
+                    className="mb-3 text-sm text-(--crm-text-secondary) hover:text-(--crm-heading)"
                 >
                     ← Quay lại
                 </button>
 
-                <h1 className="text-xl font-bold text-gray-800">
+                <h1 className="crm-page-title">
                     Tạo cơ hội mới
                 </h1>
 
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-(--crm-text-secondary)">
                     Nhập thông tin cơ hội bán hàng
                 </p>
             </div>
