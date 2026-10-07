@@ -1,19 +1,22 @@
 import type { UserRole } from "../types/user";
+import { USER_ROLES } from "../types/auth";
 
 export type CRMResource = "dashboard" | "leads" | "customers" | "deals" | "tickets" | "analytics" | "settings" | "profile" | "notifications" | "security" | "users" | "roles" | "general" | "reminders";
 
 export const rolePermissions: Record<UserRole, readonly CRMResource[]> = {
     ADMIN: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "settings", "profile", "notifications", "security", "users", "roles", "general", "reminders"],
     SALES: ["dashboard", "leads", "customers", "deals", "analytics", "profile", "notifications", "security", "reminders"],
-    SUPPORT: ["dashboard", "customers", "tickets", "profile", "notifications", "security"],
+    // UI policy: managers access business modules, not administrative settings.
+    // Backend authorization must enforce its own permissions.
+    MANAGER: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "profile", "notifications", "security", "reminders"],
 };
 
 export function canAccess(role: UserRole | undefined, resource: CRMResource): boolean {
-    return Boolean(role && rolePermissions[role].includes(resource));
+    return Boolean(role && rolePermissions[role]?.includes(resource));
 }
 
 export function rolesWithPermission(resource: CRMResource): UserRole[] {
-    return (["ADMIN", "SALES", "SUPPORT"] as const).filter((role) => rolePermissions[role].includes(resource));
+    return USER_ROLES.filter((role) => rolePermissions[role].includes(resource));
 }
 
 export const permissionRows: ReadonlyArray<{ resource: CRMResource; label: string }> = [

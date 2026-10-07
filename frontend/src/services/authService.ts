@@ -1,49 +1,35 @@
-import {
-    MockAuthError,
-    mockForgotPassword,
-    mockGetCurrentUser,
-    mockLogin,
-    mockLoginWithGoogle,
-    mockLogout,
-    mockRefreshAccessToken,
-    mockRegister,
-    mockResendVerification,
-    mockResetPassword,
-    mockVerifyEmail,
-    type MockAuthErrorCode,
-} from "../mocks/auth";
-import type { LoginRequest, RegisterRequest } from "../types/auth";
+import { z } from "zod";
 
-export class AuthServiceError extends Error {
-    code: MockAuthErrorCode;
+import { authApi } from "./api";
+import { USER_ROLES, type LoginRequest, type LoginResponse, type RegisterRequest, type RegisterResponse } from "../types/auth";
 
-    constructor(code: MockAuthErrorCode, message: string) {
-        super(message);
-        this.name = "AuthServiceError";
-        this.code = code;
-    }
-}
+const responseFields = {
+    username: z.string().trim().min(1),
+    role: z.enum(USER_ROLES),
+    message: z.string(),
+};
+const loginResponseSchema = z.object({ ...responseFields, token: z.string().trim().min(1) });
+const registerResponseSchema = z.object({ ...responseFields, token: z.null() });
 
-async function execute<T>(operation: () => Promise<T>): Promise<T> {
-    try {
-        return await operation();
-    } catch (error) {
-        if (error instanceof MockAuthError) throw new AuthServiceError(error.code, error.message);
-        throw error;
-    }
-}
-
-// UI và store chỉ phụ thuộc facade này. Khi backend sẵn sàng, thay các operation mock
-// bằng POST /auth/* và GET /auth/me mà không cần sửa các page.
 export const authService = {
-    register: (data: RegisterRequest) => execute(() => mockRegister(data)),
-    login: (data: LoginRequest) => execute(() => mockLogin(data)),
-    loginWithGoogle: () => execute(mockLoginWithGoogle),
-    verifyEmail: (email: string) => execute(() => mockVerifyEmail(email)),
-    resendVerification: (email: string) => execute(() => mockResendVerification(email)),
-    forgotPassword: (email: string) => execute(() => mockForgotPassword(email)),
-    resetPassword: (token: string, newPassword: string) => execute(() => mockResetPassword(token, newPassword)),
-    refreshToken: (refreshToken: string) => execute(() => mockRefreshAccessToken(refreshToken)),
-    getCurrentUser: () => execute(mockGetCurrentUser),
-    logout: () => execute(mockLogout),
+    async login(data: LoginRequest): Promise<LoginResponse> {
+        // Requested username contract; backend 9956ef1 still needs to replace email login.
+        const response = await authApi.post<unknown>("/api/auth/login", {
+            username: data.username,
+            password: data.password,
+        });
+        const result = loginResponseSchema.safeParse(response.data);
+        if (!result.success) throw new Error("Phản hồi đăng nhập không hợp lệ: thiếu token, username hoặc role không được hỗ trợ.");
+        return result.data;
+    },
+    async register(data: RegisterRequest): Promise<RegisterResponse> {
+        const response = await authApi.post<unknown>("/api/auth/register", {
+            username: data.username,
+            email: data.email,
+            password: data.password,
+        });
+        const result = registerResponseSchema.safeParse(response.data);
+        if (!result.success) throw new Error("Phản hồi đăng ký không khớp AuthResponse của backend.");
+        return result.data;
+    },
 };

@@ -1,5 +1,5 @@
 import { mockUsers } from "../mocks/users";
-import type { User } from "../types/auth";
+import { isUserRole } from "../types/auth";
 import type { CRMUser, CRMUserPayload, UserRole } from "../types/user";
 
 const STORAGE_KEY = "crm-soa.users";
@@ -10,7 +10,7 @@ function read(): CRMUser[] {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
             const parsed: unknown = JSON.parse(raw);
-            if (Array.isArray(parsed)) return parsed as CRMUser[];
+            if (Array.isArray(parsed)) return parsed.filter((item) => item && isUserRole(item.role)) as CRMUser[];
         }
     } catch { /* Restore mock users. */ }
     const seed = mockUsers.map((item) => ({ ...item }));
@@ -23,15 +23,6 @@ function ensureUniqueEmail(items: CRMUser[], email: string, excludeId?: number) 
 }
 
 export const userService = {
-    ensureCurrentUser: async (authUser: User): Promise<CRMUser> => {
-        await wait();
-        const items = read();
-        const existing = items.find((item) => item.id === authUser.id);
-        if (existing) return { ...existing };
-        const item: CRMUser = { id: authUser.id, fullName: authUser.fullName, email: authUser.email, role: authUser.role, status: "ACTIVE", createdAt: new Date().toISOString() };
-        write([...items, item]);
-        return { ...item };
-    },
     getUsers: async (): Promise<CRMUser[]> => { await wait(); return read().map((item) => ({ ...item })); },
     getUserById: async (id: number): Promise<CRMUser> => {
         await wait();

@@ -14,6 +14,7 @@ import type { LucideIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import { useAuthStore } from "../../stores/authStore";
+import { rolesWithPermission } from "../../config/rolePermissions";
 import type { UserRole } from "../../types/auth";
 
 interface SidebarProps {
@@ -35,28 +36,26 @@ interface NavigationGroup {
     items: NavigationItem[];
 }
 
-const ALL_ROLES: readonly UserRole[] = ["ADMIN", "SALES", "SUPPORT"];
-
 const navigationGroups: NavigationGroup[] = [
     {
         label: "Tổng quan",
         items: [
-            { label: "Trang chủ", icon: LayoutDashboard, path: "/dashboard", roles: ALL_ROLES },
+            { label: "Trang chủ", icon: LayoutDashboard, path: "/dashboard", roles: rolesWithPermission("dashboard") },
         ],
     },
     {
         label: "Kinh doanh",
         items: [
-            { label: "Lead", icon: UserRound, path: "/leads", roles: ["ADMIN", "SALES"] },
-            { label: "Khách hàng", icon: Users, path: "/customers", roles: ALL_ROLES },
-            { label: "Cơ hội", icon: BriefcaseBusiness, path: "/deals", roles: ["ADMIN", "SALES"] },
+            { label: "Lead", icon: UserRound, path: "/leads", roles: rolesWithPermission("leads") },
+            { label: "Khách hàng", icon: Users, path: "/customers", roles: rolesWithPermission("customers") },
+            { label: "Cơ hội", icon: BriefcaseBusiness, path: "/deals", roles: rolesWithPermission("deals") },
         ],
     },
     {
         label: "Vận hành",
         items: [
-            { label: "Hỗ trợ", icon: TicketCheck, path: "/support", roles: ["ADMIN", "SUPPORT"] },
-            { label: "Phân tích", icon: BarChart3, path: "/analytics", roles: ["ADMIN", "SALES"] },
+            { label: "Hỗ trợ", icon: TicketCheck, path: "/tickets", roles: rolesWithPermission("tickets") },
+            { label: "Phân tích", icon: BarChart3, path: "/analytics", roles: rolesWithPermission("analytics") },
         ],
     },
 ];

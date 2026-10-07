@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { USER_ROLES } from "../types/auth";
 
 export const profileSchema = z.object({
     fullName: z.string().trim().min(1, "Vui lòng nhập họ tên"),
@@ -7,10 +8,9 @@ export const profileSchema = z.object({
     department: z.string().trim().optional(),
     avatar: z.union([z.literal(""), z.url("URL avatar không hợp lệ")]).optional(),
 });
-export type ProfileFormData = z.infer<typeof profileSchema>;
 
 export const userSchema = profileSchema.extend({
-    role: z.enum(["ADMIN", "SALES", "SUPPORT"]),
+    role: z.enum(USER_ROLES),
     status: z.enum(["ACTIVE", "INACTIVE"]),
 });
 export type UserFormData = z.infer<typeof userSchema>;

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "re
 import { useLocation, useNavigate } from "react-router-dom";
 
 import RoleGuard from "../auth/RoleGuard";
+import { rolesWithPermission } from "../../config/rolePermissions";
 import { useAuthStore } from "../../stores/authStore";
 import type { UserRole } from "../../types/auth";
 
@@ -45,9 +46,9 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
     const roleLabels: Record<UserRole, string> = {
         ADMIN: "Quản trị viên",
         SALES: "Nhân viên kinh doanh",
-        SUPPORT: "Nhân viên hỗ trợ",
+        MANAGER: "Quản lý",
     };
-    const avatarLabel = user?.fullName.trim().split(/\s+/).at(-1)?.charAt(0).toLocaleUpperCase("vi") ?? "U";
+    const avatarLabel = user?.username.charAt(0).toLocaleUpperCase("vi") ?? "U";
 
     const isSupportPage = location.pathname.startsWith("/support");
 
@@ -76,9 +77,9 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
         setUserMenuAnchor(event.currentTarget);
     };
 
-    const handleLogout = async () => {
+    const handleLogout = () => {
         setUserMenuAnchor(null);
-        await logout();
+        logout();
         navigate("/login", { replace: true, state: { message: "Đăng xuất thành công" } });
     };
 
@@ -93,7 +94,7 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                     <p className="crm-header__title">{getPageName(location.pathname)}</p>
                 </div>
 
-                <RoleGuard allowedRoles={["ADMIN", "SALES"]} fallback={<div className="mx-auto flex-1" />}>
+                <RoleGuard allowedRoles={rolesWithPermission("leads")} fallback={<div className="mx-auto flex-1" />}>
                     <form onSubmit={handleSearch} className="crm-search crm-header__search">
                         <Search size={17} className="crm-search__icon" />
                         <input
@@ -103,13 +104,12 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
                             placeholder="Tìm Lead theo tên, email, số điện thoại..."
-                            
                         />
                     </form>
                 </RoleGuard>
 
                 <div className="crm-header__right">
-                    <RoleGuard allowedRoles={["ADMIN", "SALES"]}>
+                    <RoleGuard allowedRoles={rolesWithPermission("leads")}>
                         <button
                             type="button"
                             aria-label="Tạo Lead"
@@ -137,7 +137,7 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                             <span className="crm-online-dot" />
                         </div>
                         <div className="crm-header__user-info">
-                            <p className="crm-header__user-name">{user?.fullName ?? "Người dùng"}</p>
+                            <p className="crm-header__user-name">{user?.username ?? "Người dùng"}</p>
                             <p className="crm-caption">{user ? roleLabels[user.role] : ""}</p>
                         </div>
                         <ChevronDown size={14} className="crm-header__user-chevron" />
@@ -148,7 +148,7 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
             <Menu anchorEl={userMenuAnchor} open={Boolean(userMenuAnchor)} onClose={() => setUserMenuAnchor(null)} anchorOrigin={{ vertical: "bottom", horizontal: "right" }} transformOrigin={{ vertical: "top", horizontal: "right" }}>
                 <MenuItem disabled>
                     <ListItemIcon><UserRound size={17} /></ListItemIcon>
-                    {user?.email}
+                    {user?.username}
                 </MenuItem>
                 <MenuItem onClick={() => void handleLogout()}>
                     <ListItemIcon><LogOut size={17} /></ListItemIcon>

@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, Button, CircularProgress, TextField } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import AuthPageShell from "../../components/auth/AuthPageShell";
 import { authService } from "../../services/authService";
@@ -11,31 +11,36 @@ import { registerSchema, type RegisterFormData } from "../../utils/registerSchem
 export default function RegisterPage() {
     const navigate = useNavigate();
     const [error, setError] = useState("");
+    const submitting = useRef(false);
     const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema),
-        defaultValues: { fullName: "", email: "", password: "", confirmPassword: "" },
+        defaultValues: { username: "", email: "", password: "", confirmPassword: "" },
     });
 
     const handleRegister = async (formData: RegisterFormData) => {
+        if (submitting.current) return;
+        submitting.current = true;
         setError("");
         const data = {
-            fullName: formData.fullName,
+            username: formData.username,
             email: formData.email,
             password: formData.password,
         };
         try {
-            await authService.register(data);
-            navigate("/verify-email-pending", { replace: true, state: { email: data.email, message: "Đăng ký thành công" } });
+            const response = await authService.register(data);
+            navigate("/login", { replace: true, state: { username: response.username, message: "Đăng ký thành công. Bạn có thể đăng nhập." } });
         } catch (registerError) {
             setError(registerError instanceof Error ? registerError.message : "Không thể đăng ký. Vui lòng thử lại.");
+        } finally {
+            submitting.current = false;
         }
     };
 
     return (
         <AuthPageShell title="Tạo tài khoản" description="Bắt đầu quản lý khách hàng cùng CRM.">
-            <form onSubmit={handleSubmit(handleRegister)} className="crm-form">
+            <form onSubmit={(event) => void handleSubmit(handleRegister)(event)} className="crm-form" noValidate>
                 {error && <Alert severity="error">{error}</Alert>}
-                <Controller name="fullName" control={control} render={({ field }) => <TextField {...field} label="Họ tên" fullWidth autoComplete="name" disabled={isSubmitting} error={!!errors.fullName} helperText={errors.fullName?.message} />} />
+                <Controller name="username" control={control} render={({ field }) => <TextField {...field} label="Tên đăng nhập" fullWidth autoComplete="username" disabled={isSubmitting} error={!!errors.username} helperText={errors.username?.message} />} />
                 <Controller name="email" control={control} render={({ field }) => <TextField {...field} label="Email" type="email" fullWidth autoComplete="email" disabled={isSubmitting} error={!!errors.email} helperText={errors.email?.message} />} />
                 <Controller name="password" control={control} render={({ field }) => <TextField {...field} label="Mật khẩu" type="password" fullWidth autoComplete="new-password" disabled={isSubmitting} error={!!errors.password} helperText={errors.password?.message} />} />
                 <Controller name="confirmPassword" control={control} render={({ field }) => <TextField {...field} label="Xác nhận mật khẩu" type="password" fullWidth autoComplete="new-password" disabled={isSubmitting} error={!!errors.confirmPassword} helperText={errors.confirmPassword?.message} />} />

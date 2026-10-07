@@ -15,6 +15,7 @@ import TicketOverview from "../../components/dashboard/TicketOverview";
 import TopCustomers from "../../components/dashboard/TopCustomers";
 import { analyticsService, getAnalyticsErrorMessage } from "../../services/analyticsService";
 import { useAuthStore } from "../../stores/authStore";
+import { canAccess } from "../../config/rolePermissions";
 import type {
   AnalyticsRange,
   DashboardStats,
@@ -34,7 +35,7 @@ const EMPTY_TICKETS: TicketOverviewData = { statuses: [], urgentCount: 0 };
 export default function DashboardPage() {
   const navigate = useNavigate();
   const role = useAuthStore((state) => state.user?.role);
-  const canViewSales = role !== "SUPPORT";
+  const canViewSales = canAccess(role, "deals");
   const [range, setRange] = useState<AnalyticsRange>("30d");
   const [stats, setStats] = useState(EMPTY_STATS);
   const [revenue, setRevenue] = useState<MonthlyRevenue[]>([]);
