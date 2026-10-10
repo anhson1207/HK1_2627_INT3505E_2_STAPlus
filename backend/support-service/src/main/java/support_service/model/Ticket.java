@@ -1,6 +1,7 @@
 package support_service.model;
 
 import jakarta.persistence.*;
+import support_service.model.enums.Priority;
 
 import java.time.LocalDateTime;
 
@@ -17,11 +18,12 @@ public class Ticket {
     @Column(name = "description", nullable = false)
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "priority", nullable = false)
-    private String priority; //what's an enum ?
+    private Priority priority; //what's an enum ?
 
     @Column(name = "status", nullable = false)
-    private String status; //what's an enum ?
+    private String status;
 
     @Column(name = "sales_id", nullable = false)
     private Long salesId;
@@ -29,10 +31,10 @@ public class Ticket {
     @Column(name="support_id")
     private Long supportId;
 
-    @Column(name="createdAt", nullable = false)
+    @Column(name="created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updatedAt")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
 
@@ -56,11 +58,11 @@ public class Ticket {
         this.description = description;
     }
 
-    public String getPriority() {
+    public Priority getPriority() {
         return priority;
     }
 
-    public void setPriority(String priority) {
+    public void setPriority(Priority priority) {
         this.priority = priority;
     }
 

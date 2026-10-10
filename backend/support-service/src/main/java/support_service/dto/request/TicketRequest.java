@@ -2,6 +2,7 @@ package support_service.dto.request;
 
 import lombok.Getter;
 import lombok.Setter;
+import support_service.model.enums.Priority;
 
 @Getter
 @Setter
@@ -10,10 +11,20 @@ public class TicketRequest {
     //private Long customerId;
     private String subject;
     private String description;
-    private String priority;
+    //private String priority;
+    private Priority priority;
     private String status;
 
+    private Long salesId;
     private Long supportId;
+
+    public Long getSalesId() {
+        return salesId;
+    }
+
+    public void setSalesId(Long salesId) {
+        this.salesId = salesId;
+    }
 
     public String getSubject() {
         return subject;
@@ -31,11 +42,11 @@ public class TicketRequest {
         this.description = description;
     }
 
-    public String getPriority() {
+    public Priority getPriority() {
         return priority;
     }
 
-    public void setPriority(String priority) {
+    public void setPriority(Priority priority) {
         this.priority = priority;
     }
 

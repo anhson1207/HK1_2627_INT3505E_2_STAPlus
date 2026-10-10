@@ -1,9 +1,11 @@
 package sales_service.controller;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import sales_service.dto.request.DealFilterRequest;
 import sales_service.model.Deal;
 import sales_service.dto.request.DealRequest;
 import sales_service.service.DealService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,9 +22,12 @@ public class DealController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Deal>> getDeals(){
+    public ResponseEntity<Page<Deal>> getDeals(
+            @ModelAttribute DealFilterRequest filterRequest){
         Long salesId = 1L; // put auth here idk lol lmao
-        return ResponseEntity.ok(dealService.getDealsBySalesId(salesId));
+        filterRequest.setSalesId(salesId);
+        //return ResponseEntity.ok(dealService.getDealsBySalesId(salesId));
+        return ResponseEntity.ok(dealService.getDealsBySalesId(filterRequest));
     }
 
     @GetMapping("/{dealId}")

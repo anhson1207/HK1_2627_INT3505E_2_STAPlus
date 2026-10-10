@@ -1,5 +1,8 @@
 package support_service.controller;
 
+import org.springframework.data.domain.Page;
+import support_service.dto.request.TicketFilterRequest;
+import support_service.filter.Filter;
 import support_service.model.Ticket;
 import support_service.dto.request.TicketRequest;
 import support_service.service.TicketService;
@@ -18,14 +21,22 @@ public class TicketController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Ticket>> getTickets(){
+    public ResponseEntity<Page<Ticket>> getTickets(
+            @ModelAttribute TicketFilterRequest filterRequest){
+        //handle role here
         Long supportId = 1L;
-        return ResponseEntity.ok(ticketService.getTicketsBySupportId(supportId));
+        //return ResponseEntity.ok(ticketService.getTicketsBySupportId(supportId));
+        filterRequest.setSupportId(supportId);
+        //return ResponseEntity.ok(ticketService.getTicketsBySupportId(supportId));
 
+        //change the name already
+        return ResponseEntity.ok(ticketService.getTicketsBySupportId(filterRequest));
     }
 
     @GetMapping("/{ticketId}")
     public ResponseEntity<Ticket> getTicket(@PathVariable Long ticketId){
+        //handle roles in here
+
         Long supportId = 1L;
         return ResponseEntity.ok(ticketService.getTicketByIdAndSupportId(ticketId, supportId));
     }
