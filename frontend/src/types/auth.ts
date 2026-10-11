@@ -1,11 +1,14 @@
-export type UserRole = "ADMIN" | "SALES" | "SUPPORT";
+
+export type UserRole = "ADMIN" | "SALES" | "SUPPORT" | "UNASSIGNED";
 export type AuthProvider = "LOCAL" | "GOOGLE";
+export type UserStatus = "PENDING" | "ACTIVE" | "INACTIVE";
 
 export interface User {
     id: number;
     fullName: string;
     email: string;
     role: UserRole;
+    status: UserStatus;
     provider: AuthProvider;
     emailVerified: boolean;
 }

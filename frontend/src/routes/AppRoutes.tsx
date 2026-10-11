@@ -29,11 +29,15 @@ import TicketDetailPage from "../pages/tickets/TicketDetailPage";
 import TicketEditPage from "../pages/tickets/TicketEditPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import AnalyticsPage from "../pages/analytics/AnalyticsPage";
-
+import SalesPage from "../pages/sales/SalesPage";
+import SupportPage from "../pages/support/SupportPage";
+import SupportDashboardPage from "../pages/support/SupportDashboardPage";
+import UserManagementPage from "../pages/settings/UserManagementPage";
 export default function AppRoutes() {
     return (
         <BrowserRouter>
             <Routes>
+                
                 <Route element={<PublicOnlyRoute />}>
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
@@ -45,6 +49,7 @@ export default function AppRoutes() {
 
                 <Route element={<ProtectedRoute />}>
                     <Route element={<MainLayout />}>
+                        <Route element={ <RoleGuard allowedRoles={["ADMIN"]} fallback={<Navigate to="/dashboard" replace />} ><Outlet /></RoleGuard>}><Route path="/settings/users"element={<UserManagementPage />}/></Route>
                         <Route path="/dashboard" element={<DashboardPage />} />
 
                         <Route path="/leads" element={<LeadListPage />} />
@@ -58,6 +63,7 @@ export default function AppRoutes() {
                         <Route path="/customers/:id/edit" element={<CustomerEditPage />} />
 
                         <Route element={<RoleGuard allowedRoles={["ADMIN", "SALES"]} fallback={<Navigate to="/dashboard" replace />}><Outlet /></RoleGuard>}>
+                            <Route path="/sales" element={<SalesPage />} />
                             <Route path="/analytics" element={<AnalyticsPage />} />
                             <Route path="/deals" element={<DealListPage />} />
                             <Route path="/deals/new" element={<DealCreatePage />} />
@@ -67,6 +73,7 @@ export default function AppRoutes() {
                         </Route>
 
                         <Route element={<RoleGuard allowedRoles={["ADMIN", "SUPPORT"]} fallback={<Navigate to="/dashboard" replace />}><Outlet /></RoleGuard>}>
+                            <Route path="/support" element={<SupportDashboardPage />} />
                             <Route path="/tickets" element={<TicketListPage />} />
                             <Route path="/tickets/new" element={<TicketCreatePage />} />
                             <Route path="/tickets/:id" element={<TicketDetailPage />} />
