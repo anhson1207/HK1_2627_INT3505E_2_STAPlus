@@ -1,11 +1,19 @@
 package sales_service.service;
 
+import Utilities.PaginationCheck;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import sales_service.dto.request.DealFilterRequest;
 import sales_service.dto.request.DealRequest;
+import sales_service.filter.Filter;
 import sales_service.model.Deal;
 import sales_service.repository.DealRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -24,8 +32,28 @@ public class DealService {
                 ));
     }
 
-    public List<Deal> getDealsBySalesId(Long salesId){
-        return dealRepository.findBySalesId(salesId);
+    //add filtering and pagination here
+    public Page<Deal> getDealsBySalesId(DealFilterRequest filterRequest){
+        //return dealRepository.findBySalesId(salesId);
+        int[] pgNumAndSize = PaginationCheck.check(filterRequest.getPgNum(),
+                filterRequest.getPgSize());
+        int page = pgNumAndSize[0];
+        int size = pgNumAndSize[1];
+
+        Sort sort = filterRequest.getOrder().equals("asc")
+                ? Sort.by(filterRequest.getSortedBy()).ascending()
+                : Sort.by(filterRequest.getSortedBy()).descending();
+
+        return dealRepository.findAll(Filter.filter(
+                filterRequest.getSalesId(),
+                filterRequest.getOwner(),
+                filterRequest.getMinAmount(),
+                filterRequest.getMaxAmount(),
+                filterRequest.getStage(),
+                filterRequest.getCreatedAfter(),
+                filterRequest.getCreatedBefore()),
+                PageRequest.of(page,size,sort)
+        );
     }
 
     public Deal createDeal(DealRequest request, Long salesId){
@@ -34,6 +62,8 @@ public class DealService {
         deal.setAmount(request.getAmount());
         deal.setStage(request.getStage());
         deal.setSalesId(salesId);
+        deal.setCreatedAt(LocalDateTime.now());
+        deal.setUpdatedAt(LocalDateTime.now());
 
         return dealRepository.save(deal);
     }
@@ -49,7 +79,10 @@ public class DealService {
 
     public Deal updateDeal(Long id, DealRequest request, Long salesId){
         Deal deal = dealRepository.findByIdAndSalesId(id, salesId)
-                .orElseThrow(() -> new NoSuchElementException("Deal not found."));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Deal not found"
+                ));
 
         if (request.getOwner() == null ||
                 request.getAmount() == null ||
@@ -60,6 +93,7 @@ public class DealService {
         deal.setOwner(request.getOwner());
         deal.setAmount(request.getAmount());
         deal.setStage(request.getStage());
+        deal.setUpdatedAt(LocalDateTime.now());
 
         return dealRepository.save(deal);
 
