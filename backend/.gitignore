@@ -1,0 +1,17 @@
+# IntelliJ
+.idea/
+*.iml
+
+# Maven / Java
+**/target/
+*.class
+
+# Logs
+*.log
+hs_err_pid*
+replay_pid*
+
+# Environment
+.env
+.env.*
+!.env.example
