@@ -38,9 +38,21 @@ function getStoredAuthUsers(): StoredAuthUser[] {
 function saveStoredAuthUser(user: StoredAuthUser) {
     try {
         const list = getStoredAuthUsers();
-        const index = list.findIndex(
-            (u) => u.username.toLowerCase() === user.username.toLowerCase() || u.email.toLowerCase() === user.email.toLowerCase()
-        );
+        const userUsername = user.username ? user.username.trim().toLowerCase() : "";
+        const userEmail = user.email ? user.email.trim().toLowerCase() : "";
+
+        const index = list.findIndex((u) => {
+            const uUsername = typeof u.username === "string" ? u.username.trim().toLowerCase() : "";
+            const uEmail = typeof u.email === "string" ? u.email.trim().toLowerCase() : "";
+            const uFullName = typeof u.fullName === "string" ? u.fullName.trim().toLowerCase() : "";
+
+            return (
+                (userUsername && (uUsername === userUsername || uFullName === userUsername)) ||
+                (userEmail && uEmail === userEmail) ||
+                (Boolean(u.id && user.id && u.id === user.id))
+            );
+        });
+
         if (index >= 0) {
             list[index] = { ...list[index], ...user };
         } else {
@@ -60,15 +72,21 @@ function findUserInStorage(identifier: string): StoredAuthUser | null {
         const rawCrm = localStorage.getItem(CRM_USERS_STORAGE_KEY);
         if (rawCrm) {
             const crmUsers: Array<Record<string, unknown>> = JSON.parse(rawCrm);
-            const inCrm = crmUsers.find(
-                (u) => (typeof u.email === "string" && u.email.toLowerCase() === idLower) ||
-                       (typeof u.fullName === "string" && u.fullName.toLowerCase() === idLower)
-            );
+            const inCrm = crmUsers.find((u) => {
+                const uEmail = typeof u.email === "string" ? u.email.trim().toLowerCase() : "";
+                const uFullName = typeof u.fullName === "string" ? u.fullName.trim().toLowerCase() : "";
+                return uEmail === idLower || uFullName === idLower;
+            });
+
             if (inCrm) {
                 const authUsers = getStoredAuthUsers();
-                const inAuth = authUsers.find(
-                    (u) => u.username.toLowerCase() === idLower || u.email.toLowerCase() === idLower || u.id === inCrm.id
-                );
+                const inAuth = authUsers.find((u) => {
+                    const uUsername = typeof u.username === "string" ? u.username.trim().toLowerCase() : "";
+                    const uEmail = typeof u.email === "string" ? u.email.trim().toLowerCase() : "";
+                    const uFullName = typeof u.fullName === "string" ? u.fullName.trim().toLowerCase() : "";
+                    return uUsername === idLower || uEmail === idLower || uFullName === idLower || u.id === inCrm.id;
+                });
+
                 return {
                     id: (inCrm.id as number) || (inAuth?.id as number) || Date.now(),
                     username: (inAuth?.username as string) || (inCrm.fullName as string) || identifier,
@@ -87,9 +105,13 @@ function findUserInStorage(identifier: string): StoredAuthUser | null {
 
     // 2. Kiểm tra trong danh sách auth mock users
     const authUsers = getStoredAuthUsers();
-    const inAuth = authUsers.find(
-        (u) => u.username.toLowerCase() === idLower || u.email.toLowerCase() === idLower
-    );
+    const inAuth = authUsers.find((u) => {
+        const uUsername = typeof u.username === "string" ? u.username.trim().toLowerCase() : "";
+        const uEmail = typeof u.email === "string" ? u.email.trim().toLowerCase() : "";
+        const uFullName = typeof u.fullName === "string" ? u.fullName.trim().toLowerCase() : "";
+        return uUsername === idLower || uEmail === idLower || uFullName === idLower;
+    });
+
     return inAuth || null;
 }
 
