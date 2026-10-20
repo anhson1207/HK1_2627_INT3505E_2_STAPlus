@@ -42,11 +42,15 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
     const [search, setSearch] = useState("");
     const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(null);
     const { user, logout } = useAuthStore();
+    console.log("Header user:", user);
+console.log("Header role:", user?.role);
 
     const roleLabels: Record<UserRole, string> = {
         ADMIN: "Quản trị viên",
         SALES: "Nhân viên kinh doanh",
+        SUPPORT: "Nhân viên hỗ trợ",
         MANAGER: "Quản lý",
+        UNASSIGNED: "Chưa phân quyền",
     };
     const avatarLabel = user?.username.charAt(0).toLocaleUpperCase("vi") ?? "U";
 

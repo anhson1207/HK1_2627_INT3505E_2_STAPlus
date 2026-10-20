@@ -367,9 +367,13 @@ button,input,textarea,select{font:inherit}button{cursor:pointer}a{color:inherit;
 @media (min-width: 1200px) {
   .crm-dashboard > .crm-kpi-grid > .crm-kpi:nth-child(n+5) { grid-column: span 2; }
 }
+
 @media (max-width: 1399px) {
-  .crm-header__user-info { display: none; }
+  .crm-header__user-info {
+    display: block;
+  }
 }
+
 @media (max-width: 1199px) {
   .crm-header__workspace, .crm-header__optional, .crm-header__create-label { display: none; }
   .crm-header__create { width: 34px; min-height: 34px; padding: 0; }

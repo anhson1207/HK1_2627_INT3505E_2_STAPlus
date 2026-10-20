@@ -1,9 +1,25 @@
-export const USER_ROLES = ["ADMIN", "SALES", "MANAGER"] as const;
+export const USER_ROLES = ["ADMIN", "SALES", "SUPPORT", "MANAGER", "UNASSIGNED"] as const;
 export type UserRole = typeof USER_ROLES[number];
+export type AuthProvider = "LOCAL" | "GOOGLE";
+export type UserStatus = "PENDING" | "ACTIVE" | "INACTIVE";
+
+export interface User {
+    id: number;
+    fullName: string;
+    email: string;
+    role: UserRole;
+    status?: UserStatus;
+    provider?: AuthProvider;
+    emailVerified?: boolean;
+}
 
 export interface AuthUser {
     username: string;
+    fullName?: string;
     role: UserRole;
+    status?: UserStatus;
+    provider?: AuthProvider;
+    emailVerified?: boolean;
 }
 
 export interface LoginRequest {

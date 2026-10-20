@@ -6,9 +6,9 @@ export type CRMResource = "dashboard" | "leads" | "customers" | "deals" | "ticke
 export const rolePermissions: Record<UserRole, readonly CRMResource[]> = {
     ADMIN: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "settings", "profile", "notifications", "security", "users", "roles", "general", "reminders"],
     SALES: ["dashboard", "leads", "customers", "deals", "analytics", "profile", "notifications", "security", "reminders"],
-    // UI policy: managers access business modules, not administrative settings.
-    // Backend authorization must enforce its own permissions.
+    SUPPORT: ["dashboard", "customers", "tickets", "profile", "notifications", "security"],
     MANAGER: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "profile", "notifications", "security", "reminders"],
+    UNASSIGNED: ["profile"],
 };
 
 export function canAccess(role: UserRole | undefined, resource: CRMResource): boolean {
