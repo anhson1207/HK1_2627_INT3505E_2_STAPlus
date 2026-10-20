@@ -1,5 +1,5 @@
-
-export type UserRole = "ADMIN" | "SALES" | "SUPPORT" | "UNASSIGNED";
+export const USER_ROLES = ["ADMIN", "SALES", "SUPPORT", "MANAGER", "UNASSIGNED"] as const;
+export type UserRole = typeof USER_ROLES[number];
 export type AuthProvider = "LOCAL" | "GOOGLE";
 export type UserStatus = "PENDING" | "ACTIVE" | "INACTIVE";
 
@@ -8,32 +8,42 @@ export interface User {
     fullName: string;
     email: string;
     role: UserRole;
-    status: UserStatus;
-    provider: AuthProvider;
-    emailVerified: boolean;
+    status?: UserStatus;
+    provider?: AuthProvider;
+    emailVerified?: boolean;
+}
+
+export interface AuthUser {
+    username: string;
+    fullName?: string;
+    role: UserRole;
+    status?: UserStatus;
+    provider?: AuthProvider;
+    emailVerified?: boolean;
 }
 
 export interface LoginRequest {
-    email: string;
+    username: string;
     password: string;
 }
 
 export interface RegisterRequest {
-    fullName: string;
+    username: string;
     email: string;
     password: string;
 }
 
-export interface LoginResponse {
-    accessToken: string;
-    refreshToken: string;
-    user: User;
+export interface LoginResponse extends AuthUser {
+    token: string;
+    message: string;
 }
 
-export interface RefreshTokenResponse {
-    accessToken: string;
+// AuthServiceImpl.register returns AuthResponse without assigning a token.
+export interface RegisterResponse extends AuthUser {
+    token: null;
+    message: string;
 }
 
-export interface ForgotPasswordResponse {
-    resetToken: string;
+export function isUserRole(value: unknown): value is UserRole {
+    return USER_ROLES.some((role) => role === value);
 }

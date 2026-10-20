@@ -1,6 +1,6 @@
 
 import { mockUsers } from "../mocks/users";
-import type { User } from "../types/auth";
+import { isUserRole, type User } from "../types/auth";
 import type {
     CRMUser,
     CRMUserPayload,
@@ -19,9 +19,8 @@ function read(): CRMUser[] {
 
         if (raw) {
             const parsed: unknown = JSON.parse(raw);
-
             if (Array.isArray(parsed)) {
-                return parsed as CRMUser[];
+                return parsed.filter((item) => item && isUserRole(item.role)) as CRMUser[];
             }
         }
     } catch {
@@ -227,7 +226,7 @@ export const userService = {
             fullName: authUser.fullName,
             email: authUser.email,
             role: authUser.role,
-            status: authUser.status,
+            status: authUser.status ?? "ACTIVE",
             createdAt: new Date().toISOString(),
         };
 
@@ -239,7 +238,6 @@ export const userService = {
         await wait();
         return syncRegisteredUsers().map((item) => ({ ...item }));
     },
-
     getUserById: async (id: number): Promise<CRMUser> => {
         await wait();
 

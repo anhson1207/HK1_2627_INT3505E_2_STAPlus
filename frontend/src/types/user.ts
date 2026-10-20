@@ -1,6 +1,5 @@
-
-export type UserRole = "ADMIN" | "SALES" | "SUPPORT" | "UNASSIGNED";
-export type UserStatus = "PENDING" | "ACTIVE" | "INACTIVE";
+import type { UserRole, UserStatus } from "./auth";
+export type { UserRole, UserStatus } from "./auth";
 
 export interface CRMUser {
     id: number;

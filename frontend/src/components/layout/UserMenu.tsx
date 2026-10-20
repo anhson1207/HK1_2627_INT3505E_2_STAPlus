@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { ChevronDown, LogOut, UserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../stores/authStore.ts";
+import { useAuthStore } from "../../stores/authStore";
 
 const roleLabels: Record<string, string> = {
     ADMIN: "Quản trị viên",
     SALES: "Nhân viên kinh doanh",
     SUPPORT: "Nhân viên hỗ trợ",
+    MANAGER: "Quản lý",
     UNASSIGNED: "Chưa phân quyền",
 };
 
@@ -17,14 +18,11 @@ export default function UserMenu() {
     const logout = useAuthStore((state) => state.logout);
     const navigate = useNavigate();
 
-    console.log("[UserMenu] Component rendered");
-console.log("[UserMenu] Current user:", user);
-console.log("[UserMenu] Current role:", user?.role);
-alert("UserMenu đã được tải");
     if (!user) {
         return null;
     }
 
+    const displayName = user.fullName || user.username || "User";
     const roleLabel = roleLabels[user.role] ?? user.role;
 
     return (
@@ -34,12 +32,12 @@ alert("UserMenu đã được tải");
                 className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-gray-100"
             >
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
-                    {user.fullName.charAt(0)}
+                    {displayName.charAt(0).toUpperCase()}
                 </div>
 
                 <div className="text-left">
                     <p className="text-sm font-semibold text-gray-800">
-                        {user.fullName}
+                        {displayName}
                     </p>
 
                     <p className="text-xs text-gray-500">

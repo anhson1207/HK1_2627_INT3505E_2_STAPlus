@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "re
 import { useLocation, useNavigate } from "react-router-dom";
 
 import RoleGuard from "../auth/RoleGuard";
+import { rolesWithPermission } from "../../config/rolePermissions";
 import { useAuthStore } from "../../stores/authStore";
 import type { UserRole } from "../../types/auth";
 
@@ -48,9 +49,10 @@ console.log("Header role:", user?.role);
         ADMIN: "Quản trị viên",
         SALES: "Nhân viên kinh doanh",
         SUPPORT: "Nhân viên hỗ trợ",
-        UNASSIGNED: "Chưa phân quyền"
+        MANAGER: "Quản lý",
+        UNASSIGNED: "Chưa phân quyền",
     };
-    const avatarLabel = user?.fullName.trim().split(/\s+/).at(-1)?.charAt(0).toLocaleUpperCase("vi") ?? "U";
+    const avatarLabel = user?.username.charAt(0).toLocaleUpperCase("vi") ?? "U";
 
     const isSupportPage = location.pathname.startsWith("/support");
 
@@ -79,9 +81,9 @@ console.log("Header role:", user?.role);
         setUserMenuAnchor(event.currentTarget);
     };
 
-    const handleLogout = async () => {
+    const handleLogout = () => {
         setUserMenuAnchor(null);
-        await logout();
+        logout();
         navigate("/login", { replace: true, state: { message: "Đăng xuất thành công" } });
     };
 
@@ -96,7 +98,7 @@ console.log("Header role:", user?.role);
                     <p className="crm-header__title">{getPageName(location.pathname)}</p>
                 </div>
 
-                <RoleGuard allowedRoles={["ADMIN", "SALES"]} fallback={<div className="mx-auto flex-1" />}>
+                <RoleGuard allowedRoles={rolesWithPermission("leads")} fallback={<div className="mx-auto flex-1" />}>
                     <form onSubmit={handleSearch} className="crm-search crm-header__search">
                         <Search size={17} className="crm-search__icon" />
                         <input
@@ -106,13 +108,12 @@ console.log("Header role:", user?.role);
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
                             placeholder="Tìm Lead theo tên, email, số điện thoại..."
-                            
                         />
                     </form>
                 </RoleGuard>
 
                 <div className="crm-header__right">
-                    <RoleGuard allowedRoles={["ADMIN", "SALES"]}>
+                    <RoleGuard allowedRoles={rolesWithPermission("leads")}>
                         <button
                             type="button"
                             aria-label="Tạo Lead"
@@ -140,7 +141,7 @@ console.log("Header role:", user?.role);
                             <span className="crm-online-dot" />
                         </div>
                         <div className="crm-header__user-info">
-                            <p className="crm-header__user-name">{user?.fullName ?? "Người dùng"}</p>
+                            <p className="crm-header__user-name">{user?.username ?? "Người dùng"}</p>
                             <p className="crm-caption">{user ? roleLabels[user.role] : ""}</p>
                         </div>
                         <ChevronDown size={14} className="crm-header__user-chevron" />
@@ -151,7 +152,7 @@ console.log("Header role:", user?.role);
             <Menu anchorEl={userMenuAnchor} open={Boolean(userMenuAnchor)} onClose={() => setUserMenuAnchor(null)} anchorOrigin={{ vertical: "bottom", horizontal: "right" }} transformOrigin={{ vertical: "top", horizontal: "right" }}>
                 <MenuItem disabled>
                     <ListItemIcon><UserRound size={17} /></ListItemIcon>
-                    {user?.email}
+                    {user?.username}
                 </MenuItem>
                 <MenuItem onClick={() => void handleLogout()}>
                     <ListItemIcon><LogOut size={17} /></ListItemIcon>

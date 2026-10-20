@@ -47,8 +47,7 @@ function getRoleLabel(role: UserRole) {
 
 export default function UserManagementPage() {
     const currentUser = useAuthStore((state) => state.user);
-    const currentUserId = currentUser?.id;
-
+    const currentUserId = (currentUser as unknown as { id?: number })?.id;
     const [users, setUsers] = useState<CRMUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
@@ -65,26 +64,29 @@ export default function UserManagementPage() {
 
     const isAdmin = currentUser?.role === "ADMIN";
 
-    const loadUsers = async () => {
-        setLoading(true);
-        setError("");
-
-        try {
-            const data = await userService.getUsers();
-            setUsers(data);
-        } catch (loadError) {
-            setError(
-                loadError instanceof Error
-                    ? loadError.message
-                    : "Không thể tải người dùng."
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        void loadUsers();
+        let isMounted = true;
+        userService.getUsers()
+            .then((data) => {
+                if (isMounted) {
+                    setUsers(data);
+                    setLoading(false);
+                }
+            })
+            .catch((loadError) => {
+                if (isMounted) {
+                    setError(
+                        loadError instanceof Error
+                            ? loadError.message
+                            : "Không thể tải người dùng."
+                    );
+                    setLoading(false);
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const filtered = useMemo(() => {

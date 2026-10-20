@@ -42,7 +42,6 @@ export default function UserForm({
             status: initialData?.status ?? "PENDING",
         },
     });
-
     const selectedRole = watch("role");
 
     return (
