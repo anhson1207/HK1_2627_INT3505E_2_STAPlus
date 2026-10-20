@@ -60,9 +60,11 @@ function writeAuthUsers(users: Array<Record<string, unknown>>) {
 
 function syncAuthUser(user: CRMUser) {
     const authUsers = readAuthUsers();
-    const index = authUsers.findIndex(
-        (item) => item.id === user.id || item.email === user.email
-    );
+    const userEmail = typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
+    const index = authUsers.findIndex((item) => {
+        const itemEmail = typeof item.email === "string" ? item.email.trim().toLowerCase() : "";
+        return (Boolean(item.id && user.id && item.id === user.id)) || (Boolean(userEmail && itemEmail === userEmail));
+    });
 
     if (index === -1) return;
 
@@ -84,17 +86,18 @@ function syncRegisteredUsers(): CRMUser[] {
     let changed = false;
 
     for (const authUser of authUsers) {
-        if (typeof authUser.id !== "number") continue;
-        if (typeof authUser.email !== "string") continue;
-        if (typeof authUser.fullName !== "string") continue;
-
-        const email = authUser.email.trim().toLocaleLowerCase();
-
+        const rawEmail = typeof authUser.email === "string" ? authUser.email : "";
+        const email = rawEmail.trim().toLocaleLowerCase();
         if (!email) continue;
 
+        const displayName = typeof authUser.fullName === "string" && authUser.fullName.trim()
+            ? authUser.fullName.trim()
+            : typeof authUser.username === "string" && authUser.username.trim()
+                ? authUser.username.trim()
+                : email;
+
         const existingIndex = result.findIndex(
-            (item) =>
-                item.email.trim().toLocaleLowerCase() === email
+            (item) => item.email && item.email.trim().toLocaleLowerCase() === email
         );
 
         if (existingIndex !== -1) {
@@ -116,9 +119,10 @@ function syncRegisteredUsers(): CRMUser[] {
                 ? authUser.status
                 : "PENDING";
 
-        result.push({
-            id: authUser.id,
-            fullName: authUser.fullName.trim(),
+        // Đưa tài khoản mới đăng ký lên đầu danh sách để Admin thấy ngay lập tức
+        result.unshift({
+            id: typeof authUser.id === "number" ? authUser.id : Date.now(),
+            fullName: displayName,
             email,
             role,
             status,

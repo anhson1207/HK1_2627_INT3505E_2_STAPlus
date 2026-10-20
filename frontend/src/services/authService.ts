@@ -64,6 +64,33 @@ function saveStoredAuthUser(user: StoredAuthUser) {
     }
 }
 
+function saveToCrmUsers(user: { id: number; fullName: string; email: string; role: UserRole; status: UserStatus; createdAt: string; department?: string }) {
+    try {
+        const raw = localStorage.getItem(CRM_USERS_STORAGE_KEY);
+        let list: Array<Record<string, unknown>> = [];
+        if (raw) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) list = parsed;
+            } catch {
+                // Ignore
+            }
+        }
+        const emailLower = user.email.trim().toLowerCase();
+        const index = list.findIndex(
+            (u) => (typeof u.email === "string" && u.email.trim().toLowerCase() === emailLower) || u.id === user.id
+        );
+        if (index >= 0) {
+            list[index] = { ...list[index], ...user };
+        } else {
+            list.unshift(user);
+        }
+        localStorage.setItem(CRM_USERS_STORAGE_KEY, JSON.stringify(list));
+    } catch {
+        // Ignore
+    }
+}
+
 function findUserInStorage(identifier: string): StoredAuthUser | null {
     const idLower = identifier.trim().toLowerCase();
     
@@ -202,6 +229,15 @@ export const authService = {
                     createdAt: new Date().toISOString(),
                 };
                 saveStoredAuthUser(newUser);
+                saveToCrmUsers({
+                    id: newUser.id,
+                    fullName: newUser.fullName,
+                    email: newUser.email,
+                    role: newUser.role,
+                    status: newUser.status,
+                    createdAt: newUser.createdAt,
+                    department: "Chờ phân bổ",
+                });
 
                 if (newUser.role === "UNASSIGNED" || newUser.status !== "ACTIVE") {
                     throw new Error("Tài khoản đang chờ ADMIN duyệt và kích hoạt.");
@@ -223,7 +259,7 @@ export const authService = {
 
     async register(data: RegisterRequest): Promise<RegisterResponse> {
         // Tài khoản mới đăng ký LUÔN là UNASSIGNED và PENDING để Admin duyệt và phân quyền
-        saveStoredAuthUser({
+        const newUser: StoredAuthUser = {
             id: Date.now(),
             username: data.username,
             fullName: data.username,
@@ -232,6 +268,17 @@ export const authService = {
             role: "UNASSIGNED",
             status: "PENDING",
             createdAt: new Date().toISOString(),
+        };
+
+        saveStoredAuthUser(newUser);
+        saveToCrmUsers({
+            id: newUser.id,
+            fullName: newUser.fullName,
+            email: newUser.email,
+            role: newUser.role,
+            status: newUser.status,
+            createdAt: newUser.createdAt,
+            department: "Chờ phân bổ",
         });
 
         // Gửi tới backend nếu backend có chạy
