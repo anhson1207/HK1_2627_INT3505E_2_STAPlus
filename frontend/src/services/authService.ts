@@ -156,7 +156,16 @@ export const authService = {
                 if (localUser.password && localUser.password !== data.password) {
                     throw new Error("Mật khẩu không chính xác. Vui lòng thử lại.");
                 }
-                const role: UserRole = localUser.role || "UNASSIGNED";
+
+                if (localUser.status === "INACTIVE") {
+                    throw new Error("Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ ADMIN.");
+                }
+
+                if (localUser.status !== "ACTIVE" || localUser.role === "UNASSIGNED") {
+                    throw new Error("Tài khoản đang chờ ADMIN duyệt và kích hoạt.");
+                }
+
+                const role: UserRole = localUser.role;
                 return {
                     username: localUser.username,
                     role,
@@ -194,11 +203,15 @@ export const authService = {
                 };
                 saveStoredAuthUser(newUser);
 
+                if (newUser.role === "UNASSIGNED" || newUser.status !== "ACTIVE") {
+                    throw new Error("Tài khoản đang chờ ADMIN duyệt và kích hoạt.");
+                }
+
                 return {
                     username: newUser.username,
                     role: newUser.role,
                     token: `demo-${newUser.role.toLowerCase()}-token`,
-                    message: "Đăng nhập thành công (Chờ Admin phân quyền)",
+                    message: "Đăng nhập thành công",
                 };
             }
 

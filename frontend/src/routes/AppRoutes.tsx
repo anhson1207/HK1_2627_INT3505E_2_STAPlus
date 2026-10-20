@@ -41,7 +41,10 @@ export default function AppRoutes() {
 
                 <Route element={<ProtectedRoute />}>
                     <Route element={<MainLayout />}>
-                        <Route element={ <RoleGuard allowedRoles={["ADMIN"]} fallback={<Navigate to="/dashboard" replace />} ><Outlet /></RoleGuard>}><Route path="/settings/users"element={<UserManagementPage />}/></Route>
+                        <Route element={ <RoleGuard allowedRoles={["ADMIN"]} fallback={<Navigate to="/dashboard" replace />} ><Outlet /></RoleGuard>}>
+                            <Route path="/settings" element={<Navigate to="/settings/users" replace />} />
+                            <Route path="/settings/users" element={<UserManagementPage />}/>
+                        </Route>
                         <Route path="/dashboard" element={<DashboardPage />} />
 
                         <Route path="/leads" element={<LeadListPage />} />
