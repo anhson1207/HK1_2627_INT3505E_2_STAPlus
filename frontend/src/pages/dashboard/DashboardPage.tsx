@@ -1,6 +1,6 @@
 import PageHeader from "../../components/common/PageHeader";
 import { Alert, Button, Skeleton } from "@mui/material";
-import { BadgeDollarSign, BriefcaseBusiness, TicketCheck, Trophy, UserRoundSearch, Users } from "lucide-react";
+import { BadgeDollarSign, BriefcaseBusiness, Clock, TicketCheck, Trophy, UserRoundSearch, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -34,7 +34,9 @@ const EMPTY_TICKETS: TicketOverviewData = { statuses: [], urgentCount: 0 };
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const role = useAuthStore((state) => state.user?.role);
+  const user = useAuthStore((state) => state.user);
+  const role = user?.role;
+  const logout = useAuthStore((state) => state.logout);
   const canViewSales = canAccess(role, "deals");
   const [range, setRange] = useState<AnalyticsRange>("30d");
   const [stats, setStats] = useState(EMPTY_STATS);
@@ -79,6 +81,42 @@ export default function DashboardPage() {
   }, [range, refreshKey]);
 
   const supportActivities = activities.filter((activity) => activity.type === "CUSTOMER" || activity.type === "TICKET");
+
+  if (role === "UNASSIGNED") {
+    return (
+      <div className="mx-auto my-12 max-w-xl rounded-xl border border-(--crm-border) bg-white p-8 text-center shadow-sm">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+          <Clock size={32} />
+        </div>
+        <h2 className="mb-2 text-xl font-bold text-gray-800">Tài khoản đang chờ phân quyền</h2>
+        <p className="mb-4 text-sm leading-relaxed text-gray-600">
+          Tài khoản <strong>{user?.username}</strong> đã được ghi nhận trong hệ thống nhưng đang ở trạng thái <strong>Chờ duyệt (PENDING)</strong> và chưa được cấp quyền (<strong>Chưa phân quyền - UNASSIGNED</strong>).
+        </p>
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-left text-xs text-amber-900">
+          <p className="mb-1 font-semibold">👑 Quy trình duyệt tài khoản của Admin:</p>
+          <ol className="list-decimal space-y-1 pl-4">
+            <li>Đăng nhập bằng tài khoản <strong>Admin</strong>.</li>
+            <li>Vào mục <strong>Cài đặt ➔ Quản lý người dùng</strong> (<code>/settings/users</code>).</li>
+            <li>Tìm tài khoản <strong>{user?.username}</strong> và bấm nút <strong>Duyệt tài khoản / Sửa</strong> để chọn vai trò (<strong>Sales</strong> hoặc <strong>Support</strong>) và kích hoạt hoạt động.</li>
+          </ol>
+        </div>
+        <div className="flex justify-center gap-3">
+          <Button variant="outlined" color="inherit" onClick={() => logout()}>
+            Đăng xuất
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              logout();
+              navigate("/login");
+            }}
+          >
+            Đăng nhập tài khoản khác
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`crm-dashboard ${canViewSales ? "" : "crm-dashboard--support"}`}>

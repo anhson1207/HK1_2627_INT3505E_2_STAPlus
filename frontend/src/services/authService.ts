@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { authApi } from "./api";
-import { USER_ROLES, type LoginRequest, type LoginResponse, type RegisterRequest, type RegisterResponse } from "../types/auth";
+import { USER_ROLES, type LoginRequest, type LoginResponse, type RegisterRequest, type RegisterResponse, type UserRole, type UserStatus } from "../types/auth";
 
 const responseFields = {
     username: z.string().trim().min(1),
@@ -11,18 +11,23 @@ const responseFields = {
 const loginResponseSchema = z.object({ ...responseFields, token: z.string().trim().min(1) });
 const registerResponseSchema = z.object({ ...responseFields, token: z.null() });
 
-const REGISTERED_USERS_KEY = "crm-soa.registered-users";
+const AUTH_USERS_STORAGE_KEY = "crm-soa.mock-auth-users";
+const CRM_USERS_STORAGE_KEY = "crm-soa.users";
 
-interface StoredUser {
+interface StoredAuthUser {
+    id: number;
     username: string;
+    fullName: string;
     email: string;
-    password: string;
-    role: "ADMIN" | "SALES" | "SUPPORT";
+    password?: string;
+    role: UserRole;
+    status: UserStatus;
+    createdAt: string;
 }
 
-function getRegisteredUsers(): StoredUser[] {
+function getStoredAuthUsers(): StoredAuthUser[] {
     try {
-        const raw = localStorage.getItem(REGISTERED_USERS_KEY);
+        const raw = localStorage.getItem(AUTH_USERS_STORAGE_KEY);
         if (!raw) return [];
         return JSON.parse(raw);
     } catch {
@@ -30,21 +35,62 @@ function getRegisteredUsers(): StoredUser[] {
     }
 }
 
-function saveRegisteredUser(user: StoredUser) {
+function saveStoredAuthUser(user: StoredAuthUser) {
     try {
-        const list = getRegisteredUsers();
-        const existingIndex = list.findIndex(
+        const list = getStoredAuthUsers();
+        const index = list.findIndex(
             (u) => u.username.toLowerCase() === user.username.toLowerCase() || u.email.toLowerCase() === user.email.toLowerCase()
         );
-        if (existingIndex >= 0) {
-            list[existingIndex] = user;
+        if (index >= 0) {
+            list[index] = { ...list[index], ...user };
         } else {
             list.push(user);
         }
-        localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(list));
+        localStorage.setItem(AUTH_USERS_STORAGE_KEY, JSON.stringify(list));
     } catch {
-        // Ignore localStorage errors
+        // Ignore localStorage error
     }
+}
+
+function findUserInStorage(identifier: string): StoredAuthUser | null {
+    const idLower = identifier.trim().toLowerCase();
+    
+    // 1. Kiểm tra trong danh sách người dùng CRM (nơi Admin chỉnh sửa phân quyền)
+    try {
+        const rawCrm = localStorage.getItem(CRM_USERS_STORAGE_KEY);
+        if (rawCrm) {
+            const crmUsers: Array<Record<string, unknown>> = JSON.parse(rawCrm);
+            const inCrm = crmUsers.find(
+                (u) => (typeof u.email === "string" && u.email.toLowerCase() === idLower) ||
+                       (typeof u.fullName === "string" && u.fullName.toLowerCase() === idLower)
+            );
+            if (inCrm) {
+                const authUsers = getStoredAuthUsers();
+                const inAuth = authUsers.find(
+                    (u) => u.username.toLowerCase() === idLower || u.email.toLowerCase() === idLower || u.id === inCrm.id
+                );
+                return {
+                    id: (inCrm.id as number) || (inAuth?.id as number) || Date.now(),
+                    username: (inAuth?.username as string) || (inCrm.fullName as string) || identifier,
+                    fullName: (inCrm.fullName as string) || (inAuth?.fullName as string) || identifier,
+                    email: (inCrm.email as string) || (inAuth?.email as string) || identifier,
+                    password: inAuth?.password || "",
+                    role: (inCrm.role as UserRole) || (inAuth?.role as UserRole) || "UNASSIGNED",
+                    status: (inCrm.status as UserStatus) || (inAuth?.status as UserStatus) || "PENDING",
+                    createdAt: (inCrm.createdAt as string) || (inAuth?.createdAt as string) || new Date().toISOString(),
+                };
+            }
+        }
+    } catch {
+        // Ignore
+    }
+
+    // 2. Kiểm tra trong danh sách auth mock users
+    const authUsers = getStoredAuthUsers();
+    const inAuth = authUsers.find(
+        (u) => u.username.toLowerCase() === idLower || u.email.toLowerCase() === idLower
+    );
+    return inAuth || null;
 }
 
 const DEMO_ACCOUNTS: Record<string, { role: "ADMIN" | "SALES" | "SUPPORT"; pass: string[]; username: string }> = {
@@ -80,23 +126,21 @@ export const authService = {
             const result = loginResponseSchema.safeParse(normalized);
             if (result.success) return result.data;
         } catch {
-            // 2. Backend không bật hoặc lỗi kết nối: Chuyển sang cơ chế offline / demo
-            
-            // 2a. Kiểm tra danh sách tài khoản đã đăng ký trong máy
-            const registeredUsers = getRegisteredUsers();
-            const matchedRegistered = registeredUsers.find(
-                (u) => u.username.toLowerCase() === input || u.email.toLowerCase() === input
-            );
-            if (matchedRegistered) {
-                if (matchedRegistered.password === data.password) {
-                    return {
-                        username: matchedRegistered.username,
-                        role: matchedRegistered.role,
-                        token: `demo-${matchedRegistered.role.toLowerCase()}-token`,
-                        message: "Đăng nhập thành công",
-                    };
+            // 2. Backend offline: Xác thực với tài khoản nội bộ
+
+            // 2a. Kiểm tra tài khoản đã đăng ký (hoặc đã lưu)
+            const localUser = findUserInStorage(data.username);
+            if (localUser) {
+                if (localUser.password && localUser.password !== data.password) {
+                    throw new Error("Mật khẩu không chính xác. Vui lòng thử lại.");
                 }
-                throw new Error("Mật khẩu không chính xác. Vui lòng thử lại.");
+                const role: UserRole = localUser.role || "UNASSIGNED";
+                return {
+                    username: localUser.username,
+                    role,
+                    token: `demo-${role.toLowerCase()}-token`,
+                    message: "Đăng nhập thành công",
+                };
             }
 
             // 2b. Kiểm tra danh sách tài khoản mẫu (Admin, Sales, Support)
@@ -113,46 +157,46 @@ export const authService = {
                 throw new Error("Mật khẩu tài khoản mẫu không chính xác.");
             }
 
-            // 2c. Nếu là tài khoản vừa đăng ký hoặc tài khoản kiểm thử mới (như anhson123)
-            // Tự động ghi nhận và cho phép đăng nhập với vai trò SALES
+            // 2c. Nếu tài khoản chưa có trong hệ thống và mật khẩu >= 6:
+            // Tự động tạo với vai trò UNASSIGNED và trạng thái PENDING để Admin phê duyệt
             if (data.password.trim().length >= 6) {
-                saveRegisteredUser({
+                const newUser: StoredAuthUser = {
+                    id: Date.now(),
                     username: data.username,
+                    fullName: data.username,
                     email: data.username.includes("@") ? data.username : `${data.username}@crm.local`,
                     password: data.password,
-                    role: input.includes("admin") ? "ADMIN" : "SALES",
-                });
+                    role: input === "admin" ? "ADMIN" : "UNASSIGNED",
+                    status: input === "admin" ? "ACTIVE" : "PENDING",
+                    createdAt: new Date().toISOString(),
+                };
+                saveStoredAuthUser(newUser);
+
                 return {
-                    username: data.username,
-                    role: input.includes("admin") ? "ADMIN" : "SALES",
-                    token: "demo-user-token",
-                    message: "Đăng nhập thành công",
+                    username: newUser.username,
+                    role: newUser.role,
+                    token: `demo-${newUser.role.toLowerCase()}-token`,
+                    message: "Đăng nhập thành công (Chờ Admin phân quyền)",
                 };
             }
 
             throw new Error("Tài khoản chưa tồn tại hoặc mật khẩu dưới 6 ký tự.");
         }
 
-        const demo = DEMO_ACCOUNTS[input];
-        if (demo && demo.pass.includes(data.password)) {
-            return {
-                username: demo.username,
-                role: demo.role,
-                token: `demo-${demo.role.toLowerCase()}-token`,
-                message: "Đăng nhập thành công",
-            };
-        }
-
         throw new Error("Tài khoản hoặc mật khẩu không chính xác.");
     },
 
     async register(data: RegisterRequest): Promise<RegisterResponse> {
-        // Lưu ngay vào localStorage để chắc chắn đăng nhập được ngay cả khi không có backend
-        saveRegisteredUser({
+        // Tài khoản mới đăng ký LUÔN là UNASSIGNED và PENDING để Admin duyệt và phân quyền
+        saveStoredAuthUser({
+            id: Date.now(),
             username: data.username,
+            fullName: data.username,
             email: data.email,
             password: data.password,
-            role: "SALES",
+            role: "UNASSIGNED",
+            status: "PENDING",
+            createdAt: new Date().toISOString(),
         });
 
         // Gửi tới backend nếu backend có chạy
@@ -165,7 +209,7 @@ export const authService = {
             const raw = response.data;
             const normalized = {
                 username: (raw.username as string) || data.username,
-                role: (raw.role as string) || "SALES",
+                role: (raw.role as UserRole) || "UNASSIGNED",
                 token: null,
                 message: (raw.message as string) || "Đăng ký thành công",
             };
@@ -174,16 +218,16 @@ export const authService = {
         } catch {
             return {
                 username: data.username,
-                role: "SALES",
+                role: "UNASSIGNED",
                 token: null,
-                message: "Đăng ký thành công",
+                message: "Đăng ký thành công (Chờ Admin phân quyền)",
             };
         }
         return {
             username: data.username,
-            role: "SALES",
+            role: "UNASSIGNED",
             token: null,
-            message: "Đăng ký thành công",
+            message: "Đăng ký thành công (Chờ Admin phân quyền)",
         };
     },
 };
