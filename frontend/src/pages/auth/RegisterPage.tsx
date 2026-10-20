@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, Button, CircularProgress, TextField } from "@mui/material";
+import { Button, CircularProgress, TextField } from "@mui/material";
+import { Info } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
@@ -28,7 +29,13 @@ export default function RegisterPage() {
         };
         try {
             const response = await authService.register(data);
-            navigate("/login", { replace: true, state: { username: response.username, message: "Đăng ký thành công. Bạn có thể đăng nhập." } });
+            navigate("/login", {
+                replace: true,
+                state: {
+                    username: response.username,
+                    message: "Đăng ký thành công! Tài khoản đã được ghi nhận và đang chờ Quản trị viên (Admin) phê duyệt vai trò.",
+                },
+            });
         } catch (registerError) {
             setError(registerError instanceof Error ? registerError.message : "Không thể đăng ký. Vui lòng thử lại.");
         } finally {
@@ -39,7 +46,17 @@ export default function RegisterPage() {
     return (
         <AuthPageShell title="Tạo tài khoản" description="Bắt đầu quản lý khách hàng cùng CRM.">
             <form onSubmit={(event) => void handleSubmit(handleRegister)(event)} className="crm-form" noValidate>
-                {error && <Alert severity="error">{error}</Alert>}
+                {error && (
+                    <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/95 p-3.5 text-left text-xs leading-relaxed shadow-xs">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                            <Info size={18} />
+                        </div>
+                        <div className="flex-1">
+                            <p className="font-semibold text-amber-900">Lưu ý đăng ký</p>
+                            <p className="mt-0.5 text-amber-800">{error}</p>
+                        </div>
+                    </div>
+                )}
                 <Controller name="username" control={control} render={({ field }) => <TextField {...field} label="Tên đăng nhập" fullWidth autoComplete="username" disabled={isSubmitting} error={!!errors.username} helperText={errors.username?.message} />} />
                 <Controller name="email" control={control} render={({ field }) => <TextField {...field} label="Email" type="email" fullWidth autoComplete="email" disabled={isSubmitting} error={!!errors.email} helperText={errors.email?.message} />} />
                 <Controller name="password" control={control} render={({ field }) => <TextField {...field} label="Mật khẩu" type="password" fullWidth autoComplete="new-password" disabled={isSubmitting} error={!!errors.password} helperText={errors.password?.message} />} />
