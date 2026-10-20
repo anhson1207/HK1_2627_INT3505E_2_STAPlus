@@ -258,6 +258,71 @@ export const authService = {
     },
 
     async register(data: RegisterRequest): Promise<RegisterResponse> {
+        // Gửi tới backend nếu backend có chạy
+        try {
+            const response = await authApi.post<Record<string, unknown>>("/api/v1/auth/register", {
+                username: data.username,
+                email: data.email,
+                password: data.password,
+            });
+            const raw = response.data;
+            const normalized = {
+                username: (raw.username as string) || data.username,
+                role: (raw.role as UserRole) || "UNASSIGNED",
+                token: null,
+                message: (raw.message as string) || "Đăng ký thành công",
+            };
+            const result = registerResponseSchema.safeParse(normalized);
+            if (result.success) {
+                const newUser: StoredAuthUser = {
+                    id: Date.now(),
+                    username: data.username,
+                    fullName: data.username,
+                    email: data.email,
+                    password: data.password,
+                    role: "UNASSIGNED",
+                    status: "PENDING",
+                    createdAt: new Date().toISOString(),
+                };
+                saveStoredAuthUser(newUser);
+                saveToCrmUsers({
+                    id: newUser.id,
+                    fullName: newUser.fullName,
+                    email: newUser.email,
+                    role: newUser.role,
+                    status: newUser.status,
+                    createdAt: newUser.createdAt,
+                    department: "Chờ phân bổ",
+                });
+                return result.data;
+            }
+        } catch (apiError: unknown) {
+            // Nếu Backend trả về lỗi (ví dụ 409 Conflict: Email already exists hoặc 400 Bad Request)
+            if (apiError instanceof Error) {
+                const msg = apiError.message.toLowerCase();
+                if (msg.includes("email already exists") || (msg.includes("email") && msg.includes("exists"))) {
+                    throw new Error("Email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.", { cause: apiError });
+                }
+                if (msg.includes("username already exists") || (msg.includes("username") && msg.includes("exists"))) {
+                    throw new Error("Tên đăng nhập này đã tồn tại. Vui lòng chọn tên đăng nhập khác.", { cause: apiError });
+                }
+                // Nếu là lỗi server khác hoặc 409, ném tiếp lỗi của backend
+                if ("status" in apiError && (apiError as { status: number }).status === 409) {
+                    throw apiError;
+                }
+            }
+        }
+
+        // Chế độ Offline/Demo: Kiểm tra trùng lặp email và username trong hệ thống
+        const existingEmail = findUserInStorage(data.email);
+        if (existingEmail) {
+            throw new Error("Email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.");
+        }
+        const existingUsername = findUserInStorage(data.username);
+        if (existingUsername) {
+            throw new Error("Tên đăng nhập này đã tồn tại. Vui lòng chọn tên đăng nhập khác.");
+        }
+
         // Tài khoản mới đăng ký LUÔN là UNASSIGNED và PENDING để Admin duyệt và phân quyền
         const newUser: StoredAuthUser = {
             id: Date.now(),
@@ -281,30 +346,6 @@ export const authService = {
             department: "Chờ phân bổ",
         });
 
-        // Gửi tới backend nếu backend có chạy
-        try {
-            const response = await authApi.post<Record<string, unknown>>("/api/v1/auth/register", {
-                username: data.username,
-                email: data.email,
-                password: data.password,
-            });
-            const raw = response.data;
-            const normalized = {
-                username: (raw.username as string) || data.username,
-                role: (raw.role as UserRole) || "UNASSIGNED",
-                token: null,
-                message: (raw.message as string) || "Đăng ký thành công",
-            };
-            const result = registerResponseSchema.safeParse(normalized);
-            if (result.success) return result.data;
-        } catch {
-            return {
-                username: data.username,
-                role: "UNASSIGNED",
-                token: null,
-                message: "Đăng ký thành công (Chờ Admin phân quyền)",
-            };
-        }
         return {
             username: data.username,
             role: "UNASSIGNED",

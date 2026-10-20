@@ -32,15 +32,24 @@ function configureErrors(client: AxiosInstance, protectedRequests: boolean) {
             authHandlers?.onUnauthorized();
         }
         const body: unknown = error.response?.data;
-        const message = typeof body === "object" && body !== null && "message" in body && typeof body.message === "string" && body.message.trim()
-            ? body.message
-            : status === 0
+        const serverMessage = typeof body === "object" && body !== null
+            ? ("message" in body && typeof (body as Record<string, unknown>).message === "string" && ((body as Record<string, unknown>).message as string).trim()
+                ? ((body as Record<string, unknown>).message as string)
+                : "detail" in body && typeof (body as Record<string, unknown>).detail === "string" && ((body as Record<string, unknown>).detail as string).trim()
+                    ? ((body as Record<string, unknown>).detail as string)
+                    : "error" in body && typeof (body as Record<string, unknown>).error === "string" && ((body as Record<string, unknown>).error as string).trim()
+                        ? ((body as Record<string, unknown>).error as string)
+                        : null)
+            : null;
+
+        const message = serverMessage
+            ?? (status === 0
                 ? error.code === "ECONNABORTED"
                     ? "Máy chủ phản hồi quá lâu. Vui lòng thử lại."
                     : "Không kết nối được server. Kiểm tra kết nối, địa chỉ Auth Service và cấu hình CORS."
                 : status === 401
                     ? "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."
-                    : `Yêu cầu thất bại (${status}). Vui lòng thử lại.`;
+                    : `Yêu cầu thất bại (${status}). Vui lòng thử lại.`);
         return Promise.reject(new ApiError(message, status));
     });
 }
