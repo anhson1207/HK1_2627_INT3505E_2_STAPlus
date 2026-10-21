@@ -61,9 +61,9 @@ const navigationGroups: NavigationGroup[] = [
 ];
 
 const settingsNavigation: NavigationItem = {
-    label: "Cài đặt",
+    label: "Cài đặt & Phân quyền",
     icon: Settings,
-    path: "/settings",
+    path: "/settings/users",
     roles: ["ADMIN"],
 };
 

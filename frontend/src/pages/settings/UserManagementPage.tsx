@@ -92,7 +92,7 @@ export default function UserManagementPage() {
     const filtered = useMemo(() => {
         const keyword = deferredSearch.trim().toLocaleLowerCase("vi");
 
-        return users.filter(
+        const list = users.filter(
             (user) =>
                 (!role || user.role === role) &&
                 (!status || user.status === status) &&
@@ -103,6 +103,13 @@ export default function UserManagementPage() {
                             value!.toLocaleLowerCase("vi").includes(keyword)
                         ))
         );
+
+        // Luôn ưu tiên đưa tài khoản PENDING (chờ duyệt) và tài khoản mới lên đầu bảng
+        return list.sort((a, b) => {
+            if (a.status === "PENDING" && b.status !== "PENDING") return -1;
+            if (a.status !== "PENDING" && b.status === "PENDING") return 1;
+            return b.id - a.id;
+        });
     }, [users, deferredSearch, role, status]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));

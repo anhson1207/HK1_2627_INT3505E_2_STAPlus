@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, Button, CircularProgress, TextField } from "@mui/material";
+import { Button, CircularProgress, TextField } from "@mui/material";
+import { CheckCircle2, Clock, Info } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
@@ -27,6 +28,11 @@ export default function LoginPage() {
     });
     const busy = isLoading || isSubmitting;
 
+    const isPendingApproval = error.toLowerCase().includes("chờ admin") ||
+        error.toLowerCase().includes("duyệt") ||
+        error.toLowerCase().includes("kích hoạt") ||
+        error.toLowerCase().includes("phân quyền");
+
     const handleLogin = async (data: LoginFormData) => {
         if (submitting.current) return;
         submitting.current = true;
@@ -52,8 +58,46 @@ export default function LoginPage() {
     return (
         <AuthPageShell title="Đăng nhập" description="Đăng nhập vào không gian làm việc CRM.">
             <form onSubmit={(event) => void handleSubmit(handleLogin)(event)} className="crm-form" noValidate>
-                {locationState?.message && <Alert severity="success">{locationState.message}</Alert>}
-                {error && <Alert severity="error">{error}</Alert>}
+                {locationState?.message && (
+                    <div className="flex items-start gap-3 rounded-xl border border-sky-200 bg-sky-50/90 p-3.5 text-left text-xs leading-relaxed shadow-xs">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+                            <CheckCircle2 size={18} />
+                        </div>
+                        <div className="flex-1">
+                            <p className="font-semibold text-sky-900">Thông báo</p>
+                            <p className="mt-0.5 text-sky-800">{locationState.message}</p>
+                        </div>
+                    </div>
+                )}
+
+                {error && isPendingApproval && (
+                    <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/95 p-3.5 text-left text-xs leading-relaxed shadow-xs">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                            <Clock size={18} />
+                        </div>
+                        <div className="flex-1">
+                            <p className="font-semibold text-amber-900">Tài khoản đang chờ duyệt</p>
+                            <p className="mt-0.5 text-amber-800">
+                                Tài khoản đã được lưu vào hệ thống. Vui lòng đợi Quản trị viên (Admin) phê duyệt vai trò trước khi đăng nhập.
+                            </p>
+                            <p className="mt-1.5 font-medium text-amber-900/80">
+                                👑 Gợi ý: Bấm nút <strong>Admin</strong> ở phần Đăng nhập nhanh để vào duyệt tài khoản này.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {error && !isPendingApproval && (
+                    <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/95 p-3.5 text-left text-xs leading-relaxed shadow-xs">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                            <Info size={18} />
+                        </div>
+                        <div className="flex-1">
+                            <p className="font-semibold text-amber-900">Lưu ý đăng nhập</p>
+                            <p className="mt-0.5 text-amber-800">{error}</p>
+                        </div>
+                    </div>
+                )}
                 <Controller
                     name="username"
                     control={control}
