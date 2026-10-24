@@ -129,6 +129,14 @@ export default function LoginPage() {
                         />
                     )}
                 />
+                <div className="flex justify-end -mt-2">
+    <Link
+        to="/forgot-password"
+        className="text-sm font-medium text-(--crm-primary) hover:underline"
+    >
+        Quên mật khẩu?
+    </Link>
+</div>
                 <Button
                     type="submit"
                     variant="contained"
@@ -170,6 +178,7 @@ export default function LoginPage() {
                     </Button>
                 </div>
             </div>
+            
 
             <p className="mt-5 text-center text-sm text-(--crm-text-secondary)">
                 Chưa có tài khoản?{" "}

@@ -15,7 +15,7 @@ interface HeaderProps {
 
 function getPageName(pathname: string) {
     if (pathname === "/dashboard") return "Tổng quan";
-    
+
     // Lead Routes
     if (pathname === "/leads/new") return "Lead / Thêm mới";
     if (/^\/leads\/\d+\/edit$/.test(pathname)) return "Lead / Chỉnh sửa";
@@ -43,7 +43,7 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
     const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(null);
     const { user, logout } = useAuthStore();
     console.log("Header user:", user);
-console.log("Header role:", user?.role);
+    console.log("Header role:", user?.role);
 
     const roleLabels: Record<UserRole, string> = {
         ADMIN: "Quản trị viên",
@@ -150,10 +150,31 @@ console.log("Header role:", user?.role);
             </div>
 
             <Menu anchorEl={userMenuAnchor} open={Boolean(userMenuAnchor)} onClose={() => setUserMenuAnchor(null)} anchorOrigin={{ vertical: "bottom", horizontal: "right" }} transformOrigin={{ vertical: "top", horizontal: "right" }}>
-                <MenuItem disabled>
+                <MenuItem 
+                onClick={() => {
+                        setUserMenuAnchor(null);
+                        navigate("/profile");
+                    }}
+                >
                     <ListItemIcon><UserRound size={17} /></ListItemIcon>
                     {user?.username}
+                    
                 </MenuItem>
+
+
+                {/* <MenuItem
+                    onClick={() => {
+                        setUserMenuAnchor(null);
+                        navigate("/profile");
+                    }}
+                >
+                    <ListItemIcon>
+                        <UserRound size={17} />
+                    </ListItemIcon>
+                    Thông tin cá nhân
+                </MenuItem> */}
+
+
                 <MenuItem onClick={() => void handleLogout()}>
                     <ListItemIcon><LogOut size={17} /></ListItemIcon>
                     Đăng xuất
