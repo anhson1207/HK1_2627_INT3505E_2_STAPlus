@@ -29,6 +29,11 @@ import AnalyticsPage from "../pages/analytics/AnalyticsPage";
 import SalesPage from "../pages/sales/SalesPage";
 import SupportDashboardPage from "../pages/support/SupportDashboardPage";
 import UserManagementPage from "../pages/settings/UserManagementPage";
+import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
+import VerifyEmailPendingPage from '../pages/auth/VerifyEmailPendingPage';
+import VerifyEmailSuccessPage from '../pages/auth/VerifyEmailSuccessPage';
+import ProfilePage from "../pages/settings/ProfilePage";
 export default function AppRoutes() {
     return (
         <BrowserRouter>
@@ -37,6 +42,10 @@ export default function AppRoutes() {
                 <Route element={<PublicOnlyRoute />}>
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/verify-email-pending"element={<VerifyEmailPendingPage />}/>
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="/verify-email-success"element={<VerifyEmailSuccessPage />}/>
                 </Route>
 
                 <Route element={<ProtectedRoute />}>
@@ -45,6 +54,7 @@ export default function AppRoutes() {
                             <Route path="/settings" element={<Navigate to="/settings/users" replace />} />
                             <Route path="/settings/users" element={<UserManagementPage />}/>
                         </Route>
+                        <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/dashboard" element={<DashboardPage />} />
 
                         <Route path="/leads" element={<LeadListPage />} />
