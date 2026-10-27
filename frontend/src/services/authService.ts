@@ -354,3 +354,52 @@ export const authService = {
         };
     },
 };
+
+
+
+// import { z } from "zod";
+// import { authApi } from "./api";
+// import { USER_ROLES, type LoginRequest, type LoginResponse, type RegisterRequest, type RegisterResponse } from "../types/auth";
+
+// const loginResponseSchema = z.object({
+//     username: z.string().trim().min(1),
+//     role: z.enum(USER_ROLES),
+//     token: z.string().trim().min(1),
+//     message: z.string().optional().default(""),
+// });
+
+// export const authService = {
+//     async login(data: LoginRequest): Promise<LoginResponse> {
+//         const email = data.username.includes("@") ? data.username : `${data.username}@crm.local`;
+//         // Lỗi ApiError (có message từ BE) được ném thẳng ra, không nuốt nữa.
+//         const { data: raw } = await authApi.post<Record<string, unknown>>("/api/v1/auth/login", {
+//             email,
+//             password: data.password,
+//         });
+//         const parsed = loginResponseSchema.safeParse({
+//             username: raw.username ?? data.username,
+//             role: raw.role ?? "UNASSIGNED",
+//             token: raw.accessToken ?? raw.token,
+//             message: "Đăng nhập thành công",
+//         });
+//         if (!parsed.success) {
+//             console.error("Login response không khớp schema:", raw, parsed.error);
+//             throw new Error("Phản hồi đăng nhập từ server không hợp lệ.");
+//         }
+//         return parsed.data;
+//     },
+
+//     async register(data: RegisterRequest): Promise<RegisterResponse> {
+//         const { data: raw } = await authApi.post<Record<string, unknown>>("/api/v1/auth/register", {
+//             username: data.username,
+//             email: data.email,
+//             password: data.password,
+//         });
+//         return {
+//             username: (raw.username as string) ?? data.username,
+//             role: (raw.role as RegisterResponse["role"]) ?? "UNASSIGNED",
+//             token: null,
+//             message: "Đăng ký thành công",
+//         };
+//     },
+// };  

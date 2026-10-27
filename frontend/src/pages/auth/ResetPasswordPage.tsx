@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, TextField } from "@mui/material";
-import { ArrowLeft, LockKeyhole } from "lucide-react";
+import { Button, TextField, IconButton, InputAdornment, } from "@mui/material";
+import { ArrowLeft, LockKeyhole, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
@@ -13,7 +13,8 @@ import {
 
 export default function ResetPasswordPage() {
     const [message, setMessage] = useState("");
-
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const {
         control,
         handleSubmit,
@@ -49,7 +50,7 @@ export default function ResetPasswordPage() {
                         <TextField
                             {...field}
                             label="Mật khẩu mới"
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             fullWidth
                             autoComplete="new-password"
                             disabled={isSubmitting}
@@ -58,6 +59,32 @@ export default function ResetPasswordPage() {
                                 errors.password?.message ||
                                 "Mật khẩu cần có ít nhất 8 ký tự."
                             }
+                            slotProps={{
+                                input: {
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={() =>
+                                                    setShowPassword((prev) => !prev)
+                                                }
+                                                edge="end"
+                                                aria-label={
+                                                    showPassword
+                                                        ? "Ẩn mật khẩu"
+                                                        : "Hiện mật khẩu"
+                                                }
+                                                disabled={isSubmitting}
+                                            >
+                                                {showPassword ? (
+                                                    <EyeOff size={20} />
+                                                ) : (
+                                                    <Eye size={20} />
+                                                )}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                },
+                            }}
                         />
                     )}
                 />
@@ -69,12 +96,38 @@ export default function ResetPasswordPage() {
                         <TextField
                             {...field}
                             label="Xác nhận mật khẩu mới"
-                            type="password"
+                            type={showConfirmPassword ? "text" : "password"}
                             fullWidth
                             autoComplete="new-password"
                             disabled={isSubmitting}
                             error={!!errors.confirmPassword}
                             helperText={errors.confirmPassword?.message || " "}
+                            slotProps={{
+                                input: {
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={() =>
+                                                    setShowConfirmPassword((prev) => !prev)
+                                                }
+                                                edge="end"
+                                                aria-label={
+                                                    showConfirmPassword
+                                                        ? "Ẩn mật khẩu xác nhận"
+                                                        : "Hiện mật khẩu xác nhận"
+                                                }
+                                                disabled={isSubmitting}
+                                            >
+                                                {showConfirmPassword ? (
+                                                    <EyeOff size={20} />
+                                                ) : (
+                                                    <Eye size={20} />
+                                                )}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                },
+                            }}
                         />
                     )}
                 />
