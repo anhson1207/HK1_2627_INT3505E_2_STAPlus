@@ -110,14 +110,25 @@ export default function SupportDashboardPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          className="crm-button crm-button--primary"
-          onClick={() => navigate("/tickets/new")}
-        >
-          <Plus size={18} />
-          Tạo Ticket
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="crm-button crm-button--secondary"
+            onClick={() => navigate("/tickets")}
+          >
+            <List size={18} />
+            Danh sách Ticket
+          </button>
+
+          <button
+            type="button"
+            className="crm-button crm-button--primary"
+            onClick={() => navigate("/tickets/new")}
+          >
+            <Plus size={18} />
+            Tạo Ticket
+          </button>
+        </div>
       </div>
 
       {error && (
