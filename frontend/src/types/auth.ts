@@ -44,6 +44,24 @@ export interface RegisterResponse extends AuthUser {
     message: string;
 }
 
+export interface ForgotPasswordRequest {
+    email: string;
+}
+
+export interface ForgotPasswordResponse {
+    message: string;
+    resetToken?: string;
+}
+
+export interface ResetPasswordRequest {
+    token: string;
+    newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+    message: string;
+}
+
 export function isUserRole(value: unknown): value is UserRole {
     return USER_ROLES.some((role) => role === value);
 }

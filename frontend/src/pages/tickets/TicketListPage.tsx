@@ -1,5 +1,5 @@
 import { Alert, CircularProgress, Snackbar } from "@mui/material";
-import { AlertTriangle, CheckCircle2, CircleDot, LoaderCircle, Plus, RefreshCw, Search, TicketIcon } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleDot, LayoutDashboard, LoaderCircle, Plus, RefreshCw, Search, TicketIcon } from "lucide-react";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -58,7 +58,28 @@ export default function TicketListPage() {
 
     return (
         <div>
-            <div className="crm-page-header"><div><h1 className="crm-page-title">Tickets</h1><p className="crm-page-description">Quản lý yêu cầu hỗ trợ khách hàng</p></div><button type="button" onClick={() => navigate("/tickets/new")} className="crm-btn crm-btn--primary"><Plus size={16} /> Tạo Ticket</button></div>
+            <div className="crm-page-header">
+                <div>
+                    <h1 className="crm-page-title">Tickets</h1>
+                    <p className="crm-page-description">Quản lý yêu cầu hỗ trợ khách hàng</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => navigate("/support")}
+                        className="crm-btn crm-btn--secondary"
+                    >
+                        <LayoutDashboard size={16} /> Dashboard
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => navigate("/tickets/new")}
+                        className="crm-btn crm-btn--primary"
+                    >
+                        <Plus size={16} /> Tạo Ticket
+                    </button>
+                </div>
+            </div>
             <div className="crm-kpi-grid mb-5">{summaries.map(({ label, value, icon: Icon, color }) => <div key={label} className="crm-kpi"><div className="flex items-start justify-between"><div><p className="crm-kpi__label">{label}</p><p className="crm-kpi__value">{value}</p></div><div className={`crm-kpi__icon ${color}`}><Icon size={19} /></div></div></div>)}</div>
             <div className="crm-board">
                 <div className="crm-toolbar crm-toolbar--board"><label className="crm-search"><Search size={16} className="mr-2 text-(--crm-text-muted)" /><input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setPage(0); }} placeholder="Tìm tiêu đề, khách hàng, agent..." className="w-full text-sm outline-none" /></label><select value={status} onChange={(event) => { setStatus(event.target.value as TicketStatus | ""); setPage(0); }} className="crm-filter-chip"><option value="">Tất cả trạng thái</option>{TICKET_STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><select value={priority} onChange={(event) => { setPriority(event.target.value as TicketPriority | ""); setPage(0); }} className="crm-filter-chip"><option value="">Tất cả ưu tiên</option>{TICKET_PRIORITY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><button type="button" onClick={() => setRefreshKey((value) => value + 1)} className="crm-icon-btn ml-auto"><RefreshCw size={16} className={loading ? "animate-spin" : ""} /></button></div>
