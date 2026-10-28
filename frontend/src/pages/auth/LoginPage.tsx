@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, CircularProgress, TextField } from "@mui/material";
-import { CheckCircle2, Clock, Info } from "lucide-react";
+import { Button, CircularProgress, TextField, IconButton, InputAdornment, } from "@mui/material";
+import { CheckCircle2, Clock, Info, Eye, EyeOff } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
@@ -8,6 +8,8 @@ import { useRef, useState } from "react";
 import AuthPageShell from "../../components/auth/AuthPageShell";
 import { useAuthStore } from "../../stores/authStore";
 import { loginSchema, type LoginFormData } from "../../utils/loginSchema";
+
+
 
 interface LoginLocationState {
     from?: string;
@@ -20,6 +22,7 @@ export default function LoginPage() {
     const location = useLocation();
     const locationState = location.state as LoginLocationState | null;
     const [error, setError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const submitting = useRef(false);
     const { login, isLoading } = useAuthStore();
     const { control, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<LoginFormData>({
@@ -120,23 +123,39 @@ export default function LoginPage() {
                         <TextField
                             {...field}
                             label="Mật khẩu"
-                            type="password"
+                            type={showPassword ? "text" : "password"}
                             fullWidth
                             autoComplete="current-password"
                             disabled={busy}
                             error={!!errors.password}
                             helperText={errors.password?.message}
+                            slotProps={{
+                                input: {
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={() => setShowPassword((prev) => !prev)}
+                                                edge="end"
+                                                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                                disabled={busy}
+                                            >
+                                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                },
+                            }}
                         />
                     )}
                 />
                 <div className="flex justify-end -mt-2">
-    <Link
-        to="/forgot-password"
-        className="text-sm font-medium text-(--crm-primary) hover:underline"
-    >
-        Quên mật khẩu?
-    </Link>
-</div>
+                    <Link
+                        to="/forgot-password"
+                        className="text-sm font-medium text-(--crm-primary) hover:underline"
+                    >
+                        Quên mật khẩu?
+                    </Link>
+                </div>
                 <Button
                     type="submit"
                     variant="contained"
@@ -178,7 +197,7 @@ export default function LoginPage() {
                     </Button>
                 </div>
             </div>
-            
+
 
             <p className="mt-5 text-center text-sm text-(--crm-text-secondary)">
                 Chưa có tài khoản?{" "}

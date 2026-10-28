@@ -1,11 +1,14 @@
+import type { ReactNode } from "react";
+
 export interface TableColumn<T> {
     key: keyof T;
     label: string;
+    render?: (item: T) => ReactNode;
 }
 
 interface TableProps<T> {
-    columns: TableColumn<T>[];
-    data: T[];
+    columns?: TableColumn<T>[];
+    data?: T[];
     onRowClick?: (item: T) => void;
 }
 
@@ -14,12 +17,15 @@ export default function Table<T>({
     data,
     onRowClick,
 }: TableProps<T>) {
+    const safeColumns = Array.isArray(columns) ? columns : [];
+    const safeData = Array.isArray(data) ? data : [];
+
     return (
         <div className="crm-board crm-table-wrap">
             <table className="crm-table">
                 <thead className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
                     <tr>
-                        {columns.map((column) => (
+                        {safeColumns.map((column) => (
                             <th
                                 key={String(column.key)}
                                 className="p-3 text-xs font-semibold uppercase text-(--crm-text-secondary)"
@@ -31,7 +37,7 @@ export default function Table<T>({
                 </thead>
 
                 <tbody className="divide-y divide-(--crm-border-subtle)">
-                    {data.map((item, index) => (
+                    {safeData.map((item, index) => (
                         <tr
                             key={index}
                             onClick={() => onRowClick?.(item)}
@@ -41,12 +47,14 @@ export default function Table<T>({
                                     : ""
                             }
                         >
-                            {columns.map((column) => (
+                            {safeColumns.map((column) => (
                                 <td
                                     key={String(column.key)}
                                     className="p-3 text-(--crm-text)"
                                 >
-                                    {String(item[column.key])}
+                                    {column.render
+                                        ? column.render(item)
+                                        : String(item[column.key] ?? "")}
                                 </td>
                             ))}
                         </tr>
@@ -56,3 +64,4 @@ export default function Table<T>({
         </div>
     );
 }
+console.log("table");

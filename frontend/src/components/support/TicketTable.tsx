@@ -60,5 +60,5 @@ export const TicketTable: React.FC<TicketTableProps> = ({
         />
     );
 };
-
+console.log("lmv");
 export default TicketTable;
