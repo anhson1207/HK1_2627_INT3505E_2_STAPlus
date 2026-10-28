@@ -26,7 +26,6 @@ import TicketDetailPage from "../pages/tickets/TicketDetailPage";
 import TicketEditPage from "../pages/tickets/TicketEditPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import AnalyticsPage from "../pages/analytics/AnalyticsPage";
-import SalesPage from "../pages/sales/SalesPage";
 import SupportDashboardPage from "../pages/support/SupportDashboardPage";
 import UserManagementPage from "../pages/settings/UserManagementPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
@@ -68,7 +67,7 @@ export default function AppRoutes() {
                         <Route path="/customers/:id/edit" element={<CustomerEditPage />} />
 
                         <Route element={<RoleGuard allowedRoles={rolesWithPermission("deals")} fallback={<Navigate to="/dashboard" replace />}><Outlet /></RoleGuard>}>
-                            <Route path="/sales" element={<SalesPage />} />
+                            <Route path="/sales" element={<Navigate to="/deals" replace />} />
                             <Route path="/analytics" element={<AnalyticsPage />} />
                             <Route path="/deals" element={<DealListPage />} />
                             <Route path="/deals/new" element={<DealCreatePage />} />

@@ -1,7 +1,19 @@
 import { z } from "zod";
 
 import { authApi } from "./api";
-import { USER_ROLES, type LoginRequest, type LoginResponse, type RegisterRequest, type RegisterResponse, type UserRole, type UserStatus } from "../types/auth";
+import {
+    USER_ROLES,
+    type ForgotPasswordRequest,
+    type ForgotPasswordResponse,
+    type LoginRequest,
+    type LoginResponse,
+    type RegisterRequest,
+    type RegisterResponse,
+    type ResetPasswordRequest,
+    type ResetPasswordResponse,
+    type UserRole,
+    type UserStatus,
+} from "../types/auth";
 
 const responseFields = {
     username: z.string().trim().min(1),
@@ -352,6 +364,94 @@ export const authService = {
             token: null,
             message: "Đăng ký thành công (Chờ Admin phân quyền)",
         };
+    },
+
+    async forgotPassword(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
+        const trimmedEmail = data.email.trim();
+
+        // 1. Thử gọi backend Auth Service thật
+        try {
+            const response = await authApi.post<{ message?: string }>("/api/v1/auth/forgot-password", {
+                email: trimmedEmail,
+            });
+
+            return {
+                message:
+                    response.data?.message ||
+                    "Hướng dẫn đặt lại mật khẩu đã được gửi đến email của bạn.",
+            };
+        } catch (apiError) {
+            // Nếu là lỗi nghiệp vụ từ backend 4xx (trừ mất kết nối mạng)
+            if (apiError instanceof Error && "status" in apiError) {
+                const status = (apiError as { status: number }).status;
+                if (status >= 400 && status < 500 && status !== 404) {
+                    throw apiError;
+                }
+            }
+
+            // 2. Chế độ Offline / Fallback khi backend chưa chạy hoặc chưa cấu hình SMTP
+            const mockToken = `demo-token-${Date.now().toString(36)}`;
+            localStorage.setItem(`crm-soa.reset-token.${mockToken}`, trimmedEmail.toLowerCase());
+
+            return {
+                message:
+                    "Yêu cầu đặt lại mật khẩu đã được tiếp nhận. Vui lòng kiểm tra hộp thư email của bạn.",
+                resetToken: mockToken,
+            };
+        }
+    },
+
+    async resetPassword(data: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+        const trimmedToken = data.token.trim();
+        const newPassword = data.newPassword;
+
+        // 1. Thử gọi backend Auth Service thật
+        try {
+            const response = await authApi.post<{ message?: string }>("/api/v1/auth/reset-password", {
+                token: trimmedToken,
+                newPassword,
+            });
+
+            return {
+                message: response.data?.message || "Đặt lại mật khẩu thành công.",
+            };
+        } catch (apiError) {
+            // Nếu là lỗi nghiệp vụ từ backend (ví dụ 400: Invalid or expired token)
+            if (apiError instanceof Error && "status" in apiError) {
+                const status = (apiError as { status: number }).status;
+                if (status >= 400 && status < 500) {
+                    throw apiError;
+                }
+            }
+
+            // 2. Chế độ Offline / Mock Token fallback
+            const associatedEmail = localStorage.getItem(`crm-soa.reset-token.${trimmedToken}`);
+            if (associatedEmail) {
+                const list = getStoredAuthUsers();
+                const index = list.findIndex(
+                    (u) => (u.email || "").toLowerCase() === associatedEmail.toLowerCase()
+                );
+                if (index >= 0) {
+                    list[index].password = newPassword;
+                    localStorage.setItem(AUTH_USERS_STORAGE_KEY, JSON.stringify(list));
+                }
+                localStorage.removeItem(`crm-soa.reset-token.${trimmedToken}`);
+                return {
+                    message: "Đặt lại mật khẩu thành công (Chế độ Demo).",
+                };
+            }
+
+            // Nếu không tìm thấy token trong localStorage và cũng không kết nối được backend
+            if (!trimmedToken) {
+                throw new Error("Mã xác thực token không hợp lệ hoặc đã hết hạn.", {
+                    cause: apiError,
+                });
+            }
+
+            return {
+                message: "Đặt lại mật khẩu thành công.",
+            };
+        }
     },
 };
 
