@@ -1,8 +1,8 @@
+
 package auth_service.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,6 +18,7 @@ public class PasswordResetToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Luu hash cua OTP
     @Column(nullable = false, unique = true, length = 100)
     private String token;
 
@@ -30,4 +31,12 @@ public class PasswordResetToken {
 
     @Column(nullable = false)
     private boolean used;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private int attemptCount = 0;
+
+    @Builder.Default
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }

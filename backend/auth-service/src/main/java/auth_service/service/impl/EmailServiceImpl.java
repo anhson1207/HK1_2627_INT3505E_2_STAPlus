@@ -1,3 +1,4 @@
+
 package auth_service.service.impl;
 
 import auth_service.service.EmailService;
@@ -16,25 +17,26 @@ public class EmailServiceImpl implements EmailService {
     @Value("${spring.mail.username}")
     private String from;
 
-    @Value("${app.reset-password-url}")
-    private String resetPasswordUrl;
-
     @Override
-    public void sendPasswordResetEmail(String to, String resetToken) {
-        String resetLink = resetPasswordUrl + "?token=" + resetToken;
+    public void sendPasswordResetEmail(
+            String to,
+            String token
+    ) {
 
         SimpleMailMessage message = new SimpleMailMessage();
+
         message.setFrom(from);
         message.setTo(to);
-        message.setSubject("CRM - Reset your password");
+        message.setSubject("CRM - Password Reset OTP");
+
         message.setText(
                 "We received a request to reset your CRM password.\n\n"
-                        + "Reset your password using this link:\n"
-                        + resetLink
-                        + "\n\nThis link expires in 15 minutes."
+                        + "Your verification code is: " + token
+                        + "\n\nThis code expires in 15 minutes."
+                        + "\nDo not share this code with anyone."
+                        + "\n\nIf you did not request this, ignore this email."
         );
 
         mailSender.send(message);
-
     }
 }
