@@ -9,20 +9,30 @@ import auth_service.mapper.UserMapper;
 import auth_service.repository.*;
 import auth_service.service.AuthService;
 import auth_service.service.EmailService;
+import auth_service.service.OtpResetService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class AuthServiceImpl implements AuthService {
+
+    private static final SecureRandom OTP_RANDOM =
+            new SecureRandom();
+
+    private static final int OTP_COOLDOWN_SECONDS = 60;
 
     private final UserRepository users;
     private final RefreshTokenRepository refreshTokens;
@@ -31,9 +41,8 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder encoder;
     private final JwtService jwt;
     private final UserMapper mapper;
-
-    // Dùng để gửi reset password email
     private final EmailService emailService;
+    private final OtpResetService otpResetService;
 
     @Value("${jwt.refresh-expiration-ms}")
     private long refreshExpirationMs;
@@ -41,11 +50,15 @@ public class AuthServiceImpl implements AuthService {
     public UserResponse register(RegisterRequest r) {
 
         if (users.existsByEmail(r.getEmail())) {
-            throw new EmailAlreadyExistsException("Email already exists");
+            throw new EmailAlreadyExistsException(
+                    "Email already exists"
+            );
         }
 
         if (users.existsByUsername(r.getUsername())) {
-            throw new UsernameAlreadyExistsException("Username already exists");
+            throw new UsernameAlreadyExistsException(
+                    "Username already exists"
+            );
         }
 
         User u = User.builder()
@@ -67,11 +80,15 @@ public class AuthServiceImpl implements AuthService {
                         new UserNotFoundException("User not found"));
 
         if (u.getStatus() != UserStatus.ACTIVE) {
-            throw new ForbiddenException("User account is disabled");
+            throw new ForbiddenException(
+                    "User account is disabled"
+            );
         }
 
         if (!encoder.matches(r.getPassword(), u.getPassword())) {
-            throw new InvalidPasswordException("Invalid credentials");
+            throw new InvalidPasswordException(
+                    "Invalid credentials"
+            );
         }
 
         if (u.getRole() == null) {
@@ -88,7 +105,9 @@ public class AuthServiceImpl implements AuthService {
                         .user(u)
                         .expiresAt(
                                 LocalDateTime.now()
-                                        .plus(Duration.ofMillis(refreshExpirationMs))
+                                        .plus(Duration.ofMillis(
+                                                refreshExpirationMs
+                                        ))
                         )
                         .revoked(false)
                         .build()
@@ -109,7 +128,9 @@ public class AuthServiceImpl implements AuthService {
         RefreshToken t = refreshTokens
                 .findByToken(r.getRefreshToken())
                 .orElseThrow(() ->
-                        new InvalidTokenException("Invalid refresh token"));
+                        new InvalidTokenException(
+                                "Invalid refresh token"
+                        ));
 
         if (t.isRevoked()
                 || t.getExpiresAt().isBefore(LocalDateTime.now())) {
@@ -140,7 +161,9 @@ public class AuthServiceImpl implements AuthService {
         RefreshToken t = refreshTokens
                 .findByToken(r.getRefreshToken())
                 .orElseThrow(() ->
-                        new InvalidTokenException("Invalid refresh token"));
+                        new InvalidTokenException(
+                                "Invalid refresh token"
+                        ));
 
         t.setRevoked(true);
         refreshTokens.save(t);
@@ -150,69 +173,84 @@ public class AuthServiceImpl implements AuthService {
             ForgotPasswordRequest r
     ) {
 
-        User u = users.findByEmail(r.getEmail()).orElse(null);
+        String message =
+                "If the email exists, password reset instructions have been sent";
 
-        // Không tiết lộ email có tồn tại trong hệ thống hay không
+        User u = users.findByEmailForUpdate(r.getEmail())
+                .orElse(null);
+
         if (u == null) {
             return ForgotPasswordResponse.builder()
-                    .message(
-                            "If the email exists, password reset instructions have been sent"
-                    )
+                    .message(message)
                     .build();
         }
 
-        String token = UUID.randomUUID().toString();
+        List<PasswordResetToken> tokens =
+                resetTokens.findByUserIdOrderByIdDesc(u.getId());
 
+        LocalDateTime now = LocalDateTime.now();
+
+        // Cooldown: 60 seconds
+        if (!tokens.isEmpty()) {
+            PasswordResetToken latest = tokens.get(0);
+
+            if (latest.getCreatedAt() != null
+                    && latest.getCreatedAt()
+                    .plusSeconds(OTP_COOLDOWN_SECONDS)
+                    .isAfter(now)) {
+
+                return ForgotPasswordResponse.builder()
+                        .message(message)
+                        .build();
+            }
+        }
+
+        // Invalidate previous OTPs
+        for (PasswordResetToken oldToken : tokens) {
+            if (!oldToken.isUsed()) {
+                oldToken.setUsed(true);
+            }
+        }
+
+        // Generate 6-digit OTP
+        String otp = String.format(
+                "%06d",
+                OTP_RANDOM.nextInt(1_000_000)
+        );
+
+        // Store BCrypt hash
         resetTokens.save(
                 PasswordResetToken.builder()
-                        .token(token)
+                        .token(encoder.encode(otp))
                         .user(u)
-                        .expiresAt(
-                                LocalDateTime.now().plusMinutes(15)
-                        )
+                        .createdAt(now)
+                        .expiresAt(now.plusMinutes(15))
                         .used(false)
+                        .attemptCount(0)
                         .build()
         );
 
-        // Gửi token qua email thay vì trả token về client
+        // Send OTP via email
         emailService.sendPasswordResetEmail(
                 u.getEmail(),
-                token
+                otp
         );
 
         return ForgotPasswordResponse.builder()
-                .message(
-                        "If the email exists, password reset instructions have been sent"
-                )
+                .message(message)
                 .build();
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void resetPassword(ResetPasswordRequest r) {
 
-        PasswordResetToken t = resetTokens
-                .findByToken(r.getToken())
-                .orElseThrow(() ->
-                        new InvalidTokenException("Invalid reset token"));
+        boolean success = otpResetService.resetPassword(r);
 
-        if (t.isUsed()
-                || t.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (!success) {
             throw new InvalidTokenException(
-                    "Reset token expired or used"
+                    "Invalid or expired OTP"
             );
         }
-
-        User u = t.getUser();
-
-        u.setPassword(
-                encoder.encode(r.getNewPassword())
-        );
-
-        users.save(u);
-
-        t.setUsed(true);
-        resetTokens.save(t);
-
-        refreshTokens.revokeAllByUserId(u.getId());
     }
 
     public void changePassword(
@@ -243,7 +281,9 @@ public class AuthServiceImpl implements AuthService {
         return mapper.toResponse(
                 users.findById(u.getId())
                         .orElseThrow(() ->
-                                new UserNotFoundException("User not found"))
+                                new UserNotFoundException(
+                                        "User not found"
+                                ))
         );
     }
 }

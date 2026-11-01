@@ -63,7 +63,8 @@ public class GatewayConfig {
     public RouterFunction<ServerResponse> salesRoute() {
         return GatewayRouterFunctions.route("sales-service")
                 .route(request ->
-                                request.path().startsWith("/deals"),
+                                request.path().startsWith("/deals")
+                                        || request.path().startsWith("/api/v1/deals"),
                         http())
                 .before(uri(salesServiceUrl))
                 .build();
@@ -73,7 +74,8 @@ public class GatewayConfig {
     public RouterFunction<ServerResponse> supportRoute() {
         return GatewayRouterFunctions.route("support-service")
                 .route(request ->
-                                request.path().startsWith("/tickets"),
+                                request.path().startsWith("/tickets")
+                                        || request.path().startsWith("/api/v1/tickets"),
                         http())
                 .before(uri(supportServiceUrl))
                 .build();
