@@ -18,6 +18,7 @@ import {
   ticketService,
 } from "../../services/ticketService";
 import type { Ticket } from "../../types/ticket";
+import { getTicketSla } from "../../utils/ticketSla";
 
 export default function SupportDashboardPage() {
   const navigate = useNavigate();
@@ -72,7 +73,25 @@ export default function SupportDashboardPage() {
   const urgentCount = tickets.filter(
     (ticket) => ticket.priority === "URGENT",
   ).length;
+  const overdueCount = tickets.filter((ticket) => {
+    const sla = getTicketSla(
+      ticket.createdAt,
+      ticket.priority,
+      ticket.status,
+    );
 
+    return sla.state === "OVERDUE";
+  }).length;
+
+  const atRiskCount = tickets.filter((ticket) => {
+    const sla = getTicketSla(
+      ticket.createdAt,
+      ticket.priority,
+      ticket.status,
+    );
+
+    return sla.state === "AT_RISK";
+  }).length;
   const summaries = [
     {
       label: "Ticket mới",
@@ -98,6 +117,18 @@ export default function SupportDashboardPage() {
       description: "Cần ưu tiên xử lý",
       icon: AlertTriangle,
     },
+    {
+      label: "SLA quá hạn",
+      value: overdueCount,
+      description: "Ticket đã vượt thời hạn",
+      icon: AlertTriangle,
+    },
+    {
+      label: "SLA sắp đến hạn",
+      value: atRiskCount,
+      description: "Còn tối đa một giờ",
+      icon: Clock3,
+    },
   ];
 
   return (
@@ -110,14 +141,25 @@ export default function SupportDashboardPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          className="crm-button crm-button--primary"
-          onClick={() => navigate("/tickets/new")}
-        >
-          <Plus size={18} />
-          Tạo Ticket
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="crm-button crm-button--secondary"
+            onClick={() => navigate("/tickets")}
+          >
+            <List size={18} />
+            Danh sách Ticket
+          </button>
+
+          <button
+            type="button"
+            className="crm-button crm-button--primary"
+            onClick={() => navigate("/tickets/new")}
+          >
+            <Plus size={18} />
+            Tạo Ticket
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -278,3 +320,4 @@ export default function SupportDashboardPage() {
     </div>
   );
 }
+console.log("supportpagedashboard")

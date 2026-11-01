@@ -1,47 +1,216 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, Button, CircularProgress, TextField } from "@mui/material";
+import { Button, TextField, IconButton, InputAdornment, } from "@mui/material";
+import { ArrowLeft, LockKeyhole, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useState } from "react";
 
 import AuthPageShell from "../../components/auth/AuthPageShell";
 import { authService } from "../../services/authService";
-import { resetPasswordSchema, type ResetPasswordFormData } from "../../utils/resetPasswordSchema";
+import {
+    resetPasswordSchema,
+    type ResetPasswordFormData,
+} from "../../utils/resetPasswordSchema";
 
 export default function ResetPasswordPage() {
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const token = searchParams.get("token") ?? "";
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState(false);
-    const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<ResetPasswordFormData>({
+    const [message, setMessage] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<ResetPasswordFormData>({
         resolver: zodResolver(resetPasswordSchema),
-        defaultValues: { password: "", confirmPassword: "" },
+        defaultValues: {
+            password: "",
+            confirmPassword: "",
+        },
     });
 
-    const handleResetPassword = async ({ password }: ResetPasswordFormData) => {
-        setError("");
+    const activeToken = tokenFromUrl || customToken.trim();
+
+    const handleResetPassword = async (data: ResetPasswordFormData) => {
+        setErrorMessage("");
+        setSuccessMessage("");
+
+        if (!activeToken) {
+            setErrorMessage(
+                "Thiếu mã xác thực (Token). Vui lòng sử dụng liên kết trong email hoặc nhập mã token."
+            );
+            return;
+        }
+
+        setIsSubmitting(true);
         try {
-            await authService.resetPassword(token, password);
-            setSuccess(true);
-            window.setTimeout(() => navigate("/login", { replace: true, state: { message: "Đặt lại mật khẩu thành công" } }), 900);
-        } catch (resetError) {
-            setError(resetError instanceof Error ? resetError.message : "Không thể đặt lại mật khẩu");
+            const res = await authService.resetPassword({
+                token: activeToken,
+                newPassword: data.password,
+            });
+
+            setSuccessMessage(
+                res.message ||
+                    "Đặt lại mật khẩu thành công! Đang chuyển hướng về trang đăng nhập..."
+            );
+
+            setTimeout(() => {
+                navigate("/login");
+            }, 2500);
+        } catch (err) {
+            const msg =
+                err instanceof Error
+                    ? err.message
+                    : "Mã xác thực không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu cấp lại mã mới.";
+            setErrorMessage(msg);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
-        <AuthPageShell title="Đặt lại mật khẩu" description="Tạo mật khẩu mới cho tài khoản của bạn.">
-            {!token && <Alert severity="error" sx={{ mb: 3 }}>Link đặt lại mật khẩu không hợp lệ.</Alert>}
-            {success ? <Alert severity="success">Đặt lại mật khẩu thành công. Đang chuyển đến trang đăng nhập...</Alert> : (
-                <form onSubmit={handleSubmit(handleResetPassword)} className="crm-form">
-                    {error && <Alert severity="error">{error}</Alert>}
-                    <Controller name="password" control={control} render={({ field }) => <TextField {...field} label="Mật khẩu mới" type="password" fullWidth autoComplete="new-password" disabled={isSubmitting} error={!!errors.password} helperText={errors.password?.message} />} />
-                    <Controller name="confirmPassword" control={control} render={({ field }) => <TextField {...field} label="Xác nhận mật khẩu" type="password" fullWidth autoComplete="new-password" disabled={isSubmitting} error={!!errors.confirmPassword} helperText={errors.confirmPassword?.message} />} />
-                    <Button type="submit" variant="contained" fullWidth size="large" disabled={!token || isSubmitting} startIcon={isSubmitting ? <CircularProgress size={17} color="inherit" /> : undefined}>{isSubmitting ? "Đang đặt lại..." : "Đặt lại mật khẩu"}</Button>
+        <AuthPageShell
+            title="Đặt lại mật khẩu"
+            description="Tạo mật khẩu mới để tiếp tục sử dụng tài khoản CRM của bạn."
+        >
+            {successMessage ? (
+                <div className="space-y-4">
+                    <div
+                        role="status"
+                        className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-900"
+                    >
+                        <div className="mb-1.5 flex items-center gap-2 font-semibold text-emerald-800">
+                            <CheckCircle2 size={18} className="text-emerald-600" />
+                            Thành công
+                        </div>
+                        <p className="text-sm leading-relaxed">{successMessage}</p>
+                    </div>
+
+                    <Button
+                        variant="contained"
+                        fullWidth
+                        size="large"
+                        onClick={() => navigate("/login")}
+                    >
+                        Đăng nhập ngay
+                    </Button>
+                </div>
+            ) : (
+                <form
+                    onSubmit={handleSubmit(handleResetPassword)}
+                    className="crm-form"
+                    noValidate
+                >
+                    {!tokenFromUrl && (
+                        <TextField
+                            {...field}
+                            label="Mật khẩu mới"
+                            type={showPassword ? "text" : "password"}
+                            fullWidth
+                            disabled={isSubmitting}
+                            error={!!errors.password}
+                            helperText={
+                                errors.password?.message ||
+                                "Mật khẩu cần có ít nhất 8 ký tự."
+                            }
+                            slotProps={{
+                                input: {
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={() =>
+                                                    setShowPassword((prev) => !prev)
+                                                }
+                                                edge="end"
+                                                aria-label={
+                                                    showPassword
+                                                        ? "Ẩn mật khẩu"
+                                                        : "Hiện mật khẩu"
+                                                }
+                                                disabled={isSubmitting}
+                                            >
+                                                {showPassword ? (
+                                                    <EyeOff size={20} />
+                                                ) : (
+                                                    <Eye size={20} />
+                                                )}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                },
+                            }}
+                        />
+                    )}
+
+                <Controller
+                    name="confirmPassword"
+                    control={control}
+                    render={({ field }) => (
+                        <TextField
+                            {...field}
+                            label="Xác nhận mật khẩu mới"
+                            type={showConfirmPassword ? "text" : "password"}
+                            fullWidth
+                            autoComplete="new-password"
+                            disabled={isSubmitting}
+                            error={!!errors.confirmPassword}
+                            helperText={errors.confirmPassword?.message || " "}
+                            slotProps={{
+                                input: {
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={() =>
+                                                    setShowConfirmPassword((prev) => !prev)
+                                                }
+                                                edge="end"
+                                                aria-label={
+                                                    showConfirmPassword
+                                                        ? "Ẩn mật khẩu xác nhận"
+                                                        : "Hiện mật khẩu xác nhận"
+                                                }
+                                                disabled={isSubmitting}
+                                            >
+                                                {showConfirmPassword ? (
+                                                    <EyeOff size={20} />
+                                                ) : (
+                                                    <Eye size={20} />
+                                                )}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                },
+                            }}
+                        />
+                    )}
+
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        fullWidth
+                        size="large"
+                        disabled={isSubmitting}
+                        startIcon={
+                            isSubmitting ? (
+                                <CircularProgress size={18} color="inherit" />
+                            ) : (
+                                <KeyRound size={18} />
+                            )
+                        }
+                    >
+                        {isSubmitting ? "Đang xử lý..." : "Đặt lại mật khẩu"}
+                    </Button>
                 </form>
             )}
-            <p className="mt-5 text-center text-sm"><Link to="/login" className="font-medium text-(--crm-primary) hover:underline">Quay lại đăng nhập</Link></p>
+
+            <p className="mt-5 text-center text-sm text-(--crm-text-secondary)">
+                <Link
+                    to="/login"
+                    className="inline-flex items-center gap-2 font-medium text-(--crm-primary) hover:underline"
+                >
+                    <ArrowLeft size={16} />
+                    Quay lại đăng nhập
+                </Link>
+            </p>
         </AuthPageShell>
     );
 }

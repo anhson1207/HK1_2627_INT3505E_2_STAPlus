@@ -11,13 +11,10 @@ import CustomerDetailPage from "../pages/customers/CustomerDetailPage";
 import CustomerEditPage from "../pages/customers/CustomerEditPage";
 import LoginPage from "../pages/auth/LoginPage";
 import RegisterPage from "../pages/auth/RegisterPage";
-import VerifyEmailPendingPage from "../pages/auth/VerifyEmailPendingPage";
-import VerifyEmailSuccessPage from "../pages/auth/VerifyEmailSuccessPage";
-import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
-import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicOnlyRoute from "./PublicOnlyRoute";
 import RoleGuard from "../components/auth/RoleGuard";
+import { rolesWithPermission } from "../config/rolePermissions";
 import DealListPage from "../pages/deals/DealListPage";
 import DealCreatePage from "../pages/deals/DealCreatePage";
 import DealDetailPage from "../pages/deals/DealDetailPage";
@@ -29,10 +26,13 @@ import TicketDetailPage from "../pages/tickets/TicketDetailPage";
 import TicketEditPage from "../pages/tickets/TicketEditPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import AnalyticsPage from "../pages/analytics/AnalyticsPage";
-import SalesPage from "../pages/sales/SalesPage";
-import SupportPage from "../pages/support/SupportPage";
 import SupportDashboardPage from "../pages/support/SupportDashboardPage";
 import UserManagementPage from "../pages/settings/UserManagementPage";
+import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
+import VerifyEmailPendingPage from '../pages/auth/VerifyEmailPendingPage';
+import VerifyEmailSuccessPage from '../pages/auth/VerifyEmailSuccessPage';
+import ProfilePage from "../pages/settings/ProfilePage";
 export default function AppRoutes() {
     return (
         <BrowserRouter>
@@ -41,15 +41,19 @@ export default function AppRoutes() {
                 <Route element={<PublicOnlyRoute />}>
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/verify-email-pending"element={<VerifyEmailPendingPage />}/>
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="/verify-email-success"element={<VerifyEmailSuccessPage />}/>
                 </Route>
-                <Route path="/verify-email-pending" element={<VerifyEmailPendingPage />} />
-                <Route path="/verify-email-success" element={<VerifyEmailSuccessPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                 <Route element={<ProtectedRoute />}>
                     <Route element={<MainLayout />}>
-                        <Route element={ <RoleGuard allowedRoles={["ADMIN"]} fallback={<Navigate to="/dashboard" replace />} ><Outlet /></RoleGuard>}><Route path="/settings/users"element={<UserManagementPage />}/></Route>
+                        <Route element={ <RoleGuard allowedRoles={["ADMIN"]} fallback={<Navigate to="/dashboard" replace />} ><Outlet /></RoleGuard>}>
+                            <Route path="/settings" element={<Navigate to="/settings/users" replace />} />
+                            <Route path="/settings/users" element={<UserManagementPage />}/>
+                        </Route>
+                        <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/dashboard" element={<DashboardPage />} />
 
                         <Route path="/leads" element={<LeadListPage />} />
@@ -62,8 +66,8 @@ export default function AppRoutes() {
                         <Route path="/customers/:id" element={<CustomerDetailPage />} />
                         <Route path="/customers/:id/edit" element={<CustomerEditPage />} />
 
-                        <Route element={<RoleGuard allowedRoles={["ADMIN", "SALES"]} fallback={<Navigate to="/dashboard" replace />}><Outlet /></RoleGuard>}>
-                            <Route path="/sales" element={<SalesPage />} />
+                        <Route element={<RoleGuard allowedRoles={rolesWithPermission("deals")} fallback={<Navigate to="/dashboard" replace />}><Outlet /></RoleGuard>}>
+                            <Route path="/sales" element={<Navigate to="/deals" replace />} />
                             <Route path="/analytics" element={<AnalyticsPage />} />
                             <Route path="/deals" element={<DealListPage />} />
                             <Route path="/deals/new" element={<DealCreatePage />} />
@@ -72,7 +76,7 @@ export default function AppRoutes() {
                             <Route path="/deals/:id/edit" element={<DealEditPage />} />
                         </Route>
 
-                        <Route element={<RoleGuard allowedRoles={["ADMIN", "SUPPORT"]} fallback={<Navigate to="/dashboard" replace />}><Outlet /></RoleGuard>}>
+                        <Route element={<RoleGuard allowedRoles={rolesWithPermission("tickets")} fallback={<Navigate to="/dashboard" replace />}><Outlet /></RoleGuard>}>
                             <Route path="/support" element={<SupportDashboardPage />} />
                             <Route path="/tickets" element={<TicketListPage />} />
                             <Route path="/tickets/new" element={<TicketCreatePage />} />

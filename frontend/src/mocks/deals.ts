@@ -30,16 +30,35 @@ function wait() {
 
 function readDeals(): Deal[] {
     const stored = localStorage.getItem(STORAGE_KEY);
+
     if (stored) {
         try {
             const deals = JSON.parse(stored) as Deal[];
-            if (Array.isArray(deals)) return deals;
+
+            if (Array.isArray(deals)) {
+                const normalizedDeals = deals.map((deal) => ({
+                    ...deal,
+                    discountPercent: deal.discountPercent ?? 0,
+                    approvalStatus: deal.approvalStatus ?? "NOT_REQUIRED",
+                    discountReason: deal.discountReason ?? "",
+                }));
+
+                writeDeals(normalizedDeals);
+                return normalizedDeals;
+            }
         } catch {
             // Khôi phục dữ liệu mẫu nếu localStorage bị hỏng.
         }
     }
-    const deals = mockDeals.map((deal) => ({ ...deal }));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(deals));
+
+    const deals = mockDeals.map((deal) => ({
+        ...deal,
+        discountPercent: 0,
+        approvalStatus: "NOT_REQUIRED" as const,
+        discountReason: "",
+    }));
+
+    writeDeals(deals);
     return deals;
 }
 
@@ -78,19 +97,54 @@ export const dealMockApi = {
     },
     createDeal: async (data: DealPayload, customerName: string) => {
         await wait();
+
         const deals = readDeals();
-        const deal: Deal = { ...data, customerName, id: deals.reduce((largest, item) => Math.max(largest, item.id), 0) + 1, createdAt: new Date().toISOString() };
+
+        const deal: Deal = {
+            ...data,
+            customerName,
+            discountPercent: data.discountPercent ?? 0,
+            approvalStatus: data.discountPercent ? "PENDING" : "NOT_REQUIRED",
+            discountReason: data.discountReason ?? "",
+            id: deals.reduce((largest, item) => Math.max(largest, item.id), 0) + 1,
+            createdAt: new Date().toISOString(),
+        };
+
         writeDeals([...deals, deal]);
+
         return { ...deal };
     },
     updateDeal: async (id: number, data: DealPayload, customerName: string) => {
         await wait();
+
         const deals = readDeals();
         const index = deals.findIndex((item) => item.id === id);
-        if (index === -1) throw new Error("Không tìm thấy Deal.");
-        const updated: Deal = { ...deals[index], ...data, id, customerName };
+
+        if (index === -1) {
+            throw new Error("Không tìm thấy Deal.");
+        }
+
+        const previousDeal = deals[index];
+        const discountPercent = data.discountPercent ?? 0;
+        const discountChanged = discountPercent !== (previousDeal.discountPercent ?? 0);
+
+        const updated: Deal = {
+            ...previousDeal,
+            ...data,
+            id,
+            customerName,
+            discountPercent,
+            approvalStatus: discountChanged
+                ? discountPercent > 0 ? "PENDING" : "NOT_REQUIRED"
+                : previousDeal.approvalStatus ?? "NOT_REQUIRED",
+            discountReason: data.discountReason ?? "",
+            discountApprovedBy: discountChanged ? undefined : previousDeal.discountApprovedBy,
+            discountApprovedAt: discountChanged ? undefined : previousDeal.discountApprovedAt,
+        };
+
         deals[index] = updated;
         writeDeals(deals);
+
         return { ...updated };
     },
     deleteDeal: async (id: number) => {
@@ -107,5 +161,103 @@ export const dealMockApi = {
         deals[index] = { ...deals[index], stage };
         writeDeals(deals);
         return { ...deals[index] };
+    },
+        requestDiscountApproval: async (id: number): Promise<Deal> => {
+        await wait();
+
+        const deals = readDeals();
+        const index = deals.findIndex((item) => item.id === id);
+
+        if (index === -1) {
+            throw new Error("Không tìm thấy Deal.");
+        }
+
+        const deal = deals[index];
+
+        if ((deal.discountPercent ?? 0) <= 0) {
+            throw new Error("Deal chưa có mức giảm giá cần phê duyệt.");
+        }
+
+        if (deal.approvalStatus === "PENDING") {
+            throw new Error("Yêu cầu phê duyệt giảm giá đã được gửi.");
+        }
+
+        const updated: Deal = {
+            ...deal,
+            approvalStatus: "PENDING",
+            discountApprovedBy: undefined,
+            discountApprovedAt: undefined,
+        };
+
+        deals[index] = updated;
+        writeDeals(deals);
+
+        return { ...updated };
+    },
+
+    approveDiscount: async (
+        id: number,
+        username: string,
+    ): Promise<Deal> => {
+        await wait();
+
+        const deals = readDeals();
+        const index = deals.findIndex((item) => item.id === id);
+
+        if (index === -1) {
+            throw new Error("Không tìm thấy Deal.");
+        }
+
+        if (deals[index].approvalStatus !== "PENDING") {
+            throw new Error("Deal không có yêu cầu đang chờ phê duyệt.");
+        }
+
+        const updated: Deal = {
+            ...deals[index],
+            approvalStatus: "APPROVED",
+            discountApprovedBy: username,
+            discountApprovedAt: new Date().toISOString(),
+        };
+
+        deals[index] = updated;
+        writeDeals(deals);
+
+        return { ...updated };
+    },
+
+    rejectDiscount: async (
+        id: number,
+        username: string,
+        reason: string,
+    ): Promise<Deal> => {
+        await wait();
+
+        const deals = readDeals();
+        const index = deals.findIndex((item) => item.id === id);
+
+        if (index === -1) {
+            throw new Error("Không tìm thấy Deal.");
+        }
+
+        if (deals[index].approvalStatus !== "PENDING") {
+            throw new Error("Deal không có yêu cầu đang chờ phê duyệt.");
+        }
+
+        if (!reason.trim()) {
+            throw new Error("Vui lòng nhập lý do từ chối.");
+        }
+
+        const updated: Deal = {
+            ...deals[index],
+            approvalStatus: "REJECTED",
+            discountReason: reason.trim(),
+            discountApprovedBy: username,
+            discountApprovedAt: new Date().toISOString(),
+        };
+
+        deals[index] = updated;
+        writeDeals(deals);
+
+        return { ...updated };
     },
 };

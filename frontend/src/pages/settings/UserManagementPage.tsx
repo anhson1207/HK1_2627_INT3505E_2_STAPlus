@@ -47,8 +47,7 @@ function getRoleLabel(role: UserRole) {
 
 export default function UserManagementPage() {
     const currentUser = useAuthStore((state) => state.user);
-    const currentUserId = currentUser?.id;
-
+    const currentUserId = (currentUser as unknown as { id?: number })?.id;
     const [users, setUsers] = useState<CRMUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
@@ -65,32 +64,35 @@ export default function UserManagementPage() {
 
     const isAdmin = currentUser?.role === "ADMIN";
 
-    const loadUsers = async () => {
-        setLoading(true);
-        setError("");
-
-        try {
-            const data = await userService.getUsers();
-            setUsers(data);
-        } catch (loadError) {
-            setError(
-                loadError instanceof Error
-                    ? loadError.message
-                    : "Không thể tải người dùng."
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        void loadUsers();
+        let isMounted = true;
+        userService.getUsers()
+            .then((data) => {
+                if (isMounted) {
+                    setUsers(data);
+                    setLoading(false);
+                }
+            })
+            .catch((loadError) => {
+                if (isMounted) {
+                    setError(
+                        loadError instanceof Error
+                            ? loadError.message
+                            : "Không thể tải người dùng."
+                    );
+                    setLoading(false);
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const filtered = useMemo(() => {
         const keyword = deferredSearch.trim().toLocaleLowerCase("vi");
 
-        return users.filter(
+        const list = users.filter(
             (user) =>
                 (!role || user.role === role) &&
                 (!status || user.status === status) &&
@@ -101,6 +103,13 @@ export default function UserManagementPage() {
                             value!.toLocaleLowerCase("vi").includes(keyword)
                         ))
         );
+
+        // Luôn ưu tiên đưa tài khoản PENDING (chờ duyệt) và tài khoản mới lên đầu bảng
+        return list.sort((a, b) => {
+            if (a.status === "PENDING" && b.status !== "PENDING") return -1;
+            if (a.status !== "PENDING" && b.status === "PENDING") return 1;
+            return b.id - a.id;
+        });
     }, [users, deferredSearch, role, status]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));

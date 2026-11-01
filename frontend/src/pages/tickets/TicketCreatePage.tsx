@@ -15,3 +15,4 @@ export default function TicketCreatePage() {
     };
     return <div className="max-w-5xl"><div className="mb-6"><h1 className="crm-page-title">Tạo Ticket</h1><p className="crm-page-description">Ghi nhận yêu cầu hỗ trợ khách hàng</p></div><div className="crm-card crm-card__body"><TicketForm onSubmit={handleSubmit} onCancel={() => navigate("/tickets")} submitLabel="Tạo Ticket" serverError={error} /></div></div>;
 }
+console.log("tickets/ticketcreate")
