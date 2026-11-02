@@ -139,7 +139,7 @@ export default function LoginPage() {
                                                 aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                                                 disabled={busy}
                                             >
-                                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                                             </IconButton>
                                         </InputAdornment>
                                     ),

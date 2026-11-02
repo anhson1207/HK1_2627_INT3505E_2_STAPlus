@@ -187,7 +187,7 @@ export default function ResetPasswordPage() {
                                                     aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                                                     disabled={isSubmitting}
                                                 >
-                                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                                    {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                                                 </IconButton>
                                             </InputAdornment>
                                         ),
@@ -225,9 +225,9 @@ export default function ResetPasswordPage() {
                                                     disabled={isSubmitting}
                                                 >
                                                     {showConfirmPassword ? (
-                                                        <EyeOff size={20} />
-                                                    ) : (
                                                         <Eye size={20} />
+                                                    ) : (
+                                                        <EyeOff size={20} />
                                                     )}
                                                 </IconButton>
                                             </InputAdornment>

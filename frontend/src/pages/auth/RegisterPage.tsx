@@ -85,7 +85,7 @@ export default function RegisterPage() {
                                                 aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                                                 disabled={isSubmitting}
                                             >
-                                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                                             </IconButton>
                                         </InputAdornment>
                                     ),
@@ -118,7 +118,7 @@ export default function RegisterPage() {
                                                 aria-label={showConfirmPassword ? "Ẩn mật khẩu xác nhận" : "Hiện mật khẩu xác nhận"}
                                                 disabled={isSubmitting}
                                             >
-                                                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                                {showConfirmPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                                             </IconButton>
                                         </InputAdornment>
                                     ),
