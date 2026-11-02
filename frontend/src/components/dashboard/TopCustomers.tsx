@@ -12,7 +12,6 @@ export default function TopCustomers({ data, onCustomerClick }: TopCustomersProp
     <section className="crm-widget crm-widget--wide crm-widget--table crm-customers-widget">
       <div className="crm-widget__header">
         <div>
-          <p className="crm-widget__eyebrow">Khách hàng</p>
           <h2>Khách hàng hàng đầu</h2>
         </div>
         <span className="crm-widget__icon crm-tone--amber"><Crown size={20} aria-hidden="true" /></span>

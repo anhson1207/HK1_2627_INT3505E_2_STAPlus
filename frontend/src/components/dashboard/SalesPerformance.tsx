@@ -11,7 +11,6 @@ export default function SalesPerformance({ data }: SalesPerformanceProps) {
     <section className="crm-widget crm-widget--full crm-widget--table">
       <div className="crm-widget__header">
         <div>
-          <p className="crm-widget__eyebrow">Đội ngũ kinh doanh</p>
           <h2>Hiệu suất bán hàng</h2>
         </div>
         <span className="crm-widget__icon crm-tone--purple"><Award size={20} aria-hidden="true" /></span>

@@ -11,7 +11,6 @@ export default function ConversionFunnel({ data }: ConversionFunnelProps) {
     <section className="crm-widget crm-widget--half crm-card__body">
       <div className="crm-widget__header">
         <div>
-          <p className="crm-widget__eyebrow">Chuyển đổi</p>
           <h2>Phễu chuyển đổi</h2>
         </div>
       </div>

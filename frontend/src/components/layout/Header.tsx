@@ -42,8 +42,6 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
     const [search, setSearch] = useState("");
     const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(null);
     const { user, logout } = useAuthStore();
-    console.log("Header user:", user);
-    console.log("Header role:", user?.role);
 
     const roleLabels: Record<UserRole, string> = {
         ADMIN: "Quản trị viên",
@@ -109,6 +107,7 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                             onChange={(event) => setSearch(event.target.value)}
                             placeholder="Tìm Lead theo tên, email, số điện thoại..."
                         />
+                        <kbd className="crm-search__kbd" title="Nhấn ⌘K hoặc Ctrl+K để tìm kiếm">⌘K</kbd>
                     </form>
                 </RoleGuard>
 

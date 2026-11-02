@@ -3,7 +3,7 @@ import type { LeadSourceStat } from "../../types/analytics";
 import { getLeadSourceLabel } from "../../utils/constants";
 import type { LeadSource } from "../../types/lead";
 
-const COLORS = ["var(--crm-primary)", "var(--crm-purple)", "var(--crm-dark-blue)", "var(--crm-green)", "var(--crm-orange)", "var(--crm-text-secondary)"];
+const COLORS = ["#18181b", "#7e22ce", "#0369a1", "#15803d", "#c2410c", "#71717a"];
 
 export default function LeadSourceChart({ data }: { data: LeadSourceStat[] }) {
     const chartData = data.map((item) => ({ ...item, name: getLeadSourceLabel(item.source as LeadSource) }));
