@@ -341,11 +341,11 @@ export default function UserManagementPage() {
                                 <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle) text-left text-xs text-(--crm-text-secondary)">
                                     <th className="px-4 py-3">Tên</th>
                                     <th className="px-4 py-3">Email</th>
-                                    <th className="px-4 py-3">Vai trò</th>
+                                    <th className="px-4 py-3 text-center">Vai trò</th>
                                     <th className="px-4 py-3">Phòng ban</th>
-                                    <th className="px-4 py-3">Trạng thái</th>
-                                    <th className="px-4 py-3">Ngày tạo</th>
-                                    <th className="px-4 py-3">Thao tác</th>
+                                    <th className="px-4 py-3 text-center">Trạng thái</th>
+                                    <th className="px-4 py-3 text-center">Ngày tạo</th>
+                                    <th className="px-4 py-3 text-center">Thao tác</th>
                                 </tr>
                             </thead>
 
@@ -375,7 +375,7 @@ export default function UserManagementPage() {
                                                 {user.email}
                                             </td>
 
-                                            <td className="px-4 py-3">
+                                            <td className="px-4 py-3 text-center">
                                                 <span className="rounded-full bg-(--crm-info-soft) px-2.5 py-1 text-xs font-medium text-(--crm-primary)">
                                                     {getRoleLabel(user.role)}
                                                 </span>
@@ -385,7 +385,7 @@ export default function UserManagementPage() {
                                                 {user.department || "—"}
                                             </td>
 
-                                            <td className="px-4 py-3">
+                                            <td className="px-4 py-3 text-center">
                                                 <span
                                                     className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass}`}
                                                 >
@@ -393,14 +393,14 @@ export default function UserManagementPage() {
                                                 </span>
                                             </td>
 
-                                            <td className="px-4 py-3 text-xs text-(--crm-text-secondary)">
+                                            <td className="px-4 py-3 text-center text-xs text-(--crm-text-secondary)">
                                                 {dateFormat.format(
                                                     new Date(user.createdAt)
                                                 )}
                                             </td>
 
-                                            <td className="px-4 py-3">
-                                                <div className="flex gap-1">
+                                            <td className="px-4 py-3 text-center">
+                                                <div className="flex justify-center gap-1">
                                                     {isAdmin && (
                                                         <button
                                                             type="button"
