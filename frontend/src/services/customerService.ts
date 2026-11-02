@@ -67,7 +67,7 @@ export function getCustomerErrorMessage(error: unknown): string {
 
 export const customerService = {
     getCustomers: async (page = 0, size = 10, search?: string, status?: CustomerStatus): Promise<CustomerListResponse> => {
-        if (useCustomerMockApi) return customerMockApi.getCustomers(page, size);
+        if (useCustomerMockApi) return customerMockApi.getCustomers(page, size, search, status);
 
         try {
             const safePage = Math.max(0, page);
@@ -89,7 +89,7 @@ export const customerService = {
             };
         } catch (error) {
             console.warn("Failed to fetch customers from API, falling back to mock:", error);
-            return customerMockApi.getCustomers(page, size);
+            return customerMockApi.getCustomers(page, size, search, status);
         }
     },
 

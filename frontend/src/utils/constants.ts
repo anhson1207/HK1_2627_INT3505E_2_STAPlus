@@ -1,4 +1,17 @@
+import type { CustomerStatus } from "../types/customer";
 import type { LeadSource, LeadStatus } from "../types/lead";
+
+export const CUSTOMER_STATUS_OPTIONS: ReadonlyArray<{
+    value: CustomerStatus;
+    label: string;
+}> = [
+    { value: "ACTIVE", label: "Đang hoạt động" },
+    { value: "INACTIVE", label: "Ngừng hoạt động" },
+];
+
+export function getCustomerStatusLabel(status: CustomerStatus) {
+    return CUSTOMER_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
+}
 
 export const LEAD_STATUS_OPTIONS: ReadonlyArray<{
     value: LeadStatus;

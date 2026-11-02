@@ -23,8 +23,8 @@ export default function CustomerTable({ customers, onView }: CustomerTableProps)
                 <div className="mb-3 rounded-full bg-(--crm-surface-hover) p-4 text-(--crm-text-muted)">
                     <Users size={28} />
                 </div>
-                <p className="font-medium text-(--crm-text)">Chưa có khách hàng</p>
-                <p className="crm-page-description">Thêm khách hàng mới để bắt đầu quản lý.</p>
+                <p className="font-medium text-(--crm-text)">Không tìm thấy khách hàng</p>
+                <p className="crm-page-description">Thử thay đổi từ khóa hoặc bộ lọc hiện tại.</p>
             </div>
         );
     }

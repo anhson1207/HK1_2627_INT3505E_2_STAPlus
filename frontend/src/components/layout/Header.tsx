@@ -53,6 +53,7 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
     const avatarLabel = user?.username.charAt(0).toLocaleUpperCase("vi") ?? "U";
 
     const isSupportPage = location.pathname.startsWith("/support");
+    const isCustomerPage = location.pathname.startsWith("/customers");
 
     useEffect(() => {
         const handleShortcut = (event: KeyboardEvent) => {
@@ -68,7 +69,9 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
     const handleSearch = (event: FormEvent) => {
         event.preventDefault();
         const keyword = search.trim();
-        if (isSupportPage) {
+        if (isCustomerPage) {
+            navigate(keyword ? `/customers?search=${encodeURIComponent(keyword)}` : "/customers");
+        } else if (isSupportPage) {
             navigate(keyword ? `/support?search=${encodeURIComponent(keyword)}` : "/support");
         } else {
             navigate(keyword ? `/leads?search=${encodeURIComponent(keyword)}` : "/leads");
@@ -102,10 +105,10 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                         <input
                             ref={searchRef}
                             type="search"
-                            aria-label="Tìm Lead"
+                            aria-label={isCustomerPage ? "Tìm khách hàng" : isSupportPage ? "Tìm Ticket" : "Tìm Lead"}
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Tìm Lead theo tên, email, số điện thoại..."
+                            placeholder={isCustomerPage ? "Tìm khách hàng theo tên, email, SĐT..." : isSupportPage ? "Tìm Ticket theo tiêu đề, mã..." : "Tìm Lead theo tên, email, số điện thoại..."}
                         />
                         <kbd className="crm-search__kbd" title="Nhấn ⌘K hoặc Ctrl+K để tìm kiếm">⌘K</kbd>
                     </form>
