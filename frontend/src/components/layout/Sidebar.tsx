@@ -1,7 +1,6 @@
 import {
     BarChart3,
     BriefcaseBusiness,
-    CircleHelp,
     LayoutDashboard,
     PanelLeftClose,
     PanelLeftOpen,
@@ -111,10 +110,6 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
                         {!collapsed && <span>{settingsNavigation.label}</span>}
                     </NavLink>
                 )}
-                <button type="button" title="Trợ giúp" aria-label="Trợ giúp" className="crm-nav-item">
-                    <CircleHelp size={18} className="crm-nav-item__icon" />
-                    {!collapsed && <span>Trợ giúp</span>}
-                </button>
                 <button type="button" onClick={onToggle} className="crm-nav-item"
                     aria-label={mobile ? "Đóng thanh bên" : collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}>
                     {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
