@@ -4,7 +4,7 @@ import type { TicketOverviewData } from "../../types/analytics";
 import { getTicketStatusLabel } from "../../utils/ticketOptions";
 import type { TicketStatus } from "../../types/ticket";
 
-const COLORS = ["#18181b", "#4338ca", "#15803d", "#71717a"];
+const COLORS = ["#c2410c", "#d97706", "#ea580c", "#78716c"];
 
 export default function TicketOverview({ data }: { data: TicketOverviewData }) {
     const chartData = data.statuses.map((item) => ({ ...item, name: getTicketStatusLabel(item.status as TicketStatus) }));
