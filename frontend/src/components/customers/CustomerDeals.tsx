@@ -33,7 +33,7 @@ export default function CustomerDeals({ deals }: CustomerDealsProps) {
             <div className="crm-table-wrap">
                 <table className="crm-table">
                     <thead><tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
-                        {["Deal", "Giá trị", "Stage", "Expected Close Date"].map((label) => <th key={label} className="px-5 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">{label}</th>)}
+                        {["Tên Deal", "Giá trị", "Giai đoạn", "Ngày dự kiến đóng"].map((label) => <th key={label} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">{label}</th>)}
                     </tr></thead>
                     <tbody>{deals.map((deal) => {
                         const stage = stageConfig[deal.stage];

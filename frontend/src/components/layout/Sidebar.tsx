@@ -10,7 +10,7 @@ import {
     Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 import { useAuthStore } from "../../stores/authStore";
 import { rolesWithPermission } from "../../config/rolePermissions";
@@ -67,6 +67,7 @@ const settingsNavigation: NavigationItem = {
 };
 
 export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = false }: SidebarProps) {
+    const location = useLocation();
     const role = useAuthStore((state) => state.user?.role);
     const visibleGroups = navigationGroups
         .map((group) => ({
@@ -74,6 +75,16 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
             items: group.items.filter((item) => Boolean(role && item.roles?.includes(role))),
         }))
         .filter((group) => group.items.length > 0);
+
+    const isItemActive = (path: string, isActive: boolean) => {
+        if (isActive) return true;
+        if (path === "/support" && location.pathname.startsWith("/tickets")) return true;
+        if (path === "/deals" && location.pathname.startsWith("/deals")) return true;
+        if (path === "/leads" && location.pathname.startsWith("/leads")) return true;
+        if (path === "/customers" && location.pathname.startsWith("/customers")) return true;
+        if (path === "/settings/users" && location.pathname.startsWith("/settings")) return true;
+        return false;
+    };
 
     return (
         <aside className={`crm-sidebar ${collapsed ? "is-collapsed" : ""} ${mobile ? "is-open" : ""}`} aria-label="Điều hướng chính">
@@ -91,7 +102,7 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
                                 return (
                                     <NavLink key={item.path} to={item.path} onClick={onNavigate}
                                         title={collapsed ? item.label : undefined} aria-label={collapsed ? item.label : undefined}
-                                        className={({ isActive }) => `crm-nav-item ${isActive ? "is-active" : ""}`}>
+                                        className={({ isActive }) => `crm-nav-item ${isItemActive(item.path, isActive) ? "is-active" : ""}`}>
                                         <Icon size={18} className="crm-nav-item__icon" />
                                         {!collapsed && <span>{item.label}</span>}
                                     </NavLink>
@@ -105,7 +116,7 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
                 {role && settingsNavigation.roles.includes(role) && (
                     <NavLink to={settingsNavigation.path} onClick={onNavigate}
                         title={collapsed ? settingsNavigation.label : undefined} aria-label={collapsed ? settingsNavigation.label : undefined}
-                        className={({ isActive }) => `crm-nav-item ${isActive ? "is-active" : ""}`}>
+                        className={({ isActive }) => `crm-nav-item ${isItemActive(settingsNavigation.path, isActive) ? "is-active" : ""}`}>
                         <Settings size={18} className="crm-nav-item__icon" />
                         {!collapsed && <span>{settingsNavigation.label}</span>}
                     </NavLink>

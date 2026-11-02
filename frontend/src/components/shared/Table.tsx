@@ -64,4 +64,3 @@ export default function Table<T>({
         </div>
     );
 }
-console.log("table");

@@ -22,16 +22,30 @@ function getPageName(pathname: string) {
     if (/^\/leads\/\d+$/.test(pathname)) return "Lead / Chi tiết";
     if (pathname.startsWith("/leads")) return "Lead";
 
-    // Support Routes (/support)
-    if (pathname === "/support/new") return "Hỗ trợ / Tạo mới";
-    if (/^\/support\/[^/]+\/edit$/.test(pathname)) return "Hỗ trợ / Chỉnh sửa";
-    if (/^\/support\/[^/]+$/.test(pathname)) return "Hỗ trợ / Chi tiết";
+    // Customer Routes
+    if (pathname === "/customers/new") return "Khách hàng / Thêm mới";
+    if (/^\/customers\/\d+\/edit$/.test(pathname)) return "Khách hàng / Chỉnh sửa";
+    if (/^\/customers\/\d+$/.test(pathname)) return "Khách hàng / Chi tiết";
+    if (pathname.startsWith("/customers")) return "Khách hàng";
+
+    // Deal Routes
+    if (pathname === "/deals/new") return "Cơ hội / Thêm mới";
+    if (pathname === "/deals/kanban") return "Cơ hội / Kanban";
+    if (/^\/deals\/\d+\/edit$/.test(pathname)) return "Cơ hội / Chỉnh sửa";
+    if (/^\/deals\/\d+$/.test(pathname)) return "Cơ hội / Chi tiết";
+    if (pathname.startsWith("/deals")) return "Cơ hội";
+
+    // Ticket & Support Routes
+    if (pathname === "/tickets/new") return "Ticket / Tạo mới";
+    if (/^\/tickets\/[^/]+\/edit$/.test(pathname)) return "Ticket / Chỉnh sửa";
+    if (/^\/tickets\/[^/]+$/.test(pathname)) return "Ticket / Chi tiết";
+    if (pathname.startsWith("/tickets")) return "Ticket";
     if (pathname.startsWith("/support")) return "Hỗ trợ";
 
-    if (pathname.startsWith("/customers")) return "Khách hàng";
-    if (pathname.startsWith("/deals")) return "Cơ hội";
     if (pathname.startsWith("/analytics")) return "Phân tích";
+    if (pathname === "/settings/users") return "Cài đặt / Người dùng";
     if (pathname.startsWith("/settings")) return "Cài đặt";
+    if (pathname === "/profile") return "Hồ sơ cá nhân";
     return "CRM";
 }
 

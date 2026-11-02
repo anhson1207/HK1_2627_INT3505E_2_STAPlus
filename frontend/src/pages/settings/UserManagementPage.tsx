@@ -276,11 +276,11 @@ export default function UserManagementPage() {
             )}
 
             <div className="crm-board">
-                <div className="flex flex-wrap gap-3 border-b border-(--crm-border) p-4">
-                    <label className="flex min-w-48 flex-1 items-center gap-2 rounded-lg border border-(--crm-border) px-3">
+                <div className="crm-toolbar crm-toolbar--board">
+                    <label className="crm-search">
                         <Search
                             size={16}
-                            className="text-(--crm-text-muted)"
+                            className="mr-2 shrink-0 text-(--crm-text-muted)"
                         />
                         <input
                             type="search"
@@ -290,7 +290,8 @@ export default function UserManagementPage() {
                                 setPage(0);
                             }}
                             placeholder="Tìm tên, email, phòng ban..."
-                            className="h-9 w-full min-w-0 bg-transparent text-xs outline-none"
+                            className="w-full text-sm outline-none placeholder:text-(--crm-text-muted)"
+                            aria-label="Tìm kiếm người dùng"
                         />
                     </label>
 
@@ -338,14 +339,14 @@ export default function UserManagementPage() {
                     <div className="crm-table-wrap">
                         <table className="crm-table">
                             <thead>
-                                <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle) text-center text-xs text-(--crm-text-secondary)">
-                                    <th className="px-4 py-3 text-center">Tên</th>
-                                    <th className="px-4 py-3 text-center">Email</th>
-                                    <th className="px-4 py-3 text-center">Vai trò</th>
-                                    <th className="px-4 py-3 text-center">Phòng ban</th>
-                                    <th className="px-4 py-3 text-center">Trạng thái</th>
-                                    <th className="px-4 py-3 text-center">Ngày tạo</th>
-                                    <th className="px-4 py-3 text-center">Thao tác</th>
+                                <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle) text-center text-xs font-semibold text-(--crm-text-secondary)">
+                                    <th className="px-5 py-3.5 text-center">Tên</th>
+                                    <th className="px-5 py-3.5 text-center">Email</th>
+                                    <th className="px-5 py-3.5 text-center">Vai trò</th>
+                                    <th className="px-5 py-3.5 text-center">Phòng ban</th>
+                                    <th className="px-5 py-3.5 text-center">Trạng thái</th>
+                                    <th className="px-5 py-3.5 text-center">Ngày tạo</th>
+                                    <th className="px-5 py-3.5 text-center">Thao tác</th>
                                 </tr>
                             </thead>
 
@@ -355,51 +356,51 @@ export default function UserManagementPage() {
                                         user.status === "PENDING";
                                     const isBusy = busyId === user.id;
 
-                                    const statusClass =
+                                    const statusVariant =
                                         user.status === "ACTIVE"
-                                            ? "bg-(--crm-success-soft) text-(--crm-green-dark)"
+                                            ? "crm-status--active"
                                             : user.status === "PENDING"
-                                              ? "bg-amber-100 text-amber-800"
-                                              : "bg-(--crm-surface-hover) text-(--crm-text-secondary)";
+                                              ? "crm-status--contacted"
+                                              : "crm-status--inactive";
 
                                     return (
                                         <tr
                                             key={user.id}
                                             className="border-b border-(--crm-border-subtle) last:border-b-0 hover:bg-(--crm-surface-subtle)"
                                         >
-                                            <td className="px-4 py-3 text-center text-sm font-medium text-(--crm-heading)">
+                                            <td className="px-5 py-4 text-center text-sm font-semibold text-(--crm-heading)">
                                                 {user.fullName}
                                             </td>
 
-                                            <td className="px-4 py-3 text-center text-xs text-(--crm-text-secondary)">
+                                            <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
                                                 {user.email}
                                             </td>
 
-                                            <td className="px-4 py-3 text-center">
-                                                <span className="rounded-full bg-(--crm-info-soft) px-2.5 py-1 text-xs font-medium text-(--crm-primary)">
+                                            <td className="px-5 py-4 text-center">
+                                                <span className="crm-pill">
                                                     {getRoleLabel(user.role)}
                                                 </span>
                                             </td>
 
-                                            <td className="px-4 py-3 text-center text-xs text-(--crm-text-secondary)">
+                                            <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
                                                 {user.department || "—"}
                                             </td>
 
-                                            <td className="px-4 py-3 text-center">
+                                            <td className="px-5 py-4 text-center">
                                                 <span
-                                                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass}`}
+                                                    className={`crm-status ${statusVariant}`}
                                                 >
                                                     {getStatusLabel(user.status)}
                                                 </span>
                                             </td>
 
-                                            <td className="px-4 py-3 text-center text-xs text-(--crm-text-secondary)">
+                                            <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
                                                 {dateFormat.format(
                                                     new Date(user.createdAt)
                                                 )}
                                             </td>
 
-                                            <td className="px-4 py-3 text-center">
+                                            <td className="px-5 py-4 text-center">
                                                 <div className="flex justify-center gap-1">
                                                     {isAdmin && (
                                                         <button

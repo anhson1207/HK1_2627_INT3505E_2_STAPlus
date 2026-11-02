@@ -42,7 +42,7 @@ export default function CustomerTickets({ tickets }: CustomerTicketsProps) {
             <div className="crm-table-wrap">
                 <table className="crm-table">
                     <thead><tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
-                        {["Ticket ID", "Subject", "Priority", "Status", "Created At"].map((label) => <th key={label} className="px-5 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">{label}</th>)}
+                        {["Mã Ticket", "Tiêu đề", "Độ ưu tiên", "Trạng thái", "Ngày tạo"].map((label) => <th key={label} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">{label}</th>)}
                     </tr></thead>
                     <tbody>{tickets.map((ticket) => {
                         const priority = priorityConfig[ticket.priority];
