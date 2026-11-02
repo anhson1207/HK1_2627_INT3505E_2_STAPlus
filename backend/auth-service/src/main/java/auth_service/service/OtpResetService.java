@@ -26,28 +26,34 @@ public class OtpResetService {
     private final PasswordEncoder encoder;
 
     @Transactional
-    public boolean resetPassword(ResetPasswordRequest r) {
+    public String validateAndReset(ResetPasswordRequest r) {
 
         User u = users.findByEmailForUpdate(r.getEmail())
                 .orElse(null);
 
         if (u == null) {
-            return false;
+            return "Địa chỉ email không tồn tại trên hệ thống.";
         }
 
         List<PasswordResetToken> tokens =
                 resetTokens.findByUserIdOrderByIdDesc(u.getId());
 
         if (tokens.isEmpty()) {
-            return false;
+            return "Không tìm thấy yêu cầu đặt lại mật khẩu cho tài khoản này.";
         }
 
         PasswordResetToken t = tokens.get(0);
 
-        if (t.isUsed()
-                || !t.getExpiresAt().isAfter(LocalDateTime.now())
-                || t.getAttemptCount() >= MAX_OTP_ATTEMPTS) {
-            return false;
+        if (t.isUsed()) {
+            return "Mã OTP này đã được sử dụng. Vui lòng gửi yêu cầu để nhận mã mới.";
+        }
+
+        if (!t.getExpiresAt().isAfter(LocalDateTime.now())) {
+            return "Mã OTP đã hết hiệu lực (quá 15 phút). Vui lòng yêu cầu mã mới.";
+        }
+
+        if (t.getAttemptCount() >= MAX_OTP_ATTEMPTS) {
+            return "Mã OTP đã bị khóa do nhập sai quá 5 lần. Vui lòng yêu cầu mã mới.";
         }
 
         if (!encoder.matches(r.getToken(), t.getToken())) {
@@ -61,8 +67,12 @@ public class OtpResetService {
 
             resetTokens.save(t);
 
-            // Return normally so transaction can commit
-            return false;
+            if (attempts >= MAX_OTP_ATTEMPTS) {
+                return "Mã OTP không chính xác. Bạn đã nhập sai quá 5 lần, mã OTP đã bị vô hiệu hóa.";
+            }
+
+            int remaining = MAX_OTP_ATTEMPTS - attempts;
+            return "Mã OTP không chính xác. Bạn còn " + remaining + " lần thử.";
         }
 
         // Valid OTP: change password
@@ -76,6 +86,11 @@ public class OtpResetService {
         // Revoke previous refresh tokens
         refreshTokens.revokeAllByUserId(u.getId());
 
-        return true;
+        return null;
+    }
+
+    @Transactional
+    public boolean resetPassword(ResetPasswordRequest r) {
+        return validateAndReset(r) == null;
     }
 }

@@ -414,10 +414,14 @@ export const authService = {
                 message: response.data?.message || "Đặt lại mật khẩu thành công.",
             };
         } catch (apiError) {
-            // Nếu là lỗi nghiệp vụ từ backend (ví dụ 400: Invalid or expired token)
+            // Nếu là lỗi nghiệp vụ từ backend (ví dụ 401: Invalid or expired OTP hoặc 422 Validation failed)
             if (apiError instanceof Error && "status" in apiError) {
                 const status = (apiError as { status: number }).status;
                 if (status >= 400 && status < 500) {
+                    const rawMsg = apiError.message;
+                    if (rawMsg.toLowerCase().includes("invalid or expired otp")) {
+                        throw new Error("Mã OTP không chính xác hoặc đã hết hạn. Vui lòng kiểm tra lại.", { cause: apiError });
+                    }
                     throw apiError;
                 }
             }

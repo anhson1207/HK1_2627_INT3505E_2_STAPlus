@@ -10,18 +10,18 @@ import lombok.Data;
 @Data
 public class ResetPasswordRequest {
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "Vui lòng nhập địa chỉ email")
+    @Email(message = "Địa chỉ email không đúng định dạng")
     private String email;
 
-    @NotBlank(message = "OTP is required")
+    @NotBlank(message = "Vui lòng nhập mã OTP")
     @Pattern(
             regexp = "^[0-9]{6}$",
-            message = "OTP must contain exactly 6 digits"
+            message = "Mã OTP phải bao gồm đúng 6 chữ số"
     )
     private String token;
 
-    @NotBlank(message = "New password is required")
-    @Size(min = 8, max = 100)
+    @NotBlank(message = "Vui lòng nhập mật khẩu mới")
+    @Size(min = 8, max = 100, message = "Mật khẩu mới phải có ít nhất 8 ký tự")
     private String newPassword;
 }

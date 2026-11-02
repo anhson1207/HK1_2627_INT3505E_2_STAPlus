@@ -244,12 +244,10 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void resetPassword(ResetPasswordRequest r) {
 
-        boolean success = otpResetService.resetPassword(r);
+        String error = otpResetService.validateAndReset(r);
 
-        if (!success) {
-            throw new InvalidTokenException(
-                    "Invalid or expired OTP"
-            );
+        if (error != null) {
+            throw new InvalidTokenException(error);
         }
     }
 

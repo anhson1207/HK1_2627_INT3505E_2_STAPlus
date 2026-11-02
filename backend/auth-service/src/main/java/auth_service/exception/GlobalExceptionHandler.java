@@ -65,12 +65,18 @@ public class GlobalExceptionHandler {
  ResponseEntity<ProblemDetail> validation(
          MethodArgumentNotValidException e
  ) {
+  String message = e.getBindingResult().getFieldErrors().stream()
+          .map(org.springframework.validation.FieldError::getDefaultMessage)
+          .filter(msg -> msg != null && !msg.isBlank())
+          .findFirst()
+          .orElse("Dữ liệu nhập không hợp lệ");
+
   return ResponseEntity
           .status(422)
           .contentType(MediaType.APPLICATION_PROBLEM_JSON)
           .body(pd(
                   HttpStatus.UNPROCESSABLE_ENTITY,
-                  "Validation failed"
+                  message
           ));
  }
 }

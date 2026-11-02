@@ -37,7 +37,7 @@ export default function ResetPasswordPage() {
         },
     });
 
-    const activeToken = tokenFromUrl || customToken.trim();
+    const activeToken = customToken.trim();
 
     const handleResetPassword = async (data: ResetPasswordFormData) => {
         setErrorMessage("");
@@ -51,7 +51,7 @@ export default function ResetPasswordPage() {
 
         if (!activeToken) {
             setErrorMessage(
-                "Thiếu mã xác thực (OTP / Token). Vui lòng sử dụng liên kết trong email hoặc nhập mã."
+                "Vui lòng nhập mã xác nhận (OTP gồm 6 chữ số) được gửi về email của bạn."
             );
             return;
         }
@@ -73,10 +73,22 @@ export default function ResetPasswordPage() {
                 navigate("/login");
             }, 2500);
         } catch (err) {
-            const msg =
+            let msg =
                 err instanceof Error
                     ? err.message
                     : "Mã xác thực không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu cấp lại mã mới.";
+
+            const lowerMsg = msg.toLowerCase();
+            if (lowerMsg.includes("invalid or expired otp") || lowerMsg.includes("invalid token")) {
+                msg = "Mã OTP không chính xác hoặc đã hết hạn. Vui lòng kiểm tra lại.";
+            } else if (lowerMsg.includes("validation failed")) {
+                msg = "Dữ liệu nhập không hợp lệ. Vui lòng kiểm tra lại mã OTP và mật khẩu.";
+            } else if (lowerMsg.includes("otp must contain exactly 6 digits")) {
+                msg = "Mã OTP phải bao gồm đúng 6 chữ số.";
+            } else if (lowerMsg.includes("user not found")) {
+                msg = "Địa chỉ email không tồn tại trong hệ thống.";
+            }
+
             setErrorMessage(msg);
         } finally {
             setIsSubmitting(false);
@@ -132,20 +144,22 @@ export default function ResetPasswordPage() {
                         />
                     )}
 
-                    {!tokenFromUrl && (
-                        <TextField
-                            label="Mã xác thực (OTP / Token)"
-                            type="text"
-                            fullWidth
-                            disabled={isSubmitting}
-                            value={customToken}
-                            onChange={(e) => {
-                                setCustomToken(e.target.value);
-                                if (errorMessage) setErrorMessage("");
-                            }}
-                            helperText="Nhập mã xác nhận (OTP) 6 số hoặc token nhận được từ email."
-                        />
-                    )}
+                    <TextField
+                        label="Mã xác thực (OTP 6 số)"
+                        type="text"
+                        fullWidth
+                        disabled={isSubmitting}
+                        value={customToken}
+                        onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                            setCustomToken(val);
+                            if (errorMessage) setErrorMessage("");
+                        }}
+                        slotProps={{
+                            htmlInput: { maxLength: 6, inputMode: "numeric" },
+                        }}
+                        helperText="Nhập mã OTP gồm 6 chữ số nhận được trong email của bạn."
+                    />
 
                     <Controller
                         name="password"
