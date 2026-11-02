@@ -32,7 +32,7 @@ function getPageName(pathname: string) {
     if (pathname.startsWith("/deals")) return "Cơ hội";
     if (pathname.startsWith("/analytics")) return "Phân tích";
     if (pathname.startsWith("/settings")) return "Cài đặt";
-    return "Nova CRM";
+    return "CRM";
 }
 
 export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
