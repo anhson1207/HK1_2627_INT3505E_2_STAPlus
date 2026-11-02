@@ -408,6 +408,7 @@ export const authService = {
         // 1. Thử gọi backend Auth Service thật
         try {
             const response = await authApi.post<{ message?: string }>("/api/v1/auth/reset-password", {
+                email: data.email.trim(),
                 token: trimmedToken,
                 newPassword,
             });

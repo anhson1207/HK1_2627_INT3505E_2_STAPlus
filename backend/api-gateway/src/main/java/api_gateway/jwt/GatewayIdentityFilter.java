@@ -13,10 +13,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-@RequiredArgsConstructor
 public class GatewayIdentityFilter extends OncePerRequestFilter {
 
     private final GatewayJwtService jwtService;
+
+    public GatewayIdentityFilter(GatewayJwtService jwtService) {
+        this.jwtService = jwtService;
+    }
 
     @Override
     protected void doFilterInternal(

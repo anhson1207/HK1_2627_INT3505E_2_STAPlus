@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, TextField, IconButton, InputAdornment, } from "@mui/material";
-import { ArrowLeft, LockKeyhole, Eye, EyeOff } from "lucide-react";
+import { Button, CircularProgress, IconButton, InputAdornment, TextField } from "@mui/material";
+import { ArrowLeft, CheckCircle2, Eye, EyeOff, KeyRound, LockKeyhole } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -13,9 +13,18 @@ import {
 } from "../../utils/resetPasswordSchema";
 
 export default function ResetPasswordPage() {
-    const [message, setMessage] = useState("");
+    const [searchParams] = useSearchParams();
+    const tokenFromUrl = searchParams.get("token") || "";
+    const emailFromUrl = searchParams.get("email") || "";
+    const [customToken, setCustomToken] = useState(tokenFromUrl);
+    const [email, setEmail] = useState(emailFromUrl);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const navigate = useNavigate();
+
     const {
         control,
         handleSubmit,
@@ -34,9 +43,15 @@ export default function ResetPasswordPage() {
         setErrorMessage("");
         setSuccessMessage("");
 
+        const targetEmail = (emailFromUrl || email).trim();
+        if (!targetEmail) {
+            setErrorMessage("Vui lòng nhập địa chỉ email tài khoản của bạn.");
+            return;
+        }
+
         if (!activeToken) {
             setErrorMessage(
-                "Thiếu mã xác thực (Token). Vui lòng sử dụng liên kết trong email hoặc nhập mã token."
+                "Thiếu mã xác thực (OTP / Token). Vui lòng sử dụng liên kết trong email hoặc nhập mã."
             );
             return;
         }
@@ -44,6 +59,7 @@ export default function ResetPasswordPage() {
         setIsSubmitting(true);
         try {
             const res = await authService.resetPassword({
+                email: targetEmail,
                 token: activeToken,
                 newPassword: data.password,
             });
@@ -100,87 +116,125 @@ export default function ResetPasswordPage() {
                     className="crm-form"
                     noValidate
                 >
-                    {!tokenFromUrl && (
+                    {!emailFromUrl && (
                         <TextField
-                            {...field}
-                            label="Mật khẩu mới"
-                            type={showPassword ? "text" : "password"}
+                            label="Địa chỉ email"
+                            type="email"
                             fullWidth
+                            autoComplete="email"
                             disabled={isSubmitting}
-                            error={!!errors.password}
-                            helperText={
-                                errors.password?.message ||
-                                "Mật khẩu cần có ít nhất 8 ký tự."
-                            }
-                            slotProps={{
-                                input: {
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() =>
-                                                    setShowPassword((prev) => !prev)
-                                                }
-                                                edge="end"
-                                                aria-label={
-                                                    showPassword
-                                                        ? "Ẩn mật khẩu"
-                                                        : "Hiện mật khẩu"
-                                                }
-                                                disabled={isSubmitting}
-                                            >
-                                                {showPassword ? (
-                                                    <EyeOff size={20} />
-                                                ) : (
-                                                    <Eye size={20} />
-                                                )}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                },
+                            value={email}
+                            onChange={(e) => {
+                                setEmail(e.target.value);
+                                if (errorMessage) setErrorMessage("");
                             }}
+                            helperText="Nhập email tài khoản CRM của bạn."
                         />
                     )}
 
-                <Controller
-                    name="confirmPassword"
-                    control={control}
-                    render={({ field }) => (
+                    {!tokenFromUrl && (
                         <TextField
-                            {...field}
-                            label="Xác nhận mật khẩu mới"
-                            type={showConfirmPassword ? "text" : "password"}
+                            label="Mã xác thực (OTP / Token)"
+                            type="text"
                             fullWidth
-                            autoComplete="new-password"
                             disabled={isSubmitting}
-                            error={!!errors.confirmPassword}
-                            helperText={errors.confirmPassword?.message || " "}
-                            slotProps={{
-                                input: {
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() =>
-                                                    setShowConfirmPassword((prev) => !prev)
-                                                }
-                                                edge="end"
-                                                aria-label={
-                                                    showConfirmPassword
-                                                        ? "Ẩn mật khẩu xác nhận"
-                                                        : "Hiện mật khẩu xác nhận"
-                                                }
-                                                disabled={isSubmitting}
-                                            >
-                                                {showConfirmPassword ? (
-                                                    <EyeOff size={20} />
-                                                ) : (
-                                                    <Eye size={20} />
-                                                )}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                },
+                            value={customToken}
+                            onChange={(e) => {
+                                setCustomToken(e.target.value);
+                                if (errorMessage) setErrorMessage("");
                             }}
+                            helperText="Nhập mã xác nhận (OTP) 6 số hoặc token nhận được từ email."
                         />
+                    )}
+
+                    <Controller
+                        name="password"
+                        control={control}
+                        render={({ field }) => (
+                            <TextField
+                                {...field}
+                                label="Mật khẩu mới"
+                                type={showPassword ? "text" : "password"}
+                                fullWidth
+                                autoComplete="new-password"
+                                disabled={isSubmitting}
+                                error={!!errors.password}
+                                helperText={
+                                    errors.password?.message ||
+                                    "Mật khẩu cần có ít nhất 8 ký tự."
+                                }
+                                slotProps={{
+                                    input: {
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    onClick={() => setShowPassword((prev) => !prev)}
+                                                    edge="end"
+                                                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                                    disabled={isSubmitting}
+                                                >
+                                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    },
+                                }}
+                            />
+                        )}
+                    />
+
+                    <Controller
+                        name="confirmPassword"
+                        control={control}
+                        render={({ field }) => (
+                            <TextField
+                                {...field}
+                                label="Xác nhận mật khẩu mới"
+                                type={showConfirmPassword ? "text" : "password"}
+                                fullWidth
+                                autoComplete="new-password"
+                                disabled={isSubmitting}
+                                error={!!errors.confirmPassword}
+                                helperText={errors.confirmPassword?.message || " "}
+                                slotProps={{
+                                    input: {
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                                                    edge="end"
+                                                    aria-label={
+                                                        showConfirmPassword
+                                                            ? "Ẩn mật khẩu xác nhận"
+                                                            : "Hiện mật khẩu xác nhận"
+                                                    }
+                                                    disabled={isSubmitting}
+                                                >
+                                                    {showConfirmPassword ? (
+                                                        <EyeOff size={20} />
+                                                    ) : (
+                                                        <Eye size={20} />
+                                                    )}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    },
+                                }}
+                            />
+                        )}
+                    />
+
+                    {errorMessage && (
+                        <div
+                            role="alert"
+                            className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+                        >
+                            <div className="mb-1 flex items-center gap-2 font-semibold">
+                                <LockKeyhole size={18} className="text-red-600" />
+                                Lỗi
+                            </div>
+                            {errorMessage}
+                        </div>
                     )}
 
                     <Button

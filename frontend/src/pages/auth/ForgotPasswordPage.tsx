@@ -85,20 +85,15 @@ export default function ForgotPasswordPage() {
                         </div>
                         <p>{message}</p>
 
-                        {demoToken && (
-                            <div className="mt-3 border-t border-sky-200 pt-3">
-                                <p className="mb-2 text-xs text-sky-700">
-                                    💡 <strong>Chế độ thử nghiệm (Demo):</strong> Bạn có thể dùng đường dẫn demo bên dưới để thử nghiệm đặt lại mật khẩu ngay mà không cần đợi email:
-                                </p>
-                                <Link
-                                    to={`/reset-password?token=${demoToken}`}
-                                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-950 underline hover:text-sky-800"
-                                >
-                                    Chuyển tới trang Đặt lại mật khẩu ngay
-                                    <ArrowRight size={14} />
-                                </Link>
-                            </div>
-                        )}
+                        <div className="mt-3 border-t border-sky-200 pt-3">
+                            <Link
+                                to={`/reset-password?email=${encodeURIComponent(email.trim())}${demoToken ? `&token=${demoToken}` : ""}`}
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-950 underline hover:text-sky-800"
+                            >
+                                Đã có mã OTP? Nhập mã đặt lại mật khẩu ngay
+                                <ArrowRight size={14} />
+                            </Link>
+                        </div>
                     </div>
                 )}
 
