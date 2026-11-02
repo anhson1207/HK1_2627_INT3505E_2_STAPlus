@@ -168,8 +168,8 @@ export default function LoginPage() {
                 </Button>
             </form>
 
-            <div className="mt-5 rounded-lg border border-(--crm-border) bg-(--crm-surface-subtle) p-3">
-                <p className="mb-2 text-xs font-semibold text-(--crm-heading)">Đăng nhập nhanh (Tài khoản mẫu):</p>
+            <div className="mt-5 border-t border-(--crm-border) pt-4">
+                <p className="mb-2 text-xs font-semibold text-(--crm-text-secondary)">Đăng nhập nhanh (Tài khoản mẫu):</p>
                 <div className="grid grid-cols-3 gap-2">
                     <Button
                         size="small"
