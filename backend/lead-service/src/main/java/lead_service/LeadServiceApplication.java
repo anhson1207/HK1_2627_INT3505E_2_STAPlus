@@ -9,5 +9,4 @@ public class LeadServiceApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(LeadServiceApplication.class, args);
 	}
-
 }

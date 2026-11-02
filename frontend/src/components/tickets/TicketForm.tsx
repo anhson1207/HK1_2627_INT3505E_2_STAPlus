@@ -24,6 +24,7 @@ export default function TicketForm({ onSubmit, onCancel, initialData, submitLabe
         resolver: zodResolver(ticketSchema),
         defaultValues: { subject: initialData?.subject ?? "", customerId: initialData?.customerId ?? 0, description: initialData?.description ?? "", priority: initialData?.priority ?? "MEDIUM", status: initialData?.status ?? "OPEN", assignedTo: initialData?.assignedTo ?? "" },
     });
+    
 
     useEffect(() => {
         let active = true;
@@ -50,4 +51,6 @@ export default function TicketForm({ onSubmit, onCancel, initialData, submitLabe
             <div className="crm-form-footer"><Button variant="outlined" onClick={onCancel} disabled={isSubmitting}>Hủy</Button><Button type="submit" variant="contained" disabled={isSubmitting || loadingCustomers || Boolean(customerError)} startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : undefined}>{isSubmitting ? "Đang lưu..." : submitLabel}</Button></div>
         </form>
     );
+
 }
+console.log("ticket form");

@@ -1,6 +1,8 @@
 import api, { ApiError, hasConfiguredApi } from "./api";
 import { mockLeads } from "../data/mockLeads";
-import type { Lead, LeadPayload, LeadQuery } from "../types/lead";
+import type { Lead, LeadPayload, LeadQuery, LeadSource, LeadStatus } from "../types/lead";
+
+const useLeadMockApi = import.meta.env.VITE_USE_LEAD_MOCK_API !== "false";
 
 export interface LeadListResponse {
     content: Lead[];
@@ -8,6 +10,30 @@ export interface LeadListResponse {
     size: number;
     totalElements: number;
     totalPages: number;
+}
+
+interface BackendLead {
+    id: number;
+    fullName: string;
+    email?: string | null;
+    phone?: string | null;
+    company?: string | null;
+    source?: string | null;
+    status: LeadStatus;
+    notes?: string | null;
+    assignedUserId?: number | null;
+    createdAt: string;
+    updatedAt?: string | null;
+}
+
+interface BackendPageResponse<T> {
+    content: T[];
+    page: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    first: boolean;
+    last: boolean;
 }
 
 const STORAGE_KEY = "crm-soa.leads";
@@ -67,6 +93,82 @@ function getLocalLeads(query: LeadQuery): LeadListResponse {
     };
 }
 
+function splitFullName(fullName: string): { firstName: string; lastName: string } {
+    const trimmed = (fullName || "").trim();
+    if (!trimmed) return { firstName: "", lastName: "" };
+    const parts = trimmed.split(/\s+/);
+    if (parts.length === 1) return { firstName: parts[0], lastName: "" };
+    return {
+        firstName: parts[0],
+        lastName: parts.slice(1).join(" "),
+    };
+}
+
+function combineFullName(firstName?: string, lastName?: string): string {
+    return [firstName?.trim(), lastName?.trim()].filter(Boolean).join(" ") || "Chưa đặt tên";
+}
+
+function mapFrontendSourceToBackend(source?: LeadSource | ""): string | undefined {
+    if (!source) return undefined;
+    switch (source) {
+        case "FACEBOOK":
+        case "ZALO":
+            return "SOCIAL_MEDIA";
+        case "GOOGLE_ADS":
+            return "WEBSITE";
+        case "WEBSITE":
+        case "REFERRAL":
+        case "OTHER":
+            return source;
+        default:
+            return "OTHER";
+    }
+}
+
+function mapBackendSourceToFrontend(source?: string | null): LeadSource {
+    if (!source) return "OTHER";
+    switch (source) {
+        case "WEBSITE":
+            return "WEBSITE";
+        case "REFERRAL":
+            return "REFERRAL";
+        case "SOCIAL_MEDIA":
+            return "FACEBOOK";
+        default:
+            return "OTHER";
+    }
+}
+
+function mapBackendLeadToFrontend(item: BackendLead): Lead {
+    const { firstName, lastName } = splitFullName(item.fullName);
+    return {
+        id: item.id,
+        firstName,
+        lastName,
+        email: item.email || "",
+        phone: item.phone || "",
+        company: item.company || undefined,
+        source: mapBackendSourceToFrontend(item.source),
+        status: item.status,
+        ownerName: item.assignedUserId ? `User #${item.assignedUserId}` : undefined,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt || undefined,
+    };
+}
+
+function mapFrontendPayloadToBackend(data: LeadPayload) {
+    return {
+        fullName: combineFullName(data.firstName, data.lastName),
+        email: data.email?.trim() || null,
+        phone: data.phone?.trim() || null,
+        company: data.company?.trim() || null,
+        source: mapFrontendSourceToBackend(data.source) ?? "OTHER",
+        status: data.status,
+        notes: null,
+        assignedUserId: null,
+    };
+}
+
 export function getErrorMessage(error: unknown): string {
     if (error instanceof ApiError || error instanceof Error) return error.message;
     return "Đã xảy ra lỗi. Vui lòng thử lại.";
@@ -74,33 +176,53 @@ export function getErrorMessage(error: unknown): string {
 
 export const leadService = {
     getLeads: async (query: LeadQuery = {}): Promise<LeadListResponse> => {
-        if (!hasConfiguredApi) return getLocalLeads(query);
+        if (useLeadMockApi || !hasConfiguredApi) return getLocalLeads(query);
 
-        const response = await api.get<LeadListResponse>("/leads", {
-            params: {
-                page: query.page,
-                size: query.size,
-                search: query.search,
-                status: query.status,
-                source: query.source,
-            },
-        });
-        return response.data;
+        try {
+            const page = Math.max(0, query.page ?? 0);
+            const size = Math.min(Math.max(1, query.size ?? 10), 100);
+            const response = await api.get<BackendPageResponse<BackendLead>>("/leads", {
+                params: {
+                    page,
+                    size,
+                    q: query.search?.trim() || undefined,
+                    status: query.status || undefined,
+                    source: mapFrontendSourceToBackend(query.source),
+                },
+            });
+            return {
+                content: response.data.content.map(mapBackendLeadToFrontend),
+                page: response.data.page,
+                size: response.data.size,
+                totalElements: response.data.totalElements,
+                totalPages: response.data.totalPages,
+            };
+        } catch (error) {
+            console.warn("Failed to fetch leads from API, falling back to local storage:", error);
+            return getLocalLeads(query);
+        }
     },
 
     getLeadById: async (id: number): Promise<Lead> => {
-        if (!hasConfiguredApi) {
+        if (useLeadMockApi || !hasConfiguredApi) {
             const lead = readLocalLeads().find((item) => item.id === id);
             if (!lead) throw new ApiError("Không tìm thấy Lead.", 404);
             return { ...lead };
         }
 
-        const response = await api.get<Lead>(`/leads/${id}`);
-        return response.data;
+        try {
+            const response = await api.get<BackendLead>(`/leads/${id}`);
+            return mapBackendLeadToFrontend(response.data);
+        } catch (error) {
+            console.warn(`Failed to fetch lead ${id} from API, falling back to local storage:`, error);
+            const localLead = readLocalLeads().find((item) => item.id === id);
+            if (localLead) return { ...localLead };
+            throw error;
+        }
     },
 
     createLead: async (data: LeadPayload): Promise<Lead> => {
-        if (!hasConfiguredApi) {
+        if (useLeadMockApi || !hasConfiguredApi) {
             const leads = readLocalLeads();
             const now = new Date().toISOString();
             const lead: Lead = {
@@ -113,12 +235,12 @@ export const leadService = {
             return { ...lead };
         }
 
-        const response = await api.post<Lead>("/leads", data);
-        return response.data;
+        const response = await api.post<BackendLead>("/leads", mapFrontendPayloadToBackend(data));
+        return mapBackendLeadToFrontend(response.data);
     },
 
     updateLead: async (id: number, data: LeadPayload): Promise<Lead> => {
-        if (!hasConfiguredApi) {
+        if (useLeadMockApi || !hasConfiguredApi) {
             const leads = readLocalLeads();
             const index = leads.findIndex((item) => item.id === id);
             if (index === -1) throw new ApiError("Không tìm thấy Lead.", 404);
@@ -128,12 +250,12 @@ export const leadService = {
             return { ...updated };
         }
 
-        const response = await api.put<Lead>(`/leads/${id}`, data);
-        return response.data;
+        const response = await api.put<BackendLead>(`/leads/${id}`, mapFrontendPayloadToBackend(data));
+        return mapBackendLeadToFrontend(response.data);
     },
 
     deleteLead: async (id: number): Promise<void> => {
-        if (!hasConfiguredApi) {
+        if (useLeadMockApi || !hasConfiguredApi) {
             const leads = readLocalLeads();
             if (!leads.some((item) => item.id === id)) throw new ApiError("Không tìm thấy Lead.", 404);
             writeLocalLeads(leads.filter((item) => item.id !== id));

@@ -34,25 +34,29 @@ export default function CustomerTable({ customers, onView }: CustomerTableProps)
             <table className="crm-table">
                 <thead>
                     <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
-                        {["Tên", "Công ty", "Email", "Số điện thoại", "Trạng thái", "Người phụ trách", "Ngày tạo"].map((label) => (
-                            <th key={label} className="px-4 py-3 text-left text-xs font-medium text-(--crm-text-secondary)">{label}</th>
-                        ))}
+                        <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Tên</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Công ty</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Email</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Số điện thoại</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Trạng thái</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Người phụ trách</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Ngày tạo</th>
                     </tr>
                 </thead>
                 <tbody>
                     {customers.map((customer) => (
                         <tr key={customer.id} className="border-b border-(--crm-border-subtle) last:border-b-0 hover:bg-(--crm-surface-subtle)">
-                            <td className="px-4 py-4">
-                                <button type="button" onClick={() => onView(customer)} className="text-left text-sm font-medium text-(--crm-primary) hover:text-(--crm-primary) hover:underline">
+                            <td className="px-4 py-4 text-center">
+                                <button type="button" onClick={() => onView(customer)} className="inline-block text-center text-sm font-medium text-(--crm-primary) hover:text-(--crm-primary) hover:underline">
                                     {customer.name}
                                 </button>
                             </td>
-                            <td className="px-4 py-4 text-sm text-(--crm-text)">{customer.company}</td>
-                            <td className="px-4 py-4 text-sm text-(--crm-text-secondary)">{customer.email}</td>
-                            <td className="px-4 py-4 text-sm text-(--crm-text-secondary)">{customer.phone}</td>
-                            <td className="px-4 py-4"><StatusChip status={customer.status} /></td>
-                            <td className="px-4 py-4 text-sm text-(--crm-text-secondary)">{customer.ownerName || "—"}</td>
-                            <td className="px-4 py-4 text-sm text-(--crm-text-secondary)">{formatDate(customer.createdAt)}</td>
+                            <td className="px-4 py-4 text-center text-sm text-(--crm-text)">{customer.company}</td>
+                            <td className="px-4 py-4 text-center text-sm text-(--crm-text-secondary)">{customer.email}</td>
+                            <td className="px-4 py-4 text-center text-sm text-(--crm-text-secondary)">{customer.phone}</td>
+                            <td className="px-4 py-4 text-center"><StatusChip status={customer.status} /></td>
+                            <td className="px-4 py-4 text-center text-sm text-(--crm-text-secondary)">{customer.ownerName || "—"}</td>
+                            <td className="px-4 py-4 text-center text-sm text-(--crm-text-secondary)">{formatDate(customer.createdAt)}</td>
                         </tr>
                     ))}
                 </tbody>
