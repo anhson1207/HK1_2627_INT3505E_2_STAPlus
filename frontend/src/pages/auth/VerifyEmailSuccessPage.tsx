@@ -31,7 +31,7 @@ export default function VerifyEmailSuccessPage() {
         <button
           type="button"
           onClick={handleLogin}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#007f9b] px-4 py-3 font-medium text-white transition hover:bg-[#00677e]"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition hover:bg-blue-700"
         >
           <LogIn size={18} />
           Đi đến đăng nhập

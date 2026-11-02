@@ -35,7 +35,7 @@ export default function VerifyEmailPendingPage() {
   description="Vui lòng kiểm tra hộp thư để xác minh địa chỉ email của bạn."
 >
       <div className="mx-auto w-full max-w-md px-4 py-8 text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-cyan-50 text-[#007f9b]">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-600">
           <MailCheck size={34} />
         </div>
 
@@ -56,7 +56,7 @@ export default function VerifyEmailPendingPage() {
         <button
           type="button"
           onClick={handleOpenEmail}
-          className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#007f9b] px-4 py-3 font-medium text-white transition hover:bg-[#00677e]"
+          className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition hover:bg-blue-700"
         >
           Mở hộp thư
           <ExternalLink size={18} />
@@ -74,7 +74,7 @@ export default function VerifyEmailPendingPage() {
         <button
           type="button"
           onClick={handleBackToLogin}
-          className="mx-auto flex items-center justify-center gap-2 text-sm text-gray-600 transition hover:text-[#007f9b]"
+          className="mx-auto flex items-center justify-center gap-2 text-sm text-gray-600 transition hover:text-blue-600"
         >
           <ArrowLeft size={16} />
           Quay lại đăng nhập
