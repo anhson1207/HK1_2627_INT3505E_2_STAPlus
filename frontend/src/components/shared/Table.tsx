@@ -28,7 +28,7 @@ export default function Table<T>({
                         {safeColumns.map((column) => (
                             <th
                                 key={String(column.key)}
-                                className="p-3 text-xs font-semibold uppercase text-(--crm-text-secondary)"
+                                className="p-3 text-center text-xs font-semibold uppercase text-(--crm-text-secondary)"
                             >
                                 {column.label}
                             </th>
@@ -50,7 +50,7 @@ export default function Table<T>({
                             {safeColumns.map((column) => (
                                 <td
                                     key={String(column.key)}
-                                    className="p-3 text-(--crm-text)"
+                                    className="p-3 text-center text-(--crm-text)"
                                 >
                                     {column.render
                                         ? column.render(item)

@@ -42,18 +42,18 @@ export default function CustomerTickets({ tickets }: CustomerTicketsProps) {
             <div className="crm-table-wrap">
                 <table className="crm-table">
                     <thead><tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
-                        {["Ticket ID", "Subject", "Priority", "Status", "Created At"].map((label) => <th key={label} className="px-5 py-3 text-left text-xs font-medium text-(--crm-text-secondary)">{label}</th>)}
+                        {["Ticket ID", "Subject", "Priority", "Status", "Created At"].map((label) => <th key={label} className="px-5 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">{label}</th>)}
                     </tr></thead>
                     <tbody>{tickets.map((ticket) => {
                         const priority = priorityConfig[ticket.priority];
                         const status = statusConfig[ticket.status];
                         return (
                             <tr key={ticket.id} className="border-b border-(--crm-border-subtle) last:border-0 hover:bg-(--crm-surface-subtle)">
-                                <td className="px-5 py-4 text-sm font-medium text-(--crm-primary)">#{ticket.id}</td>
-                                <td className="px-5 py-4 text-sm font-medium text-(--crm-heading)">{ticket.subject}</td>
-                                <td className="px-5 py-4"><span className={`crm-status ${priority.className}`}>{priority.label}</span></td>
-                                <td className="px-5 py-4"><span className={`crm-status ${status.className}`}>{status.label}</span></td>
-                                <td className="px-5 py-4 text-sm text-(--crm-text-secondary)">{dateTimeFormatter.format(new Date(ticket.createdAt))}</td>
+                                <td className="px-5 py-4 text-center text-sm font-medium text-(--crm-primary)">#{ticket.id}</td>
+                                <td className="px-5 py-4 text-center text-sm font-medium text-(--crm-heading)">{ticket.subject}</td>
+                                <td className="px-5 py-4 text-center"><span className={`crm-status ${priority.className}`}>{priority.label}</span></td>
+                                <td className="px-5 py-4 text-center"><span className={`crm-status ${status.className}`}>{status.label}</span></td>
+                                <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">{dateTimeFormatter.format(new Date(ticket.createdAt))}</td>
                             </tr>
                         );
                     })}</tbody>

@@ -344,12 +344,12 @@ export default function TicketListPage() {
                             <thead>
                                 <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
                                     <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">ID</th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-(--crm-text-secondary)">Tiêu đề</th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-(--crm-text-secondary)">Khách hàng</th>
+                                    <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Tiêu đề</th>
+                                    <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Khách hàng</th>
                                     <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Ưu tiên</th>
                                     <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Trạng thái</th>
                                     <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">SLA</th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-(--crm-text-secondary)">Phân công</th>
+                                    <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Phân công</th>
                                     <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Ngày tạo</th>
                                 </tr>
                             </thead>
@@ -371,7 +371,7 @@ export default function TicketListPage() {
                                                 #{ticket.id}
                                             </td>
 
-                                            <td className="px-4 py-4">
+                                            <td className="px-4 py-4 text-center">
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -379,13 +379,13 @@ export default function TicketListPage() {
                                                             `/tickets/${ticket.id}`,
                                                         )
                                                     }
-                                                    className="text-sm font-medium text-(--crm-primary) hover:underline"
+                                                    className="inline-block text-center text-sm font-medium text-(--crm-primary) hover:underline"
                                                 >
                                                     {ticket.subject}
                                                 </button>
                                             </td>
 
-                                            <td className="px-4 py-4">
+                                            <td className="px-4 py-4 text-center">
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -393,7 +393,7 @@ export default function TicketListPage() {
                                                             `/customers/${ticket.customerId}`,
                                                         )
                                                     }
-                                                    className="text-sm text-(--crm-text) hover:text-(--crm-primary) hover:underline"
+                                                    className="inline-block text-center text-sm text-(--crm-text) hover:text-(--crm-primary) hover:underline"
                                                 >
                                                     {ticket.customerName}
                                                 </button>
@@ -428,7 +428,7 @@ export default function TicketListPage() {
                                                 </span>
                                             </td>
 
-                                            <td className="px-4 py-4 text-sm text-(--crm-text-secondary)">
+                                            <td className="px-4 py-4 text-center text-sm text-(--crm-text-secondary)">
                                                 {ticket.assignedTo || "—"}
                                             </td>
 
