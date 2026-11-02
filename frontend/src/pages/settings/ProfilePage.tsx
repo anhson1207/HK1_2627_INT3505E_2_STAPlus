@@ -35,7 +35,7 @@ export default function ProfilePage() {
 
             <section className="crm-card crm-card__body">
                 <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-blue-100 text-3xl font-semibold text-blue-700">
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-100 text-3xl font-semibold text-zinc-800">
                         {avatarLabel}
                     </div>
 
@@ -48,7 +48,7 @@ export default function ProfilePage() {
                             Tên đăng nhập
                         </p>
 
-                        <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+                        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-700">
                             <UserRound size={15} />
                             {roleLabel}
                         </div>
