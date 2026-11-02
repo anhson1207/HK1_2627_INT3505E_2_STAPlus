@@ -44,19 +44,13 @@ export default function LeadTable({ leads, onView, onEdit, onDelete }: LeadTable
                 <table className="crm-table">
                     <thead>
                         <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
-                            {[
-                                "Tên Lead",
-                                "Email",
-                                "Số điện thoại",
-                                "Nguồn",
-                                "Trạng thái",
-                                "Phụ trách",
-                            ].map((label) => (
-                                <th key={label} className="px-4 py-3 text-left text-xs font-medium text-(--crm-text-secondary)">
-                                    {label}
-                                </th>
-                            ))}
-                            <th className="w-16 px-4 py-3 text-right text-xs font-medium text-(--crm-text-secondary)">Thao tác</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-(--crm-text-secondary)">Tên Lead</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-(--crm-text-secondary)">Email</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-(--crm-text-secondary)">Số điện thoại</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-(--crm-text-secondary)">Nguồn</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Trạng thái</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-(--crm-text-secondary)">Phụ trách</th>
+                            <th className="w-16 px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -75,7 +69,7 @@ export default function LeadTable({ leads, onView, onEdit, onDelete }: LeadTable
                                 <td className="whitespace-nowrap px-4 py-4 text-sm text-(--crm-text-secondary)">
                                     {getLeadSourceLabel(lead.source)}
                                 </td>
-                                <td className="whitespace-nowrap px-4 py-4"><StatusChip status={lead.status} /></td>
+                                <td className="whitespace-nowrap px-4 py-4 text-center"><StatusChip status={lead.status} /></td>
                                 <td className="px-4 py-4">
                                     {lead.ownerName ? (
                                         <div className="flex items-center gap-2">
@@ -86,7 +80,7 @@ export default function LeadTable({ leads, onView, onEdit, onDelete }: LeadTable
                                         </div>
                                     ) : <span className="text-sm text-(--crm-text-muted)">Chưa phân công</span>}
                                 </td>
-                                <td className="px-4 py-4 text-right">
+                                <td className="px-4 py-4 text-center">
                                     <IconButton size="small" aria-label={`Thao tác với ${lead.firstName} ${lead.lastName}`} onClick={(event) => openMenu(event, lead)}>
                                         <MoreHorizontal size={18} />
                                     </IconButton>
