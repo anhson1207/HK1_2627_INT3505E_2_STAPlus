@@ -338,11 +338,11 @@ export default function UserManagementPage() {
                     <div className="crm-table-wrap">
                         <table className="crm-table">
                             <thead>
-                                <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle) text-left text-xs text-(--crm-text-secondary)">
-                                    <th className="px-4 py-3">Tên</th>
-                                    <th className="px-4 py-3">Email</th>
+                                <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle) text-center text-xs text-(--crm-text-secondary)">
+                                    <th className="px-4 py-3 text-center">Tên</th>
+                                    <th className="px-4 py-3 text-center">Email</th>
                                     <th className="px-4 py-3 text-center">Vai trò</th>
-                                    <th className="px-4 py-3">Phòng ban</th>
+                                    <th className="px-4 py-3 text-center">Phòng ban</th>
                                     <th className="px-4 py-3 text-center">Trạng thái</th>
                                     <th className="px-4 py-3 text-center">Ngày tạo</th>
                                     <th className="px-4 py-3 text-center">Thao tác</th>
@@ -367,11 +367,11 @@ export default function UserManagementPage() {
                                             key={user.id}
                                             className="border-b border-(--crm-border-subtle) last:border-b-0 hover:bg-(--crm-surface-subtle)"
                                         >
-                                            <td className="px-4 py-3 text-sm font-medium text-(--crm-heading)">
+                                            <td className="px-4 py-3 text-center text-sm font-medium text-(--crm-heading)">
                                                 {user.fullName}
                                             </td>
 
-                                            <td className="px-4 py-3 text-xs text-(--crm-text-secondary)">
+                                            <td className="px-4 py-3 text-center text-xs text-(--crm-text-secondary)">
                                                 {user.email}
                                             </td>
 
@@ -381,7 +381,7 @@ export default function UserManagementPage() {
                                                 </span>
                                             </td>
 
-                                            <td className="px-4 py-3 text-xs text-(--crm-text-secondary)">
+                                            <td className="px-4 py-3 text-center text-xs text-(--crm-text-secondary)">
                                                 {user.department || "—"}
                                             </td>
 
