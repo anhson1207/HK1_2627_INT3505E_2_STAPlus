@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
     return (
         <AuthPageShell
             title="Quên mật khẩu"
-            description="Nhập email của bạn để nhận liên kết đặt lại mật khẩu."
+            description="Nhập email của bạn để nhận mã OTP đặt lại mật khẩu."
         >
             <form onSubmit={handleSubmit} className="crm-form" noValidate>
                 <TextField

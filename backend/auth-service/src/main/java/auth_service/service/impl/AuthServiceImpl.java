@@ -174,7 +174,7 @@ public class AuthServiceImpl implements AuthService {
     ) {
 
         String message =
-                "If the email exists, password reset instructions have been sent";
+                "Mã OTP đặt lại mật khẩu đã được gửi về email của bạn.";
 
         User u = users.findByEmailForUpdate(r.getEmail())
                 .orElse(null);

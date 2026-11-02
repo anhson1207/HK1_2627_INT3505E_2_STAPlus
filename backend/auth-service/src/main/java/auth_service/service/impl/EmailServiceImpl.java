@@ -27,14 +27,19 @@ public class EmailServiceImpl implements EmailService {
 
         message.setFrom(from);
         message.setTo(to);
-        message.setSubject("CRM - Password Reset OTP");
+        message.setSubject("CRM - Mã OTP đặt lại mật khẩu của bạn");
 
         message.setText(
-                "We received a request to reset your CRM password.\n\n"
-                        + "Your verification code is: " + token
-                        + "\n\nThis code expires in 15 minutes."
-                        + "\nDo not share this code with anyone."
-                        + "\n\nIf you did not request this, ignore this email."
+                "Xin chào,\n\n"
+                        + "Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản CRM của bạn.\n\n"
+                        + "========================================\n"
+                        + "👉 MÃ XÁC NHẬN (OTP) CỦA BẠN LÀ:  " + token + "\n"
+                        + "========================================\n\n"
+                        + "Mã OTP này gồm 6 chữ số và có hiệu lực trong vòng 15 phút.\n"
+                        + "Vui lòng nhập mã này trên trang web và không chia sẻ cho bất kỳ ai.\n\n"
+                        + "Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này.\n\n"
+                        + "Trân trọng,\n"
+                        + "Đội ngũ phát triển CRM"
         );
 
         mailSender.send(message);
