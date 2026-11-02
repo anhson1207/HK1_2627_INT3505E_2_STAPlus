@@ -371,14 +371,12 @@ export const authService = {
 
         // 1. Thử gọi backend Auth Service thật
         try {
-            const response = await authApi.post<{ message?: string }>("/api/v1/auth/forgot-password", {
+            await authApi.post<{ message?: string }>("/api/v1/auth/forgot-password", {
                 email: trimmedEmail,
             });
 
             return {
-                message:
-                    response.data?.message ||
-                    "Hướng dẫn đặt lại mật khẩu đã được gửi đến email của bạn.",
+                message: "Mã OTP đã được gửi về email của bạn.",
             };
         } catch (apiError) {
             // Nếu là lỗi nghiệp vụ từ backend 4xx (trừ mất kết nối mạng)
@@ -394,8 +392,7 @@ export const authService = {
             localStorage.setItem(`crm-soa.reset-token.${mockToken}`, trimmedEmail.toLowerCase());
 
             return {
-                message:
-                    "Yêu cầu đặt lại mật khẩu đã được tiếp nhận. Vui lòng kiểm tra hộp thư email của bạn.",
+                message: "Mã OTP đã được gửi về email của bạn.",
                 resetToken: mockToken,
             };
         }

@@ -35,10 +35,7 @@ export default function ForgotPasswordPage() {
         setIsSubmitting(true);
         try {
             const res = await authService.forgotPassword({ email: trimmedEmail });
-            setMessage(
-                res.message ||
-                    "Hướng dẫn đặt lại mật khẩu đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư đến (và mục Spam)."
-            );
+            setMessage(res.message || "Mã OTP đã được gửi về email của bạn.");
             if (res.resetToken) {
                 setDemoToken(res.resetToken);
             }
@@ -77,20 +74,19 @@ export default function ForgotPasswordPage() {
                 {message && (
                     <div
                         role="status"
-                        className="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm leading-relaxed text-sky-900"
+                        className="rounded-lg border border-sky-200 bg-sky-50 p-3.5 text-sm leading-relaxed text-sky-900"
                     >
-                        <div className="mb-1.5 flex items-center gap-2 font-semibold text-sky-800">
-                            <MailCheck size={18} className="text-sky-600" />
-                            Đã tiếp nhận yêu cầu
+                        <div className="flex items-center gap-2 font-medium text-sky-800">
+                            <MailCheck size={18} className="shrink-0 text-sky-600" />
+                            <span>{message}</span>
                         </div>
-                        <p>{message}</p>
 
-                        <div className="mt-3 border-t border-sky-200 pt-3">
+                        <div className="mt-2.5 border-t border-sky-200 pt-2.5">
                             <Link
                                 to={`/reset-password?email=${encodeURIComponent(email.trim())}${demoToken ? `&token=${demoToken}` : ""}`}
                                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-950 underline hover:text-sky-800"
                             >
-                                Đã có mã OTP? Nhập mã đặt lại mật khẩu ngay
+                                Đã có mã OTP, nhập mã đặt mật khẩu ngay
                                 <ArrowRight size={14} />
                             </Link>
                         </div>
