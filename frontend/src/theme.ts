@@ -3,29 +3,29 @@ import { createTheme } from "@mui/material/styles";
 export const theme = createTheme({
     palette: {
         primary: {
-            main: "#c2410c",
-            dark: "#9a3412",
-            light: "#fff7ed",
+            main: "#007f9b",
+            dark: "#006278",
+            light: "#e8f5f7",
             contrastText: "#ffffff",
         },
         success: {
-            main: "#16a34a",
+            main: "#00c875",
         },
         warning: {
-            main: "#d97706",
+            main: "#fdab3d",
         },
         error: {
-            main: "#dc2626",
+            main: "#e2445c",
         },
         background: {
-            default: "#faf8f5",
+            default: "#f6f7fb",
             paper: "#ffffff",
         },
         text: {
-            primary: "#1c1917",
-            secondary: "#78716c",
+            primary: "#323338",
+            secondary: "#676879",
         },
-        divider: "#e7e5e4",
+        divider: "#e6e9ef",
     },
 
     typography: {
@@ -73,7 +73,7 @@ export const theme = createTheme({
         MuiCard: {
             styleOverrides: {
                 root: {
-                    border: "1px solid #e7e5e4",
+                    border: "1px solid #d0d4e4",
                     boxShadow: "none",
                     borderRadius: 8,
                 },
