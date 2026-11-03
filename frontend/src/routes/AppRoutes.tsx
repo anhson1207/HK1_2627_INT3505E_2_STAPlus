@@ -28,6 +28,8 @@ import DashboardPage from "../pages/dashboard/DashboardPage";
 import AnalyticsPage from "../pages/analytics/AnalyticsPage";
 import SupportDashboardPage from "../pages/support/SupportDashboardPage";
 import UserManagementPage from "../pages/settings/UserManagementPage";
+import AuditLogPage from "../pages/settings/AuditLogPage";
+import RoleManagementPage from "../pages/settings/RoleManagementPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import VerifyEmailPendingPage from '../pages/auth/VerifyEmailPendingPage';
@@ -52,6 +54,8 @@ export default function AppRoutes() {
                         <Route element={ <RoleGuard allowedRoles={["ADMIN"]} fallback={<Navigate to="/dashboard" replace />} ><Outlet /></RoleGuard>}>
                             <Route path="/settings" element={<Navigate to="/settings/users" replace />} />
                             <Route path="/settings/users" element={<UserManagementPage />}/>
+                            <Route path="/settings/audit-logs" element={<AuditLogPage />}/>
+                            <Route path="/settings/roles" element={<RoleManagementPage />}/>
                         </Route>
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/dashboard" element={<DashboardPage />} />

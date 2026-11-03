@@ -9,3 +9,4 @@ public record AssignmentRuleDTO(
         List<Long> activeSalesIds,
         int unassignedCount
 ) {}
+

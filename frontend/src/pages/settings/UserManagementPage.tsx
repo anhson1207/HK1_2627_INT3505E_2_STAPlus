@@ -18,6 +18,7 @@ import {
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import UserForm from "../../components/settings/UserForm";
+import AdminSettingsNav from "../../components/settings/AdminSettingsNav";
 import { userService } from "../../services/userService";
 import { useAuthStore } from "../../stores/authStore";
 import type { CRMUser, UserRole, UserStatus } from "../../types/user";
@@ -242,13 +243,15 @@ export default function UserManagementPage() {
             <div className="crm-page-header">
                 <div>
                     <h2 className="text-lg font-semibold text-(--crm-heading)">
-                        Quản lý người dùng
+                        Quản trị hệ thống
                     </h2>
                     <p className="crm-page-description">
-                        Quản lý vai trò, trạng thái và duyệt tài khoản đăng ký.
+                        Quản lý người dùng, phân quyền RBAC và nhật ký hoạt động hệ thống.
                     </p>
                 </div>
             </div>
+
+            <AdminSettingsNav />
 
             {pendingCount > 0 && (
                 <Alert severity="info" className="mb-4">

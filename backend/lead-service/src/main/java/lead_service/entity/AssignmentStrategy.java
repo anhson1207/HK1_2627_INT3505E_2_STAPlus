@@ -5,3 +5,4 @@ public enum AssignmentStrategy {
     LOAD_BALANCED,
     MANUAL
 }
+

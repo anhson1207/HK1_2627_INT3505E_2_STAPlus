@@ -8,3 +8,4 @@ public record AutoAssignResultDTO(
         String strategyUsed,
         Map<Long, Integer> assignmentSummary
 ) {}
+
