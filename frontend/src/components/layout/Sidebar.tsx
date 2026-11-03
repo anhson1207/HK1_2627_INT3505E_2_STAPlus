@@ -86,11 +86,29 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
         return false;
     };
 
+    const isHome = location.pathname === "/dashboard" || location.pathname === "/" || location.pathname === "/dashboard/";
+
+    const handleHomeClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        onNavigate?.();
+        if (isHome) {
+            e.preventDefault();
+            window.location.reload();
+        }
+    };
+
+    const handleNavItemClick = (path: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+        onNavigate?.();
+        if ((path === "/dashboard" || path === "/") && isHome) {
+            e.preventDefault();
+            window.location.reload();
+        }
+    };
+
     return (
         <aside className={`crm-sidebar ${collapsed ? "is-collapsed" : ""} ${mobile ? "is-open" : ""}`} aria-label="Điều hướng chính">
             <Link
                 to="/dashboard"
-                onClick={onNavigate}
+                onClick={handleHomeClick}
                 className="crm-sidebar__brand"
                 title="Quay về trang chủ"
                 aria-label="CRM - Quay về trang chủ"
@@ -106,7 +124,7 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
                             {group.items.map((item) => {
                                 const Icon = item.icon;
                                 return (
-                                    <NavLink key={item.path} to={item.path} onClick={onNavigate}
+                                    <NavLink key={item.path} to={item.path} onClick={handleNavItemClick(item.path)}
                                         title={collapsed ? item.label : undefined} aria-label={collapsed ? item.label : undefined}
                                         className={({ isActive }) => `crm-nav-item ${isItemActive(item.path, isActive) ? "is-active" : ""}`}>
                                         <Icon size={18} className="crm-nav-item__icon" />
