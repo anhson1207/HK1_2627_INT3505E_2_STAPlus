@@ -110,7 +110,8 @@ select,select:hover,select:focus,select:active{background-repeat:no-repeat!impor
 /* APP SHELL */
 .crm-app{min-height:100vh;background:var(--crm-bg)}
 .crm-sidebar{position:fixed;inset:0 auto 0 0;z-index:40;width:var(--crm-sidebar-width);background:var(--crm-sidebar);color:var(--crm-sidebar-text);border-right:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column}
-.crm-sidebar__brand{min-height:var(--crm-header-height);padding:0 16px;display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600;color:#ffffff;border-bottom:1px solid rgba(255,255,255,.08)}
+.crm-sidebar__brand{min-height:var(--crm-header-height);padding:0 16px;display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600;color:#ffffff;border-bottom:1px solid rgba(255,255,255,.08);text-decoration:none;cursor:pointer;transition:opacity .15s ease}
+.crm-sidebar__brand:hover{text-decoration:none;color:#ffffff;opacity:.9}
 .crm-sidebar__brand-mark{width:28px;height:28px;display:inline-grid;place-items:center;flex:0 0 auto;border-radius:6px;background:var(--crm-primary);color:#fff;font-weight:700;box-shadow:0 1px 3px rgba(0,127,155,.25)}
 .crm-sidebar__section{padding:12px 10px 4px}.crm-sidebar__label{padding:8px 10px 6px;color:var(--crm-sidebar-muted);font-size:11px;line-height:1;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 .crm-nav{display:flex;flex-direction:column;gap:2px}.crm-nav-item{min-height:36px;padding:0 10px;display:flex;align-items:center;gap:10px;border-radius:6px;color:var(--crm-sidebar-muted);font-size:13.5px;font-weight:500;transition:background var(--crm-transition-fast),color var(--crm-transition-fast)}

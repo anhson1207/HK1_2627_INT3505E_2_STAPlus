@@ -10,7 +10,7 @@ import {
     Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 
 import { useAuthStore } from "../../stores/authStore";
 import { rolesWithPermission } from "../../config/rolePermissions";
@@ -88,10 +88,16 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
 
     return (
         <aside className={`crm-sidebar ${collapsed ? "is-collapsed" : ""} ${mobile ? "is-open" : ""}`} aria-label="Điều hướng chính">
-            <div className="crm-sidebar__brand">
+            <Link
+                to="/dashboard"
+                onClick={onNavigate}
+                className="crm-sidebar__brand"
+                title="Quay về trang chủ"
+                aria-label="CRM - Quay về trang chủ"
+            >
                 <span className="crm-sidebar__brand-mark" aria-hidden="true"><LayoutDashboard size={18} /></span>
                 {!collapsed && <span>CRM</span>}
-            </div>
+            </Link>
             <nav className="crm-sidebar__navigation crm-scrollbar">
                 {visibleGroups.map((group) => (
                     <div key={group.label} className="crm-sidebar__section">
