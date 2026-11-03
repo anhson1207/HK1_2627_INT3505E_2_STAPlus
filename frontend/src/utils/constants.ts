@@ -28,12 +28,14 @@ export const LEAD_SOURCE_OPTIONS: ReadonlyArray<{
     value: LeadSource;
     label: string;
 }> = [
-    { value: "WEBSITE", label: "Website" },
-    { value: "FACEBOOK", label: "Facebook" },
-    { value: "ZALO", label: "Zalo" },
+    { value: "WEBSITE", label: "Form Website" },
+    { value: "FACEBOOK", label: "Facebook Ads" },
+    { value: "ZALO", label: "Zalo OA" },
     { value: "GOOGLE_ADS", label: "Google Ads" },
+    { value: "PHONE", label: "Điện thoại / Cold-call" },
     { value: "REFERRAL", label: "Giới thiệu" },
-    { value: "OTHER", label: "Khác" },
+    { value: "EVENT", label: "Sự kiện / Hội thảo" },
+    { value: "OTHER", label: "Khác / Import" },
 ];
 
 export function getLeadStatusLabel(status: LeadStatus) {

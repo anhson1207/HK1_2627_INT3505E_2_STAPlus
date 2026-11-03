@@ -110,28 +110,26 @@ function combineFullName(firstName?: string, lastName?: string): string {
 
 function mapFrontendSourceToBackend(source?: LeadSource | ""): string | undefined {
     if (!source) return undefined;
-    switch (source) {
-        case "FACEBOOK":
-        case "ZALO":
-            return "SOCIAL_MEDIA";
-        case "GOOGLE_ADS":
-            return "WEBSITE";
-        case "WEBSITE":
-        case "REFERRAL":
-        case "OTHER":
-            return source;
-        default:
-            return "OTHER";
-    }
+    return source;
 }
 
 function mapBackendSourceToFrontend(source?: string | null): LeadSource {
     if (!source) return "OTHER";
-    switch (source) {
+    switch (source.toUpperCase()) {
         case "WEBSITE":
             return "WEBSITE";
+        case "FACEBOOK":
+            return "FACEBOOK";
+        case "ZALO":
+            return "ZALO";
+        case "GOOGLE_ADS":
+            return "GOOGLE_ADS";
+        case "PHONE":
+            return "PHONE";
         case "REFERRAL":
             return "REFERRAL";
+        case "EVENT":
+            return "EVENT";
         case "SOCIAL_MEDIA":
             return "FACEBOOK";
         default:
@@ -263,5 +261,79 @@ export const leadService = {
         }
 
         await api.delete(`/leads/${id}`);
+    },
+
+    importLeads: async (items: LeadPayload[]): Promise<{ imported: number; total: number; errors?: string[] }> => {
+        if (!items || items.length === 0) return { imported: 0, total: 0 };
+
+        if (useLeadMockApi || !hasConfiguredApi) {
+            const leads = readLocalLeads();
+            let currentMaxId = leads.reduce((maxId, item) => Math.max(maxId, item.id), 0);
+            const now = new Date().toISOString();
+            const newLeads: Lead[] = items.map((item) => {
+                currentMaxId += 1;
+                return {
+                    ...item,
+                    id: currentMaxId,
+                    createdAt: now,
+                    updatedAt: now,
+                };
+            });
+            writeLocalLeads([...leads, ...newLeads]);
+            return { imported: newLeads.length, total: items.length };
+        }
+
+        try {
+            const payload = items.map(mapFrontendPayloadToBackend);
+            const response = await api.post<{ total: number; successCount: number; failureCount: number; errors: string[] }>(
+                "/leads/import",
+                payload
+            );
+            return {
+                imported: response.data.successCount,
+                total: response.data.total,
+                errors: response.data.errors,
+            };
+        } catch {
+            // Fallback to sequential create if import batch fails
+            let imported = 0;
+            for (const item of items) {
+                try {
+                    await api.post<BackendLead>("/leads", mapFrontendPayloadToBackend(item));
+                    imported++;
+                } catch {
+                    // skip failed item
+                }
+            }
+            return { imported, total: items.length };
+        }
+    },
+
+    captureWebhookLead: async (
+        channel: string,
+        payload: { fullName: string; email?: string; phone?: string; company?: string; notes?: string; source?: LeadSource }
+    ): Promise<Lead> => {
+        if (useLeadMockApi || !hasConfiguredApi) {
+            const { firstName, lastName } = splitFullName(payload.fullName);
+            const channelSource = payload.source || (
+                channel.toLowerCase().includes("facebook") ? "FACEBOOK" :
+                channel.toLowerCase().includes("zalo") ? "ZALO" :
+                channel.toLowerCase().includes("google") ? "GOOGLE_ADS" :
+                channel.toLowerCase().includes("phone") ? "PHONE" : "WEBSITE"
+            );
+            return leadService.createLead({
+                firstName,
+                lastName,
+                email: payload.email || "",
+                phone: payload.phone || "",
+                company: payload.company,
+                source: channelSource,
+                status: "NEW",
+                ownerName: undefined,
+            });
+        }
+
+        const response = await api.post<BackendLead>(`/leads/webhook/${channel}`, payload);
+        return mapBackendLeadToFrontend(response.data);
     },
 };

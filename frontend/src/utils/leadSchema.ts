@@ -14,7 +14,7 @@ export const leadSchema = z.object({
 
     company: z.string().trim().max(100, "Tên công ty tối đa 100 ký tự"),
 
-    source: z.enum(["WEBSITE", "FACEBOOK", "ZALO", "GOOGLE_ADS", "REFERRAL", "OTHER"]),
+    source: z.enum(["WEBSITE", "FACEBOOK", "ZALO", "GOOGLE_ADS", "PHONE", "REFERRAL", "EVENT", "OTHER"]),
 
     status: z.enum(["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "LOST"]),
 

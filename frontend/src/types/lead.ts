@@ -10,7 +10,9 @@ export type LeadSource =
     | "FACEBOOK"
     | "ZALO"
     | "GOOGLE_ADS"
+    | "PHONE"
     | "REFERRAL"
+    | "EVENT"
     | "OTHER";
 
 export interface Lead {

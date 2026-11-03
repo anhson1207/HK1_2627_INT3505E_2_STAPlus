@@ -23,6 +23,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/health").permitAll()
+                        .requestMatchers(HttpMethod.POST, ApiPaths.LEADS + "/webhook/**").permitAll()
                         .requestMatchers(HttpMethod.GET, ApiPaths.LEADS, ApiPaths.LEADS + "/**").hasAnyRole("ADMIN", "SALES", "SUPPORT")
                         .requestMatchers(HttpMethod.POST, ApiPaths.LEADS, ApiPaths.LEADS + "/**").hasAnyRole("ADMIN", "SALES")
                         .requestMatchers(HttpMethod.PUT, ApiPaths.LEADS, ApiPaths.LEADS + "/**").hasAnyRole("ADMIN", "SALES")

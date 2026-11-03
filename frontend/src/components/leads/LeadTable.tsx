@@ -3,7 +3,7 @@ import { IconButton, Menu, MenuItem } from "@mui/material";
 import { useState, type MouseEvent } from "react";
 
 import type { Lead } from "../../types/lead";
-import { getLeadSourceLabel } from "../../utils/constants";
+import LeadSourceBadge from "./LeadSourceBadge";
 import StatusChip from "../common/StatusChip";
 
 interface LeadTableProps {
@@ -69,7 +69,7 @@ export default function LeadTable({ leads, onView, onEdit, onDelete }: LeadTable
                                 </td>
                                 <td className="whitespace-nowrap px-5 py-4 text-center text-sm text-(--crm-text-secondary)">{lead.phone}</td>
                                 <td className="whitespace-nowrap px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
-                                    {getLeadSourceLabel(lead.source)}
+                                    <LeadSourceBadge source={lead.source} />
                                 </td>
                                 <td className="whitespace-nowrap px-5 py-4 text-center"><StatusChip status={lead.status} /></td>
                                 <td className="px-5 py-4 text-center">

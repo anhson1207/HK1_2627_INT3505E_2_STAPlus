@@ -1,7 +1,7 @@
 import { Building2, CalendarDays, Mail, Phone, UserRound } from "lucide-react";
 
 import type { Lead } from "../../types/lead";
-import { getLeadSourceLabel } from "../../utils/constants";
+import LeadSourceBadge from "./LeadSourceBadge";
 import StatusChip from "../common/StatusChip";
 
 interface LeadDetailProps {
@@ -47,7 +47,7 @@ export default function LeadDetail({ lead }: LeadDetailProps) {
                 ))}
                 <div className="crm-field--full">
                     <p className="crm-property__label">Nguồn Lead</p>
-                    <p className="crm-property__value">{getLeadSourceLabel(lead.source)}</p>
+                    <div className="mt-1.5"><LeadSourceBadge source={lead.source} /></div>
                 </div>
             </div>
         </div>
