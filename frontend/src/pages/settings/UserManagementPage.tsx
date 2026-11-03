@@ -96,7 +96,11 @@ export default function UserManagementPage() {
                 (!role || user.role === role) &&
                 (!status || user.status === status) &&
                 (!keyword ||
-                    [user.fullName, user.email, user.department]
+                    [
+                        user.fullName,
+                        user.email,
+                        user.department || "Chưa phân bổ",
+                    ]
                         .filter(Boolean)
                         .some((value) =>
                             value!.toLocaleLowerCase("vi").includes(keyword)
@@ -369,9 +373,22 @@ export default function UserManagementPage() {
                                                 </span>
                                             </td>
 
-                                            <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
-                                                <span className="block truncate text-center" title={user.department || undefined}>
-                                                    {user.department || "—"}
+                                            <td className="px-5 py-4 text-center text-sm">
+                                                <span
+                                                    className={`block truncate text-center ${
+                                                        !user.department || user.department === "—" || user.department === "Chờ phân bổ" || user.department === "Chưa phân bổ"
+                                                            ? "text-(--crm-text-muted) italic"
+                                                            : "text-(--crm-text-secondary)"
+                                                    }`}
+                                                    title={
+                                                        user.department && user.department !== "—" && user.department !== "Chờ phân bổ"
+                                                            ? user.department
+                                                            : "Chưa phân bổ"
+                                                    }
+                                                >
+                                                    {user.department && user.department !== "—" && user.department !== "Chờ phân bổ"
+                                                        ? user.department
+                                                        : "Chưa phân bổ"}
                                                 </span>
                                             </td>
 

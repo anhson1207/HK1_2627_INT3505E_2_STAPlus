@@ -248,7 +248,7 @@ export const authService = {
                     role: newUser.role,
                     status: newUser.status,
                     createdAt: newUser.createdAt,
-                    department: "Chờ phân bổ",
+                    department: "Chưa phân bổ",
                 });
 
                 if (newUser.role === "UNASSIGNED" || newUser.status !== "ACTIVE") {
@@ -304,7 +304,7 @@ export const authService = {
                     role: newUser.role,
                     status: newUser.status,
                     createdAt: newUser.createdAt,
-                    department: "Chờ phân bổ",
+                    department: "Chưa phân bổ",
                 });
                 return result.data;
             }
@@ -355,7 +355,7 @@ export const authService = {
             role: newUser.role,
             status: newUser.status,
             createdAt: newUser.createdAt,
-            department: "Chờ phân bổ",
+            department: "Chưa phân bổ",
         });
 
         return {
