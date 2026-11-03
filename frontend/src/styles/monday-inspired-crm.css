@@ -284,9 +284,11 @@ select.crm-filter-chip:focus{border-color:var(--crm-primary);box-shadow:0 0 0 3p
 .crm-kpi__trend.is-up { color: var(--crm-success); }
 .crm-kpi-grid--compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .crm-dashboard--support .crm-activity-widget { grid-column: span 6; }
-.crm-range-filter { min-height: 36px; flex-shrink: 0; }
-.crm-range-filter > svg { color: var(--crm-primary); }
-.crm-range-filter select { min-width: 0; padding: 6px 0; border: 0; background: transparent; color: var(--crm-text); font-size: 13px; cursor: pointer; }
+.crm-range-filter { position: relative; display: inline-flex; align-items: center; min-height: 32px; height: 32px; flex-shrink: 0; cursor: pointer; }
+.crm-range-filter__icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--crm-primary); pointer-events: none; z-index: 1; }
+.crm-range-filter__select { appearance: none; -webkit-appearance: none; -moz-appearance: none; width: 100%; min-height: 32px; height: 32px; padding: 0 32px 0 34px; border: 1px solid var(--crm-border); border-radius: 6px; background-color: #fff; color: var(--crm-text); font-size: 13px; font-weight: 500; box-shadow: var(--crm-shadow-xs); cursor: pointer; outline: none; transition: background-color .12s ease, border-color .12s ease, box-shadow .12s ease; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat !important; background-position: right 10px center !important; background-size: 13px 13px !important; }
+.crm-range-filter__select:hover, .crm-range-filter:hover .crm-range-filter__select { background-color: var(--crm-surface-hover); border-color: var(--crm-border-strong); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23334155' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
+.crm-range-filter__select:focus { border-color: var(--crm-primary); box-shadow: 0 0 0 3px rgba(0,127,155,.15); outline: none; }
 .chart-container { width: 100%; min-width: 0; height: 288px; }
 .chart-empty { min-height: 220px; padding: 24px; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--crm-text-muted); font-size: 13px; }
 .crm-table.crm-table--widget { min-width: 620px; table-layout: fixed; }
