@@ -1,5 +1,5 @@
 import { ListItemIcon, Menu, MenuItem } from "@mui/material";
-import { Bell, CalendarDays, ChevronDown, CircleHelp, LogOut, Menu as MenuIcon, Plus, Search, UserRound } from "lucide-react";
+import { Bell, CalendarDays, ChevronDown, CircleHelp, LogOut, Menu as MenuIcon, Search, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -129,17 +129,6 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                 </RoleGuard>
 
                 <div className="crm-header__right">
-                    <RoleGuard allowedRoles={rolesWithPermission("leads")}>
-                        <button
-                            type="button"
-                            aria-label="Tạo Lead"
-                            onClick={() => navigate("/leads/new")}
-                            className="crm-btn crm-btn--primary crm-header__create"
-                        >
-                            <Plus size={16} />
-                            <span className="crm-header__create-label">Tạo Lead</span>
-                        </button>
-                    </RoleGuard>
                     <button type="button" title="Lịch" aria-label="Lịch" className="crm-icon-btn crm-header__optional">
                         <CalendarDays size={18} />
                     </button>
