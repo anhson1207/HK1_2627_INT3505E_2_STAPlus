@@ -44,13 +44,13 @@ export default function LeadTable({ leads, onView, onEdit, onDelete }: LeadTable
                 <table className="crm-table">
                     <thead>
                         <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
-                            <th className="min-w-[220px] px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Tên Lead</th>
-                            <th className="min-w-[200px] px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Email</th>
-                            <th className="min-w-[140px] px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Số điện thoại</th>
-                            <th className="min-w-[120px] px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Nguồn</th>
-                            <th className="min-w-[120px] px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Trạng thái</th>
-                            <th className="min-w-[160px] px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Phụ trách</th>
-                            <th className="w-20 min-w-[70px] px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Thao tác</th>
+                            <th style={{ width: "22%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Tên Lead</th>
+                            <th style={{ width: "21%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Email</th>
+                            <th style={{ width: "13%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Số điện thoại</th>
+                            <th style={{ width: "11%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Nguồn</th>
+                            <th style={{ width: "11%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Trạng thái</th>
+                            <th style={{ width: "14%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Phụ trách</th>
+                            <th style={{ width: "8%" }} className="px-2 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -61,10 +61,12 @@ export default function LeadTable({ leads, onView, onEdit, onDelete }: LeadTable
                                 onClick={() => onView(lead)}
                             >
                                 <td className="px-5 py-4 text-center">
-                                    <p className="text-center text-sm font-semibold text-(--crm-heading)">{lead.firstName} {lead.lastName}</p>
-                                    <p className="mt-1.5 text-center text-xs text-(--crm-text-muted)">{lead.company || "Chưa có công ty"}</p>
+                                    <p className="truncate text-center text-sm font-semibold text-(--crm-heading)" title={`${lead.firstName} ${lead.lastName}`}>{lead.firstName} {lead.lastName}</p>
+                                    <p className="mt-1.5 truncate text-center text-xs text-(--crm-text-muted)" title={lead.company || "Chưa có công ty"}>{lead.company || "Chưa có công ty"}</p>
                                 </td>
-                                <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">{lead.email}</td>
+                                <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
+                                    <span className="block truncate text-center" title={lead.email}>{lead.email}</span>
+                                </td>
                                 <td className="whitespace-nowrap px-5 py-4 text-center text-sm text-(--crm-text-secondary)">{lead.phone}</td>
                                 <td className="whitespace-nowrap px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
                                     {getLeadSourceLabel(lead.source)}
@@ -72,11 +74,11 @@ export default function LeadTable({ leads, onView, onEdit, onDelete }: LeadTable
                                 <td className="whitespace-nowrap px-5 py-4 text-center"><StatusChip status={lead.status} /></td>
                                 <td className="px-5 py-4 text-center">
                                     {lead.ownerName ? (
-                                        <div className="flex items-center justify-center gap-2.5">
+                                        <div className="flex items-center justify-center gap-2.5 overflow-hidden">
                                             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-(--crm-info-soft) text-xs font-semibold text-(--crm-primary)">
                                                 {lead.ownerName.trim().charAt(0).toLocaleUpperCase("vi")}
                                             </div>
-                                            <span className="whitespace-nowrap text-sm text-(--crm-text-secondary)">{lead.ownerName}</span>
+                                            <span className="truncate text-sm text-(--crm-text-secondary)" title={lead.ownerName}>{lead.ownerName}</span>
                                         </div>
                                     ) : <span className="text-sm text-(--crm-text-muted)">Chưa phân công</span>}
                                 </td>

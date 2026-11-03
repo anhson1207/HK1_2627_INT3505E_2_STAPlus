@@ -346,14 +346,14 @@ export default function TicketListPage() {
                         <table className="crm-table">
                             <thead>
                                 <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">ID</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Tiêu đề</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Khách hàng</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Ưu tiên</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Trạng thái</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">SLA</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Phân công</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Ngày tạo</th>
+                                    <th style={{ width: "7%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">ID</th>
+                                    <th style={{ width: "25%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Tiêu đề</th>
+                                    <th style={{ width: "16%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Khách hàng</th>
+                                    <th style={{ width: "11%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Ưu tiên</th>
+                                    <th style={{ width: "11%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Trạng thái</th>
+                                    <th style={{ width: "11%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">SLA</th>
+                                    <th style={{ width: "10%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Phân công</th>
+                                    <th style={{ width: "9%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Ngày tạo</th>
                                 </tr>
                             </thead>
 
@@ -370,7 +370,7 @@ export default function TicketListPage() {
                                             key={ticket.id}
                                             className="border-b border-(--crm-border-subtle) last:border-0 hover:bg-(--crm-surface-subtle)"
                                         >
-                                            <td className="px-5 py-4 text-center text-sm font-medium text-(--crm-text-secondary)">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center text-sm font-medium text-(--crm-text-secondary)">
                                                 #{ticket.id}
                                             </td>
 
@@ -382,7 +382,8 @@ export default function TicketListPage() {
                                                             `/tickets/${ticket.id}`,
                                                         )
                                                     }
-                                                    className="inline-block text-center text-sm font-medium text-(--crm-primary) hover:underline"
+                                                    className="inline-block max-w-full truncate text-center text-sm font-medium text-(--crm-primary) hover:underline"
+                                                    title={ticket.subject}
                                                 >
                                                     {ticket.subject}
                                                 </button>
@@ -396,25 +397,26 @@ export default function TicketListPage() {
                                                             `/customers/${ticket.customerId}`,
                                                         )
                                                     }
-                                                    className="inline-block text-center text-sm text-(--crm-text) hover:text-(--crm-primary) hover:underline"
+                                                    className="inline-block max-w-full truncate text-center text-sm text-(--crm-text) hover:text-(--crm-primary) hover:underline"
+                                                    title={ticket.customerName}
                                                 >
                                                     {ticket.customerName}
                                                 </button>
                                             </td>
 
-                                            <td className="px-5 py-4 text-center">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center">
                                                 <TicketPriorityBadge
                                                     priority={ticket.priority}
                                                 />
                                             </td>
 
-                                            <td className="px-5 py-4 text-center">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center">
                                                 <TicketStatusBadge
                                                     status={ticket.status}
                                                 />
                                             </td>
 
-                                            <td className="px-5 py-4 text-center">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center">
                                                 <span
                                                     className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${SLA_COLOR[sla.state]}`}
                                                     title={
@@ -432,10 +434,12 @@ export default function TicketListPage() {
                                             </td>
 
                                             <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
-                                                {ticket.assignedTo || "—"}
+                                                <span className="block truncate text-center" title={ticket.assignedTo || undefined}>
+                                                    {ticket.assignedTo || "—"}
+                                                </span>
                                             </td>
 
-                                            <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
                                                 {dateFormatter.format(
                                                     new Date(ticket.createdAt),
                                                 )}

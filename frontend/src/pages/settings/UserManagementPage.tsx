@@ -340,13 +340,13 @@ export default function UserManagementPage() {
                         <table className="crm-table">
                             <thead>
                                 <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle) text-center text-xs font-semibold text-(--crm-text-secondary)">
-                                    <th className="px-5 py-3.5 text-center">Tên</th>
-                                    <th className="px-5 py-3.5 text-center">Email</th>
-                                    <th className="px-5 py-3.5 text-center">Vai trò</th>
-                                    <th className="px-5 py-3.5 text-center">Phòng ban</th>
-                                    <th className="px-5 py-3.5 text-center">Trạng thái</th>
-                                    <th className="px-5 py-3.5 text-center">Ngày tạo</th>
-                                    <th className="px-5 py-3.5 text-center">Thao tác</th>
+                                    <th style={{ width: "20%" }} className="px-5 py-3.5 text-center">Tên</th>
+                                    <th style={{ width: "24%" }} className="px-5 py-3.5 text-center">Email</th>
+                                    <th style={{ width: "12%" }} className="px-5 py-3.5 text-center">Vai trò</th>
+                                    <th style={{ width: "14%" }} className="px-5 py-3.5 text-center">Phòng ban</th>
+                                    <th style={{ width: "12%" }} className="px-5 py-3.5 text-center">Trạng thái</th>
+                                    <th style={{ width: "10%" }} className="px-5 py-3.5 text-center">Ngày tạo</th>
+                                    <th style={{ width: "8%" }} className="px-5 py-3.5 text-center">Thao tác</th>
                                 </tr>
                             </thead>
 
@@ -369,24 +369,30 @@ export default function UserManagementPage() {
                                             className="border-b border-(--crm-border-subtle) last:border-b-0 hover:bg-(--crm-surface-subtle)"
                                         >
                                             <td className="px-5 py-4 text-center text-sm font-semibold text-(--crm-heading)">
-                                                {user.fullName}
+                                                <span className="block truncate text-center" title={user.fullName}>
+                                                    {user.fullName}
+                                                </span>
                                             </td>
 
                                             <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
-                                                {user.email}
+                                                <span className="block truncate text-center" title={user.email}>
+                                                    {user.email}
+                                                </span>
                                             </td>
 
-                                            <td className="px-5 py-4 text-center">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center">
                                                 <span className="crm-pill">
                                                     {getRoleLabel(user.role)}
                                                 </span>
                                             </td>
 
                                             <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
-                                                {user.department || "—"}
+                                                <span className="block truncate text-center" title={user.department || undefined}>
+                                                    {user.department || "—"}
+                                                </span>
                                             </td>
 
-                                            <td className="px-5 py-4 text-center">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center">
                                                 <span
                                                     className={`crm-status ${statusVariant}`}
                                                 >
@@ -394,7 +400,7 @@ export default function UserManagementPage() {
                                                 </span>
                                             </td>
 
-                                            <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
                                                 {dateFormat.format(
                                                     new Date(user.createdAt)
                                                 )}
