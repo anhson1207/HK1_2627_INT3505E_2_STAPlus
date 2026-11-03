@@ -11,7 +11,6 @@ import {
 import {
     Check,
     Pencil,
-    Plus,
     Search,
     UserRoundCheck,
     UserRoundX,
@@ -121,12 +120,6 @@ export default function UserManagementPage() {
     const pendingCount = users.filter(
         (user) => user.status === "PENDING"
     ).length;
-
-    const openCreate = () => {
-        setEditing(null);
-        setFormError("");
-        setFormOpen(true);
-    };
 
     const openEdit = (user: CRMUser) => {
         setEditing(user);
@@ -251,16 +244,6 @@ export default function UserManagementPage() {
                         Quản lý vai trò, trạng thái và duyệt tài khoản đăng ký.
                     </p>
                 </div>
-
-                {isAdmin && (
-                    <Button
-                        variant="contained"
-                        startIcon={<Plus size={17} />}
-                        onClick={openCreate}
-                    >
-                        Thêm người dùng
-                    </Button>
-                )}
             </div>
 
             {pendingCount > 0 && (
@@ -511,26 +494,22 @@ export default function UserManagementPage() {
                 maxWidth="md"
             >
                 <DialogTitle>
-                    {editing
-                        ? editing.status === "PENDING"
-                            ? "Duyệt tài khoản"
-                            : "Chỉnh sửa người dùng"
-                        : "Thêm người dùng"}
+                    {editing?.status === "PENDING"
+                        ? "Duyệt tài khoản"
+                        : "Chỉnh sửa người dùng"}
                 </DialogTitle>
 
                 <DialogContent>
                     <div className="pt-2">
                         <UserForm
-                            key={editing?.id ?? "new"}
+                            key={editing?.id ?? "edit"}
                             initialData={editing ?? undefined}
                             onSubmit={save}
                             onCancel={() => setFormOpen(false)}
                             submitLabel={
                                 editing?.status === "PENDING"
                                     ? "Lưu phân quyền"
-                                    : editing
-                                      ? "Lưu thay đổi"
-                                      : "Tạo người dùng"
+                                    : "Lưu thay đổi"
                             }
                             error={formError}
                         />
