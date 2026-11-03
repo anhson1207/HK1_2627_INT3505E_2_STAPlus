@@ -288,18 +288,14 @@ select.crm-filter-chip:focus{border-color:var(--crm-primary);box-shadow:0 0 0 3p
 .crm-range-filter select { min-width: 0; padding: 6px 0; border: 0; background: transparent; color: var(--crm-text); font-size: 13px; cursor: pointer; }
 .chart-container { width: 100%; min-width: 0; height: 288px; }
 .chart-empty { min-height: 220px; padding: 24px; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--crm-text-muted); font-size: 13px; }
-.crm-table.crm-table--widget { min-width: 620px; table-layout: auto; }
-.crm-table--widget thead th { height: 36px; border-right: 0; padding: 0 16px; }
+.crm-table.crm-table--widget { min-width: 620px; table-layout: fixed; }
+.crm-table--widget thead th { height: 38px; border-right: 0; padding: 0 16px; }
 .crm-table--widget tbody td { height: 56px; padding: 10px 16px; border-right: 0; }
 .crm-table--widget tbody tr:hover td { background: var(--crm-surface-selected); }
-.crm-table--widget .crm-col-actions { width: 36px; }
-.crm-customers-table .crm-col-customer { width: 30%; }
-.crm-customers-table .crm-col-count { width: 60px; }
-.crm-customers-table .crm-col-value { width: 170px; }
-.crm-customers-table .crm-person { display: flex; gap: 10px; }
+.crm-table--widget .crm-person { display: flex; align-items: center; gap: 10px; width: 100%; }
+.crm-table--widget .crm-person__name { font-weight: 500; text-align: left; }
 .crm-customers-table .crm-table__link { text-align: left; }
-.crm-person__name { font-weight: 500; }
-.customer-rank, .performance-medal { display: inline-grid; place-items: center; flex: 0 0 auto; width: 30px; height: 30px; border-radius: var(--crm-radius-md); background: var(--crm-info-soft); color: var(--crm-primary); font-size: 12px; font-weight: 600; }
+.customer-rank, .performance-medal { display: inline-grid; place-items: center; flex: 0 0 30px; width: 30px; height: 30px; border-radius: var(--crm-radius-md); background: var(--crm-info-soft); color: var(--crm-primary); font-size: 12px; font-weight: 600; }
 .customer-rank--1, .performance-medal--1 { color: var(--crm-amber-text); background: var(--crm-warning-soft); }
 .customer-rank--2, .performance-medal--2 { color: var(--crm-purple); background: var(--crm-purple-soft); }
 .customer-rank--3, .performance-medal--3 { color: var(--crm-green-dark); background: var(--crm-success-soft); }
@@ -309,7 +305,7 @@ select.crm-filter-chip:focus{border-color:var(--crm-primary);box-shadow:0 0 0 3p
 .crm-count-badge.is-positive { color: var(--crm-green-dark); background: var(--crm-success-soft); }
 .crm-money { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--crm-text-secondary); }
 .crm-money.is-positive { color: var(--crm-primary-hover); }
-.crm-conversion { display: flex; align-items: center; gap: 10px; }
+.crm-conversion { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .crm-conversion__track { display: block; width: 80px; height: 6px; overflow: hidden; border-radius: var(--crm-radius-pill); background: var(--crm-surface-hover); }
 .crm-conversion__track > span { display: block; height: 100%; background: var(--crm-teal); border-radius: inherit; }
 .conversion-pill { min-width: 42px; padding: 4px 7px; border-radius: var(--crm-radius-xs); background: var(--crm-success-soft); color: var(--crm-green-dark); text-align: center; font-size: 11px; font-weight: 600; }
