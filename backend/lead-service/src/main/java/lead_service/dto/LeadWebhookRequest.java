@@ -40,3 +40,4 @@ public record LeadWebhookRequest(
         return sb.isEmpty() ? null : sb.toString();
     }
 }
+

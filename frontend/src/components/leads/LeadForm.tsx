@@ -6,6 +6,7 @@ import { leadSchema, type LeadFormData } from "../../utils/leadSchema";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS } from "../../utils/constants";
+import { SALES_REPRESENTATIVES } from "../../services/leadService";
 
 interface LeadFormProps {
     onSubmit: (data: LeadFormData) => void | Promise<void>;
@@ -132,12 +133,22 @@ export default function LeadForm({
                     render={({ field }) => (
                         <TextField
                             {...field}
+                            select
                             label="Người phụ trách"
                             fullWidth
                             error={!!errors.ownerName}
-                            helperText={errors.ownerName?.message}
+                            helperText={errors.ownerName?.message || "Chọn người phụ trách hoặc để trống để hệ thống tự động phân bổ"}
                             disabled={isSubmitting}
-                        />
+                        >
+                            <MenuItem value="">
+                                <em>Chưa phân công (Tự động phân bổ)</em>
+                            </MenuItem>
+                            {Object.entries(SALES_REPRESENTATIVES).map(([id, sales]) => (
+                                <MenuItem key={id} value={sales.name}>
+                                    {sales.name} ({sales.email})
+                                </MenuItem>
+                            ))}
+                        </TextField>
                     )}
                 />
 

@@ -16,3 +16,4 @@ public record BatchLeadResponse(
         return new BatchLeadResponse(total, success, total - success, errors);
     }
 }
+

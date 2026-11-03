@@ -23,11 +23,16 @@ public class LeadServiceImpl implements LeadService {
 
     private final LeadRepository repository;
     private final LeadMapper mapper;
+    private final LeadAssignmentService assignmentService;
 
     @Override
     public LeadResponse create(LeadRequest request) {
+        Lead entity = mapper.toEntity(request);
+        if (entity.getAssignedUserId() == null) {
+            entity.setAssignedUserId(assignmentService.determineNextSalesId());
+        }
         return mapper.toResponse(
-                repository.save(mapper.toEntity(request))
+                repository.save(entity)
         );
     }
 
@@ -149,6 +154,10 @@ public class LeadServiceImpl implements LeadService {
             }
         }
 
+        Long assignedUserId = request.data() != null && request.data().get("assignedUserId") != null
+                ? Long.valueOf(request.data().get("assignedUserId").toString())
+                : assignmentService.determineNextSalesId();
+
         Lead lead = Lead.builder()
                 .fullName(request.resolveFullName())
                 .email(blankToNull(request.email()))
@@ -156,6 +165,7 @@ public class LeadServiceImpl implements LeadService {
                 .company(blankToNull(request.company()))
                 .source(source)
                 .status(LeadStatus.NEW)
+                .assignedUserId(assignedUserId)
                 .notes(blankToNull(request.resolveNotes()))
                 .build();
 
@@ -178,7 +188,11 @@ public class LeadServiceImpl implements LeadService {
                     errors.add("Dòng " + (i + 1) + ": Phải có email hoặc số điện thoại");
                     continue;
                 }
-                repository.save(mapper.toEntity(req));
+                Lead entity = mapper.toEntity(req);
+                if (entity.getAssignedUserId() == null) {
+                    entity.setAssignedUserId(assignmentService.determineNextSalesId());
+                }
+                repository.save(entity);
                 success++;
             } catch (Exception ex) {
                 errors.add("Dòng " + (i + 1) + ": " + ex.getMessage());

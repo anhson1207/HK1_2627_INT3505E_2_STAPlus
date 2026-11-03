@@ -31,6 +31,23 @@ public class LeadController {
     );
 
     private final LeadService service;
+    private final lead_service.service.LeadAssignmentService assignmentService;
+
+    @GetMapping("/assignment-rules")
+    public ResponseEntity<lead_service.dto.AssignmentRuleDTO> getAssignmentRules() {
+        return ResponseEntity.ok(assignmentService.getRules());
+    }
+
+    @PutMapping("/assignment-rules")
+    public ResponseEntity<lead_service.dto.AssignmentRuleDTO> updateAssignmentRules(
+            @RequestBody lead_service.dto.AssignmentRuleDTO dto) {
+        return ResponseEntity.ok(assignmentService.updateRules(dto));
+    }
+
+    @PostMapping("/auto-assign")
+    public ResponseEntity<lead_service.dto.AutoAssignResultDTO> autoAssign() {
+        return ResponseEntity.ok(assignmentService.autoAssignPendingLeads());
+    }
 
     @PostMapping
     public ResponseEntity<LeadResponse> create(@Valid @RequestBody LeadRequest request) {

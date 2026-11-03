@@ -1,10 +1,11 @@
 import PageHeader from "../../components/common/PageHeader";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Alert, CircularProgress, Snackbar } from "@mui/material";
-import { Plus, Radio, RefreshCw, Search, Upload } from "lucide-react";
+import { Plus, Radio, RefreshCw, Search, SlidersHorizontal, Upload } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import ConfirmDialog from "../../components/common/ConfirmDialog";
+import LeadAssignmentModal from "../../components/leads/LeadAssignmentModal";
 import LeadChannelsModal from "../../components/leads/LeadChannelsModal";
 import LeadImportModal from "../../components/leads/LeadImportModal";
 import LeadTable from "../../components/leads/LeadTable";
@@ -38,6 +39,7 @@ export default function LeadListPage() {
     const [message, setMessage] = useState("");
     const [importOpen, setImportOpen] = useState(false);
     const [channelsOpen, setChannelsOpen] = useState(false);
+    const [assignmentOpen, setAssignmentOpen] = useState(false);
 
     useEffect(() => {
         let active = true;
@@ -97,6 +99,13 @@ export default function LeadListPage() {
                 description="Quản lý khách hàng tiềm năng"
                 actions={
                     <div className="flex flex-wrap items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setAssignmentOpen(true)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
+                        >
+                            <SlidersHorizontal size={14} className="text-(--crm-primary)" /> Phân bổ tự động
+                        </button>
                         <button
                             type="button"
                             onClick={() => setChannelsOpen(true)}
@@ -243,6 +252,15 @@ export default function LeadListPage() {
             <LeadChannelsModal
                 open={channelsOpen}
                 onClose={() => setChannelsOpen(false)}
+                onSuccess={(msg) => {
+                    setMessage(msg);
+                    setRefreshKey((k) => k + 1);
+                }}
+            />
+
+            <LeadAssignmentModal
+                open={assignmentOpen}
+                onClose={() => setAssignmentOpen(false)}
                 onSuccess={(msg) => {
                     setMessage(msg);
                     setRefreshKey((k) => k + 1);

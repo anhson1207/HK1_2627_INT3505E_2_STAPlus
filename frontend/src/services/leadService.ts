@@ -1,6 +1,20 @@
 import api, { ApiError, hasConfiguredApi } from "./api";
 import { mockLeads } from "../data/mockLeads";
-import type { Lead, LeadPayload, LeadQuery, LeadSource, LeadStatus } from "../types/lead";
+import type { AssignmentRule, AutoAssignResult, Lead, LeadPayload, LeadQuery, LeadSource, LeadStatus } from "../types/lead";
+
+export const SALES_REPRESENTATIVES: Record<number, { name: string; email: string; avatarColor: string }> = {
+    1: { name: "Nguyễn Anh Sơn", email: "son@crm.com", avatarColor: "bg-blue-100 text-blue-700" },
+    2: { name: "Trần Minh", email: "sales@crm.com", avatarColor: "bg-emerald-100 text-emerald-700" },
+    4: { name: "Phạm Bảo Trúc", email: "truc@crm.com", avatarColor: "bg-purple-100 text-purple-700" },
+    5: { name: "Đỗ Hải Anh", email: "haianh@crm.com", avatarColor: "bg-cyan-100 text-cyan-700" },
+    7: { name: "Bùi Hoàng Nam", email: "nam@crm.com", avatarColor: "bg-amber-100 text-amber-700" },
+    9: { name: "Ngô Quốc Huy", email: "huy@crm.com", avatarColor: "bg-indigo-100 text-indigo-700" },
+};
+
+export function getSalesOwnerName(userId?: number | null): string | undefined {
+    if (!userId) return undefined;
+    return SALES_REPRESENTATIVES[userId]?.name || `Sales #${userId}`;
+}
 
 const useLeadMockApi = import.meta.env.VITE_USE_LEAD_MOCK_API !== "false";
 
@@ -148,13 +162,21 @@ function mapBackendLeadToFrontend(item: BackendLead): Lead {
         company: item.company || undefined,
         source: mapBackendSourceToFrontend(item.source),
         status: item.status,
-        ownerName: item.assignedUserId ? `User #${item.assignedUserId}` : undefined,
+        ownerId: item.assignedUserId || undefined,
+        ownerName: getSalesOwnerName(item.assignedUserId),
         createdAt: item.createdAt,
         updatedAt: item.updatedAt || undefined,
     };
 }
 
 function mapFrontendPayloadToBackend(data: LeadPayload) {
+    let assignedUserId = data.ownerId || null;
+    if (!assignedUserId && data.ownerName) {
+        const found = Object.entries(SALES_REPRESENTATIVES).find(
+            ([_, s]) => s.name.toLowerCase() === data.ownerName?.trim().toLowerCase()
+        );
+        if (found) assignedUserId = Number(found[0]);
+    }
     return {
         fullName: combineFullName(data.firstName, data.lastName),
         email: data.email?.trim() || null,
@@ -163,7 +185,7 @@ function mapFrontendPayloadToBackend(data: LeadPayload) {
         source: mapFrontendSourceToBackend(data.source) ?? "OTHER",
         status: data.status,
         notes: null,
-        assignedUserId: null,
+        assignedUserId,
     };
 }
 
@@ -335,5 +357,71 @@ export const leadService = {
 
         const response = await api.post<BackendLead>(`/leads/webhook/${channel}`, payload);
         return mapBackendLeadToFrontend(response.data);
+    },
+
+    getAssignmentRules: async (): Promise<AssignmentRule> => {
+        if (useLeadMockApi || !hasConfiguredApi) {
+            const raw = localStorage.getItem("crm-soa.assignment-rules");
+            if (raw) {
+                try { return JSON.parse(raw) as AssignmentRule; } catch { /* ignore */ }
+            }
+            const leads = readLocalLeads();
+            const unassigned = leads.filter((l) => !l.ownerName).length;
+            return {
+                enabled: true,
+                strategy: "ROUND_ROBIN",
+                activeSalesIds: [2, 4, 5],
+                unassignedCount: unassigned,
+            };
+        }
+
+        const response = await api.get<AssignmentRule>("/leads/assignment-rules");
+        return response.data;
+    },
+
+    updateAssignmentRules: async (rules: AssignmentRule): Promise<AssignmentRule> => {
+        if (useLeadMockApi || !hasConfiguredApi) {
+            localStorage.setItem("crm-soa.assignment-rules", JSON.stringify(rules));
+            return rules;
+        }
+
+        const response = await api.put<AssignmentRule>("/leads/assignment-rules", rules);
+        return response.data;
+    },
+
+    autoAssignPendingLeads: async (): Promise<AutoAssignResult> => {
+        if (useLeadMockApi || !hasConfiguredApi) {
+            const leads = readLocalLeads();
+            const activeSalesIds = [2, 4, 5];
+            let assignedCount = 0;
+            const summary: Record<number, number> = {};
+            let counter = 0;
+
+            const updated = leads.map((lead) => {
+                if (!lead.ownerName) {
+                    const salesId = activeSalesIds[counter % activeSalesIds.length];
+                    counter++;
+                    assignedCount++;
+                    summary[salesId] = (summary[salesId] || 0) + 1;
+                    return {
+                        ...lead,
+                        ownerId: salesId,
+                        ownerName: getSalesOwnerName(salesId),
+                    };
+                }
+                return lead;
+            });
+
+            writeLocalLeads(updated);
+            return {
+                assignedCount,
+                totalUnassignedBefore: assignedCount,
+                strategyUsed: "ROUND_ROBIN",
+                assignmentSummary: summary,
+            };
+        }
+
+        const response = await api.post<AutoAssignResult>("/leads/auto-assign");
+        return response.data;
     },
 };
