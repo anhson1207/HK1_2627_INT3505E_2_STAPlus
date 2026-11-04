@@ -190,6 +190,27 @@ select.crm-filter-chip:focus{border-color:var(--crm-primary);box-shadow:0 0 0 3p
 .crm-status--open{background:var(--crm-dark-blue);color:#ffffff}
 .crm-pill{min-height:24px;padding:3px 9px;border-radius:999px;display:inline-flex;align-items:center;gap:5px;background:var(--crm-surface-hover);color:var(--crm-text-secondary);font-size:12px;line-height:1}
 
+/* LEAD SOURCE BADGES - High-Contrast & Vibrant */
+.crm-source-badge{display:inline-flex;align-items:center;justify-content:center;gap:5.5px;min-height:26px;padding:3.5px 11px;border-radius:9999px;font-size:12px;font-weight:600;line-height:1.2;white-space:nowrap;letter-spacing:.01em;border:1px solid transparent;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:transform .12s ease,box-shadow .12s ease}
+.crm-source-badge:hover{transform:translateY(-1px);box-shadow:0 2px 4px rgba(0,0,0,.08)}
+.crm-source-badge svg{width:13px;height:13px;flex-shrink:0}
+.crm-source-badge--website{background-color:#e0f2fe!important;border-color:#38bdf8!important;color:#0369a1!important}
+.crm-source-badge--website svg{color:#0284c7!important}
+.crm-source-badge--facebook{background-color:#eff6ff!important;border-color:#60a5fa!important;color:#1d4ed8!important}
+.crm-source-badge--facebook svg{color:#2563eb!important}
+.crm-source-badge--zalo{background-color:#ecfeff!important;border-color:#22d3ee!important;color:#0e7490!important}
+.crm-source-badge--zalo svg{color:#0891b2!important}
+.crm-source-badge--google_ads{background-color:#fef3c7!important;border-color:#f59e0b!important;color:#92400e!important}
+.crm-source-badge--google_ads svg{color:#d97706!important}
+.crm-source-badge--phone{background-color:#dcfce7!important;border-color:#4ade80!important;color:#166534!important}
+.crm-source-badge--phone svg{color:#15803d!important}
+.crm-source-badge--referral{background-color:#f3e8ff!important;border-color:#c084fc!important;color:#6b21a8!important}
+.crm-source-badge--referral svg{color:#7e22ce!important}
+.crm-source-badge--event{background-color:#ffe4e6!important;border-color:#fb7185!important;color:#9f1239!important}
+.crm-source-badge--event svg{color:#e11d48!important}
+.crm-source-badge--other{background-color:#f1f5f9!important;border-color:#94a3b8!important;color:#334155!important}
+.crm-source-badge--other svg{color:#64748b!important}
+
 /* PEOPLE */
 .crm-avatar{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;overflow:hidden;background:#5559df;color:#fff;font-size:11px;font-weight:600;text-transform:uppercase;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2),0 1px 3px rgba(85,89,223,.25)}.crm-avatar--sm{width:24px;height:24px}.crm-avatar--lg{width:40px;height:40px;font-size:14px}.crm-person{display:inline-flex;align-items:center;gap:7px;min-width:0}.crm-person__name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
