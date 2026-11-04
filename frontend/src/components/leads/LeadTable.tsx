@@ -49,7 +49,7 @@ export default function LeadTable({ leads, onView, onEdit, onDelete }: LeadTable
                             <th style={{ width: "12%" }} className="px-3 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Số điện thoại</th>
                             <th style={{ width: "13%" }} className="px-3 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Nguồn</th>
                             <th style={{ width: "11%" }} className="px-3 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Trạng thái</th>
-                            <th style={{ width: "18%" }} className="px-4 py-3.5 text-left text-xs font-semibold text-(--crm-text-secondary)">Phụ trách</th>
+                            <th style={{ width: "18%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Phụ trách</th>
                             <th style={{ width: "8%" }} className="px-2 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Thao tác</th>
                         </tr>
                     </thead>
@@ -72,15 +72,15 @@ export default function LeadTable({ leads, onView, onEdit, onDelete }: LeadTable
                                     <LeadSourceBadge source={lead.source} />
                                 </td>
                                 <td className="whitespace-nowrap px-5 py-4 text-center"><StatusChip status={lead.status} /></td>
-                                <td className="px-4 py-4 text-left">
+                                <td className="px-4 py-4 text-center">
                                     {lead.ownerName ? (
-                                        <div className="flex items-center gap-2.5 overflow-hidden">
+                                        <div className="inline-flex w-[150px] items-center gap-2.5 text-left overflow-hidden">
                                             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-(--crm-info-soft) text-xs font-semibold text-(--crm-primary)">
                                                 {lead.ownerName.trim().charAt(0).toLocaleUpperCase("vi")}
                                             </div>
                                             <span className="truncate text-sm text-(--crm-text-secondary)" title={lead.ownerName}>{lead.ownerName}</span>
                                         </div>
-                                    ) : <span className="text-sm text-(--crm-text-muted)">Chưa phân công</span>}
+                                    ) : <span className="inline-block w-[150px] text-center text-sm text-(--crm-text-muted)">Chưa phân công</span>}
                                 </td>
                                 <td className="px-4 py-4 text-center">
                                     <IconButton size="small" aria-label={`Thao tác với ${lead.firstName} ${lead.lastName}`} onClick={(event) => openMenu(event, lead)}>
