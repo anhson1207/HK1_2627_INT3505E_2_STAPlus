@@ -40,6 +40,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/reset-password"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/audit-logs").permitAll()
+                        .requestMatchers("/api/v1/chat/**").authenticated()
                         .requestMatchers("/api/v1/users/**", "/api/v1/audit-logs/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

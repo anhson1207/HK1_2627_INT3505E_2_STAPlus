@@ -34,7 +34,8 @@ public class GatewayConfig {
                 .route(request ->
                                 request.path().startsWith("/api/v1/auth/")
                                         || request.path().startsWith("/api/v1/users")
-                                        || request.path().startsWith("/api/v1/audit-logs"),
+                                        || request.path().startsWith("/api/v1/audit-logs")
+                                        || request.path().startsWith("/api/v1/chat"),
                         http())
                 .before(uri(authServiceUrl))
                 .build();
