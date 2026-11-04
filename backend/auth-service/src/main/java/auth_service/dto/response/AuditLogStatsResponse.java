@@ -16,3 +16,4 @@ public class AuditLogStatsResponse {
     private Map<String, Long> actionCounts;
     private Map<String, Long> moduleCounts;
 }
+

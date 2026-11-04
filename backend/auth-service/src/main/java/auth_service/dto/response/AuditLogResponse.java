@@ -24,3 +24,4 @@ public class AuditLogResponse {
     private String status;
     private String details;
 }
+

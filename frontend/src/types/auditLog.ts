@@ -67,3 +67,4 @@ export interface AuditLogPageResponse {
     first: boolean;
     last: boolean;
 }
+

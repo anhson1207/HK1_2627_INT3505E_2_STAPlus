@@ -113,22 +113,26 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
                 title="Quay về trang chủ"
                 aria-label="CRM - Quay về trang chủ"
             >
-                <span className="crm-sidebar__brand-mark" aria-hidden="true"><LayoutDashboard size={18} /></span>
-                {!collapsed && <span>CRM</span>}
+                <div className="crm-sidebar__brand-mark-wrap">
+                    <span className="crm-sidebar__brand-mark" aria-hidden="true"><LayoutDashboard size={18} /></span>
+                </div>
+                <span className="crm-sidebar__brand-text">CRM</span>
             </Link>
             <nav className="crm-sidebar__navigation crm-scrollbar">
                 {visibleGroups.map((group) => (
                     <div key={group.label} className="crm-sidebar__section">
-                        {!collapsed && <p className="crm-sidebar__label">{group.label}</p>}
+                        <p className="crm-sidebar__label">{group.label}</p>
                         <div className="crm-nav">
                             {group.items.map((item) => {
                                 const Icon = item.icon;
                                 return (
                                     <NavLink key={item.path} to={item.path} onClick={handleNavItemClick(item.path)}
-                                        title={collapsed ? item.label : undefined} aria-label={collapsed ? item.label : undefined}
+                                        title={item.label} aria-label={item.label}
                                         className={({ isActive }) => `crm-nav-item ${isItemActive(item.path, isActive) ? "is-active" : ""}`}>
-                                        <Icon size={18} className="crm-nav-item__icon" />
-                                        {!collapsed && <span>{item.label}</span>}
+                                        <span className="crm-nav-item__icon-wrap">
+                                            <Icon size={18} className="crm-nav-item__icon" />
+                                        </span>
+                                        <span className="crm-nav-item__label">{item.label}</span>
                                     </NavLink>
                                 );
                             })}
@@ -139,16 +143,21 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
             <div className="crm-sidebar__footer crm-nav">
                 {role && settingsNavigation.roles.includes(role) && (
                     <NavLink to={settingsNavigation.path} onClick={onNavigate}
-                        title={collapsed ? settingsNavigation.label : undefined} aria-label={collapsed ? settingsNavigation.label : undefined}
+                        title={settingsNavigation.label} aria-label={settingsNavigation.label}
                         className={({ isActive }) => `crm-nav-item ${isItemActive(settingsNavigation.path, isActive) ? "is-active" : ""}`}>
-                        <Settings size={18} className="crm-nav-item__icon" />
-                        {!collapsed && <span>{settingsNavigation.label}</span>}
+                        <span className="crm-nav-item__icon-wrap">
+                            <Settings size={18} className="crm-nav-item__icon" />
+                        </span>
+                        <span className="crm-nav-item__label">{settingsNavigation.label}</span>
                     </NavLink>
                 )}
-                <button type="button" onClick={onToggle} className="crm-nav-item"
+                <button type="button" onClick={onToggle} className="crm-nav-item crm-sidebar__toggle-btn"
+                    title={mobile ? "Đóng thanh bên" : collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
                     aria-label={mobile ? "Đóng thanh bên" : collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}>
-                    {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-                    {!collapsed && <span>{mobile ? "Đóng thanh bên" : "Thu gọn thanh bên"}</span>}
+                    <span className="crm-nav-item__icon-wrap">
+                        {collapsed ? <PanelLeftOpen size={18} className="crm-nav-item__icon" /> : <PanelLeftClose size={18} className="crm-nav-item__icon" />}
+                    </span>
+                    <span className="crm-nav-item__label">{mobile ? "Đóng thanh bên" : "Thu gọn thanh bên"}</span>
                 </button>
             </div>
         </aside>

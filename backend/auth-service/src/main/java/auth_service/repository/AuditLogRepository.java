@@ -24,3 +24,4 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long>, JpaSp
     @Query("SELECT a.action, COUNT(a) FROM AuditLog a GROUP BY a.action")
     List<Object[]> countByActionGroup();
 }
+

@@ -20,3 +20,4 @@ public class CreateAuditLogRequest {
     private String status;
     private String details;
 }
+

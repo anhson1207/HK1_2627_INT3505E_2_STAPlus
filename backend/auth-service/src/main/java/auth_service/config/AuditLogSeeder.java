@@ -228,3 +228,4 @@ public class AuditLogSeeder implements CommandLineRunner {
         log.info("Successfully seeded {} audit logs", seeds.size());
     }
 }
+
