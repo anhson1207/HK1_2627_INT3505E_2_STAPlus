@@ -3,6 +3,7 @@ package auth_service.jwt;
 import auth_service.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,13 @@ public class JwtService {
     @Value("${jwt.access-expiration-ms}")
     private long accessExpirationMs;
 
+    @PostConstruct
+    public void validateSecret() {
+        if (secret == null || secret.isBlank() || secret.length() < 32) {
+            throw new IllegalStateException("FATAL: JWT_SECRET must be configured and at least 32 characters long!");
+        }
+    }
+
     private SecretKey key() {
         return Keys.hmacShaKeyFor(
                 secret.getBytes(StandardCharsets.UTF_8)
@@ -30,6 +38,7 @@ public class JwtService {
                 .subject(user.getEmail())
                 .claim("role", user.getRole().name())
                 .claim("userId", user.getId())
+                .claim("username", user.getUsername())
                 .issuedAt(new Date())
                 .expiration(
                         new Date(

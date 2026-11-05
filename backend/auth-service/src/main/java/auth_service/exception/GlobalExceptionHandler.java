@@ -61,6 +61,18 @@ public class GlobalExceptionHandler {
           .body(pd(HttpStatus.FORBIDDEN, e.getMessage()));
  }
 
+ @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+ ResponseEntity<ProblemDetail> responseStatus(org.springframework.web.server.ResponseStatusException e) {
+  HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
+  if (status == null) status = HttpStatus.BAD_REQUEST;
+  ProblemDetail problem = pd(status, e.getReason());
+  problem.setProperty("message", e.getReason());
+  return ResponseEntity
+          .status(e.getStatusCode())
+          .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+          .body(problem);
+ }
+
  @ExceptionHandler(MethodArgumentNotValidException.class)
  ResponseEntity<ProblemDetail> validation(
          MethodArgumentNotValidException e

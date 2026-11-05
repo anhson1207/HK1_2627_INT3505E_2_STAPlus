@@ -1,0 +1,27 @@
+# IDE & Agent Configs
+.idea/
+.vscode/
+.agent/
+.agents/
+.claude/
+.codex/
+.cursor/
+.devin/
+.gemini/
+.impeccable/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Build Artifacts
+**/target/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+
+# Uploads & Temporary Media
+uploads/
+**/uploads/
+outputs/
+

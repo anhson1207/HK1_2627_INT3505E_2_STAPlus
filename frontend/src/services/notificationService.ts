@@ -50,4 +50,15 @@ export const notificationService = {
         if (!items.some((item) => item.id === id)) throw new Error("Không tìm thấy thông báo.");
         write(items.filter((item) => item.id !== id));
     },
+    addNotification: (item: Omit<Notification, "id" | "createdAt" | "read">): Notification => {
+        const items = read();
+        const newItem: Notification = {
+            id: Date.now(),
+            ...item,
+            read: false,
+            createdAt: new Date().toISOString(),
+        };
+        write([newItem, ...items]);
+        return newItem;
+    },
 };
