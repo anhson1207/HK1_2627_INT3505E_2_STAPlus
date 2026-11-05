@@ -50,4 +50,27 @@ public class NotificationController {
         notificationService.markAllAsRead(userId);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/follow-up")
+    public ResponseEntity<Notification> createFollowUp(
+            @RequestBody java.util.Map<String, String> body,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId) {
+        Long userId = resolveUserId(currentUserId);
+        String title = body != null ? body.get("title") : "Nhắc nhở follow-up";
+        String message = body != null ? body.get("message") : "Đến hạn liên hệ lại khách hàng";
+        String targetUrl = body != null ? body.get("targetUrl") : "/customers";
+        return ResponseEntity.ok(notificationService.createFollowUpNotification(userId, title, message, targetUrl));
+    }
+
+    @PostMapping("/email")
+    public ResponseEntity<java.util.Map<String, Object>> sendEmail(
+            @RequestBody java.util.Map<String, String> body,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId) {
+        Long userId = resolveUserId(currentUserId);
+        String email = body != null ? body.get("email") : "customer@example.com";
+        String subject = body != null ? body.get("subject") : "Thông báo CRM";
+        String content = body != null ? body.get("message") : "Nội dung email";
+        boolean sent = notificationService.sendEmailNotification(userId, email, subject, content);
+        return ResponseEntity.ok(java.util.Map.of("success", sent, "recipient", email));
+    }
 }

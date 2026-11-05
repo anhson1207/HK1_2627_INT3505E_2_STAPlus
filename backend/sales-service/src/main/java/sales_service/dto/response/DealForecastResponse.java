@@ -29,3 +29,4 @@ public class DealForecastResponse {
     public List<PipelineStageSummary> getStages() { return stages; }
     public void setStages(List<PipelineStageSummary> stages) { this.stages = stages; }
 }
+

@@ -37,3 +37,4 @@ public class DashboardStatsResponse {
     public long getWonDeals() { return wonDeals; }
     public void setWonDeals(long wonDeals) { this.wonDeals = wonDeals; }
 }
+

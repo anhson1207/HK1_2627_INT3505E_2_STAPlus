@@ -8,3 +8,4 @@ import java.util.List;
 public interface AnalyticsActivityRepository extends JpaRepository<AnalyticsActivity, Long> {
     List<AnalyticsActivity> findTop10ByOrderByCreatedAtDesc();
 }
+

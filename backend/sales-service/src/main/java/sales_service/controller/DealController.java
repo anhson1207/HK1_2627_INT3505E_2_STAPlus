@@ -106,6 +106,52 @@ public class DealController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{dealId}/discount-approval")
+    public ResponseEntity<Deal> requestDiscountApprovalAlias(
+            @PathVariable Long dealId,
+            @RequestBody(required = false) DiscountApprovalRequestDTO request,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId) {
+
+        Long salesId = resolveSalesId(currentUserId);
+        Long managerId = 1000L;
+        if (request == null) {
+            request = new DiscountApprovalRequestDTO();
+            request.setDiscountPercent(10.0);
+            request.setReason("Yêu cầu phê duyệt chiết khấu");
+        }
+        dealService.requestDiscount(dealId, salesId, managerId, request);
+        return ResponseEntity.ok(dealService.getDealByIdAndSalesId(dealId, null));
+    }
+
+    @PatchMapping("/{dealId}/discount-approval")
+    public ResponseEntity<Deal> decideDiscountApprovalAlias(
+            @PathVariable Long dealId,
+            @RequestBody(required = false) java.util.Map<String, String> body,
+            @RequestParam(required = false) String status,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId) {
+
+        String decisionStatus = (body != null && body.containsKey("status")) ? body.get("status") : status;
+        if (decisionStatus == null) decisionStatus = "APPROVED";
+        Long managerId = (currentUserId != null && currentUserId > 0) ? currentUserId : 1000L;
+        dealService.decideDiscountByDealId(dealId, managerId, decisionStatus);
+        return ResponseEntity.ok(dealService.getDealByIdAndSalesId(dealId, null));
+    }
+
+    @PatchMapping("/{dealId}/stage")
+    public ResponseEntity<Deal> updateDealStageAlias(
+            @PathVariable Long dealId,
+            @RequestBody(required = false) java.util.Map<String, String> body,
+            @RequestParam(required = false) String stage,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId,
+            @RequestHeader(value = "X-User-Role", required = false) String currentUserRole) {
+
+        String newStage = (body != null && body.containsKey("stage")) ? body.get("stage") : stage;
+        DealRequest request = new DealRequest();
+        request.setStage(newStage);
+        Long salesId = isManagerOrAdmin(currentUserRole) ? null : resolveSalesId(currentUserId);
+        return ResponseEntity.ok(dealService.patchDeal(dealId, request, salesId != null ? salesId : 1L));
+    }
+
     @PutMapping("/{dealId}")
     public ResponseEntity<Deal> updateDeal(
             @PathVariable Long dealId,

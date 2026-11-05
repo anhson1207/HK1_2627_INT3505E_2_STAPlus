@@ -27,3 +27,4 @@ public class RecentActivityResponse {
     public String getTimeAgo() { return timeAgo; }
     public void setTimeAgo(String timeAgo) { this.timeAgo = timeAgo; }
 }
+

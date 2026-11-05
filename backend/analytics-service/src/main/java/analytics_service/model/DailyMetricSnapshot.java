@@ -68,3 +68,4 @@ public class DailyMetricSnapshot {
     public Integer getOpenTickets() { return openTickets; }
     public void setOpenTickets(Integer openTickets) { this.openTickets = openTickets; }
 }
+

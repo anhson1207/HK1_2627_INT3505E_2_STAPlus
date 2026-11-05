@@ -22,3 +22,4 @@ public class PipelineStageSummary {
     public double getTotalValue() { return totalValue; }
     public void setTotalValue(double totalValue) { this.totalValue = totalValue; }
 }
+

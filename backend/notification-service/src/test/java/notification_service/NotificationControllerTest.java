@@ -65,3 +65,4 @@ public class NotificationControllerTest {
                 .andExpect(status().isNoContent());
     }
 }
+

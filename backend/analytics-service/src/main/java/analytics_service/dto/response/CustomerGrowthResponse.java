@@ -17,3 +17,4 @@ public class CustomerGrowthResponse {
     public long getCustomers() { return customers; }
     public void setCustomers(long customers) { this.customers = customers; }
 }
+

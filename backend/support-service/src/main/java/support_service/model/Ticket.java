@@ -37,6 +37,35 @@ public class Ticket {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "sla_deadline")
+    private LocalDateTime slaDeadline;
+
+    public LocalDateTime getSlaDeadline() {
+        return slaDeadline;
+    }
+
+    public void setSlaDeadline(LocalDateTime slaDeadline) {
+        this.slaDeadline = slaDeadline;
+    }
+
+    public static LocalDateTime calculateSlaDeadline(Priority priority, LocalDateTime created) {
+        LocalDateTime base = created != null ? created : LocalDateTime.now();
+        Priority p = priority != null ? priority : Priority.MEDIUM;
+        return switch (p) {
+            case URGENT -> base.plusHours(24);
+            case HIGH -> base.plusHours(48);
+            case MEDIUM -> base.plusHours(72);
+            case LOW -> base.plusHours(120);
+        };
+    }
+
+    @Transient
+    public boolean isSlaBreached() {
+        if (slaDeadline == null) return false;
+        if ("RESOLVED".equalsIgnoreCase(status) || "CLOSED".equalsIgnoreCase(status)) return false;
+        return LocalDateTime.now().isAfter(slaDeadline);
+    }
+
 
     public Long getId() {
         return id;

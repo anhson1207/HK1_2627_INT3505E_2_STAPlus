@@ -11,3 +11,4 @@ public interface DailyMetricSnapshotRepository extends JpaRepository<DailyMetric
     Optional<DailyMetricSnapshot> findByMetricDate(LocalDate metricDate);
     List<DailyMetricSnapshot> findByMetricDateBetweenOrderByMetricDateAsc(LocalDate start, LocalDate end);
 }
+

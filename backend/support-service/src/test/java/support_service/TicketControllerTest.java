@@ -52,3 +52,4 @@ public class TicketControllerTest {
                 .andExpect(jsonPath("$.content").isArray());
     }
 }
+

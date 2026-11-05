@@ -254,6 +254,14 @@ public class DealService {
         dealEventPublisher.publishDiscountRequest(event);
     }
 
+    public void decideDiscountByDealId(Long dealId, Long managerId, String status) {
+        List<DiscountApproval> approvals = discountApprovalRepository.findByDealIdOrderByCreatedAtDesc(dealId);
+        if (approvals.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Discount request not found for deal " + dealId);
+        }
+        approveDiscount(approvals.get(0).getId(), managerId, status);
+    }
+
     public void approveDiscount(Long discountId, Long managerId, String status) {
         String decision;
         if ("APPROVED".equalsIgnoreCase(status)) {

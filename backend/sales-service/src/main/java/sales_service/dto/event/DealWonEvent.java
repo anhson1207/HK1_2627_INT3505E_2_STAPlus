@@ -38,3 +38,4 @@ public class DealWonEvent {
     public LocalDateTime getWonAt() { return wonAt; }
     public void setWonAt(LocalDateTime wonAt) { this.wonAt = wonAt; }
 }
+

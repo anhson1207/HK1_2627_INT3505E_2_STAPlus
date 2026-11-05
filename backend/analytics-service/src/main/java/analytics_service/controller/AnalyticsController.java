@@ -74,3 +74,4 @@ public class AnalyticsController {
         return ResponseEntity.ok(analyticsService.getConversionFunnel());
     }
 }
+

@@ -34,3 +34,4 @@ public class TicketStatusOverviewResponse {
     public long getUrgentCount() { return urgentCount; }
     public void setUrgentCount(long urgentCount) { this.urgentCount = urgentCount; }
 }
+

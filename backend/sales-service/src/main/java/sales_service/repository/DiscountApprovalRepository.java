@@ -7,5 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DiscountApprovalRepository extends JpaRepository<DiscountApproval, Long> {
-    Optional<DiscountApproval>findByIdAndManagerId(Long id, Long managerId);
+    Optional<DiscountApproval> findByIdAndManagerId(Long id, Long managerId);
+    List<DiscountApproval> findByDealIdOrderByCreatedAtDesc(Long dealId);
 }

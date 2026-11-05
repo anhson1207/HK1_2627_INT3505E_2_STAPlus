@@ -17,9 +17,11 @@ import java.util.List;
 @Service
 public class NotificationService {
     private final NotificationRepository notificationRepository;
+    private final EmailNotificationService emailNotificationService;
 
-    public NotificationService(NotificationRepository notificationRepository){
+    public NotificationService(NotificationRepository notificationRepository, EmailNotificationService emailNotificationService){
         this.notificationRepository = notificationRepository;
+        this.emailNotificationService = emailNotificationService;
     }
 
     public List<Notification> getNotifications(Long userId){
@@ -120,5 +122,31 @@ public class NotificationService {
         n.setCreatedAt(event.getCreatedAt() != null ? event.getCreatedAt() : LocalDateTime.now());
 
         return notificationRepository.save(n);
+    }
+
+    public Notification createFollowUpNotification(Long userId, String title, String message, String targetUrl) {
+        Notification n = new Notification();
+        n.setUserId(userId != null ? userId : 1L);
+        n.setType(NotificationType.FOLLOW_UP);
+        n.setTitle(title != null ? title : "Nhắc nhở theo dõi khách hàng");
+        n.setMessage(message != null ? message : "Đến hạn liên hệ theo dõi khách hàng.");
+        n.setTargetUrl(targetUrl != null ? targetUrl : "/customers");
+        n.setRead(false);
+        n.setCreatedAt(LocalDateTime.now());
+        return notificationRepository.save(n);
+    }
+
+    public boolean sendEmailNotification(Long userId, String email, String subject, String body) {
+        boolean sent = emailNotificationService.sendEmail(email, subject, body);
+        Notification n = new Notification();
+        n.setUserId(userId != null ? userId : 1L);
+        n.setType(NotificationType.FOLLOW_UP);
+        n.setTitle("Email thông báo: " + subject);
+        n.setMessage("Đã gửi email tới " + email);
+        n.setTargetUrl("/notifications");
+        n.setRead(false);
+        n.setCreatedAt(LocalDateTime.now());
+        notificationRepository.save(n);
+        return sent;
     }
 }

@@ -21,3 +21,4 @@ public class RabbitMQConfig {
         return template;
     }
 }
+

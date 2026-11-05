@@ -9,3 +9,4 @@ public class AnalyticsServiceApplication {
         SpringApplication.run(AnalyticsServiceApplication.class, args);
     }
 }
+

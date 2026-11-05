@@ -80,3 +80,4 @@ public class AnalyticsControllerTest {
                 .andExpect(jsonPath("$.statuses").isArray());
     }
 }
+

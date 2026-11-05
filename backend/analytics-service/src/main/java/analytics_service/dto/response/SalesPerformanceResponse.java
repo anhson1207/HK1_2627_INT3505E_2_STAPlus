@@ -32,3 +32,4 @@ public class SalesPerformanceResponse {
     public int getConversionRate() { return conversionRate; }
     public void setConversionRate(int conversionRate) { this.conversionRate = conversionRate; }
 }
+

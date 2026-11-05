@@ -82,6 +82,7 @@ public class TicketService {
         ticket.setSupportId(request.getSupportId());
         ticket.setCreatedAt(LocalDateTime.now());
         ticket.setUpdatedAt(LocalDateTime.now());
+        ticket.setSlaDeadline(Ticket.calculateSlaDeadline(ticket.getPriority(), ticket.getCreatedAt()));
 
         Ticket saved = ticketRepository.save(ticket);
 
@@ -130,6 +131,7 @@ public class TicketService {
         ticket.setPriority(request.getPriority());
         ticket.setStatus(request.getStatus());
         ticket.setUpdatedAt(LocalDateTime.now());
+        ticket.setSlaDeadline(Ticket.calculateSlaDeadline(ticket.getPriority(), ticket.getCreatedAt()));
 
         Ticket saved = ticketRepository.save(ticket);
 
@@ -152,7 +154,10 @@ public class TicketService {
 
         if (request.getSubject() != null) ticket.setSubject(request.getSubject());
         if (request.getDescription() != null) ticket.setDescription(request.getDescription());
-        if (request.getPriority() != null) ticket.setPriority(request.getPriority());
+        if (request.getPriority() != null) {
+            ticket.setPriority(request.getPriority());
+            ticket.setSlaDeadline(Ticket.calculateSlaDeadline(request.getPriority(), ticket.getCreatedAt()));
+        }
         if (request.getStatus() != null) ticket.setStatus(request.getStatus());
         if (request.getSupportId() != null) ticket.setSupportId(request.getSupportId());
         ticket.setUpdatedAt(LocalDateTime.now());
@@ -193,5 +198,9 @@ public class TicketService {
 
     public List<Ticket> getUnassignedTickets(){
         return ticketRepository.findBySupportIdIsNull();
+    }
+
+    public List<Ticket> getTicketsByCustomerId(Long customerId) {
+        return ticketRepository.findBySalesIdOrderByCreatedAtDesc(customerId);
     }
 }
