@@ -1,13 +1,13 @@
 import type { UserRole } from "../types/user";
 import { USER_ROLES } from "../types/auth";
 
-export type CRMResource = "dashboard" | "leads" | "customers" | "deals" | "tickets" | "analytics" | "settings" | "profile" | "notifications" | "security" | "users" | "roles" | "general" | "reminders" | "audit-logs";
+export type CRMResource = "dashboard" | "leads" | "customers" | "deals" | "tickets" | "analytics" | "chat" | "settings" | "profile" | "notifications" | "security" | "users" | "roles" | "general" | "reminders" | "audit-logs";
 
 export const rolePermissions: Record<UserRole, readonly CRMResource[]> = {
-    ADMIN: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "settings", "profile", "notifications", "security", "users", "roles", "general", "reminders", "audit-logs"],
-    SALES: ["dashboard", "leads", "customers", "deals", "analytics", "profile", "notifications", "security", "reminders"],
-    SUPPORT: ["dashboard", "customers", "tickets", "profile", "notifications", "security"],
-    MANAGER: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "profile", "notifications", "security", "reminders"],
+    ADMIN: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "chat", "settings", "profile", "notifications", "security", "users", "roles", "general", "reminders", "audit-logs"],
+    SALES: ["dashboard", "leads", "customers", "deals", "analytics", "chat", "profile", "notifications", "security", "reminders"],
+    SUPPORT: ["dashboard", "customers", "tickets", "chat", "profile", "notifications", "security"],
+    MANAGER: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "chat", "profile", "notifications", "security", "reminders"],
     UNASSIGNED: ["profile"],
 };
 
@@ -23,7 +23,7 @@ export const permissionRows: ReadonlyArray<{ resource: CRMResource; label: strin
     { resource: "dashboard", label: "Dashboard" }, { resource: "leads", label: "Leads" },
     { resource: "customers", label: "Customers" }, { resource: "deals", label: "Deals" },
     { resource: "tickets", label: "Tickets" }, { resource: "analytics", label: "Analytics" },
-    { resource: "reminders", label: "Reminders" }, { resource: "settings", label: "Settings (quản trị)" },
+    { resource: "reminders", label: "Reminders" }, { resource: "chat", label: "Trò chuyện nội bộ (Internal Chat)" }, { resource: "settings", label: "Settings (quản trị)" },
     { resource: "profile", label: "My Profile" }, { resource: "notifications", label: "Notification Preferences" },
     { resource: "security", label: "Security" }, { resource: "audit-logs", label: "Nhật ký hoạt động (Audit Log)" },
 ];

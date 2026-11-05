@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,13 @@ public class GatewayJwtService {
 
     @Value("${jwt.secret}")
     private String secret;
+
+    @PostConstruct
+    public void validateSecret() {
+        if (secret == null || secret.isBlank() || secret.length() < 32) {
+            throw new IllegalStateException("FATAL: JWT_SECRET must be configured and at least 32 characters long!");
+        }
+    }
 
     private SecretKey key() {
         return Keys.hmacShaKeyFor(

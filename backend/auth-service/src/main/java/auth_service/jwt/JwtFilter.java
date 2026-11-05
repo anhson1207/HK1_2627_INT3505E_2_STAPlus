@@ -30,14 +30,18 @@ public class JwtFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String h = req.getHeader("Authorization");
+        String token = null;
 
-        if (h == null || !h.startsWith("Bearer ")) {
+        if (h != null && h.startsWith("Bearer ")) {
+            token = h.substring(7);
+        }
+
+        if (token == null || token.isBlank()) {
             chain.doFilter(req, res);
             return;
         }
 
         try {
-            String token = h.substring(7);
             String email = jwtService.extractEmail(token);
 
             User u = userRepository.findByEmail(email).orElse(null);

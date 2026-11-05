@@ -1,8 +1,8 @@
-import { Bell, BriefcaseBusiness, Clock3, Settings2, Ticket } from "lucide-react";
+import { Bell, BriefcaseBusiness, Clock3, MessageSquare, Settings2, Ticket } from "lucide-react";
 import type { NotificationType } from "../types/notification";
 
 export const notificationIcons: Record<NotificationType, typeof Bell> = {
-    FOLLOW_UP: Clock3, DEAL: BriefcaseBusiness, TICKET: Ticket, SYSTEM: Settings2,
+    FOLLOW_UP: Clock3, DEAL: BriefcaseBusiness, TICKET: Ticket, SYSTEM: Settings2, CHAT: MessageSquare,
 };
 
 export function formatNotificationTime(value: string): string {

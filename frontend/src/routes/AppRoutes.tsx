@@ -35,6 +35,7 @@ import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import VerifyEmailPendingPage from '../pages/auth/VerifyEmailPendingPage';
 import VerifyEmailSuccessPage from '../pages/auth/VerifyEmailSuccessPage';
 import ProfilePage from "../pages/settings/ProfilePage";
+import ChatPage from "../pages/chat/ChatPage";
 export default function AppRoutes() {
     return (
         <BrowserRouter>
@@ -59,6 +60,10 @@ export default function AppRoutes() {
                         </Route>
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/dashboard" element={<DashboardPage />} />
+
+                        <Route element={<RoleGuard allowedRoles={rolesWithPermission("chat")} fallback={<Navigate to="/dashboard" replace />}><Outlet /></RoleGuard>}>
+                            <Route path="/chat" element={<ChatPage />} />
+                        </Route>
 
                         <Route path="/leads" element={<LeadListPage />} />
                         <Route path="/leads/new" element={<LeadCreatePage />} />

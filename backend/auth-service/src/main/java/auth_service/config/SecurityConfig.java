@@ -1,6 +1,7 @@
 package auth_service.config;
 
 import auth_service.jwt.JwtFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.*;
 import org.springframework.http.HttpMethod;
@@ -31,6 +32,13 @@ public class SecurityConfig {
                 .sessionManagement(s ->
                         s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                .exceptionHandling(e -> e
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"status\":401,\"message\":\"Yêu cầu đăng nhập để truy cập tài nguyên này.\"}");
+                        })
+                )
                 .authorizeHttpRequests(a -> a
                         .requestMatchers(
                                 "/api/v1/auth/register",
@@ -39,8 +47,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/forgot-password",
                                 "/api/v1/auth/reset-password"
                         ).permitAll()
+                        .requestMatchers("/api/v1/internal/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/audit-logs").permitAll()
-                        .requestMatchers("/api/v1/chat/**").authenticated()
                         .requestMatchers("/api/v1/users/**", "/api/v1/audit-logs/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

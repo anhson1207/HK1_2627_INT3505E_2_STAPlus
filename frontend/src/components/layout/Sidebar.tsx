@@ -2,6 +2,7 @@ import {
     BarChart3,
     BriefcaseBusiness,
     LayoutDashboard,
+    MessageSquare,
     PanelLeftClose,
     PanelLeftOpen,
     Settings,
@@ -13,6 +14,7 @@ import type { LucideIcon } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 
 import { useAuthStore } from "../../stores/authStore";
+import { useChatStore } from "../../stores/chatStore";
 import { rolesWithPermission } from "../../config/rolePermissions";
 import type { UserRole } from "../../types/auth";
 
@@ -40,6 +42,7 @@ const navigationGroups: NavigationGroup[] = [
         label: "Tổng quan",
         items: [
             { label: "Trang chủ", icon: LayoutDashboard, path: "/dashboard", roles: rolesWithPermission("dashboard") },
+            { label: "Trò chuyện", icon: MessageSquare, path: "/chat", roles: rolesWithPermission("chat") },
         ],
     },
     {
@@ -69,6 +72,7 @@ const settingsNavigation: NavigationItem = {
 export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = false }: SidebarProps) {
     const location = useLocation();
     const role = useAuthStore((state) => state.user?.role);
+    const totalUnreadCount = useChatStore((state) => state.unreadSummary.totalUnreadCount);
     const visibleGroups = navigationGroups
         .map((group) => ({
             ...group,
@@ -78,6 +82,7 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
 
     const isItemActive = (path: string, isActive: boolean) => {
         if (isActive) return true;
+        if (path === "/chat" && location.pathname.startsWith("/chat")) return true;
         if (path === "/support" && location.pathname.startsWith("/tickets")) return true;
         if (path === "/deals" && location.pathname.startsWith("/deals")) return true;
         if (path === "/leads" && location.pathname.startsWith("/leads")) return true;
@@ -129,10 +134,20 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
                                     <NavLink key={item.path} to={item.path} onClick={handleNavItemClick(item.path)}
                                         title={item.label} aria-label={item.label}
                                         className={({ isActive }) => `crm-nav-item ${isItemActive(item.path, isActive) ? "is-active" : ""}`}>
-                                        <span className="crm-nav-item__icon-wrap">
+                                        <span className="crm-nav-item__icon-wrap relative">
                                             <Icon size={18} className="crm-nav-item__icon" />
+                                            {item.path === "/chat" && totalUnreadCount > 0 && collapsed && (
+                                                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-(--crm-primary) ring-2 ring-slate-900" />
+                                            )}
                                         </span>
-                                        <span className="crm-nav-item__label">{item.label}</span>
+                                        <span className="crm-nav-item__label flex items-center justify-between flex-1 pr-3">
+                                            <span>{item.label}</span>
+                                            {item.path === "/chat" && totalUnreadCount > 0 && (
+                                                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-(--crm-primary) text-white leading-none shadow-2xs">
+                                                    {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
+                                                </span>
+                                            )}
+                                        </span>
                                     </NavLink>
                                 );
                             })}
