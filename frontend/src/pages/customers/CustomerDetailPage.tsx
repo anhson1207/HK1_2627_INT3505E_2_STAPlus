@@ -14,7 +14,7 @@ import { mockCustomerActivities, mockCustomerDeals, mockCustomerTickets } from "
 import { customerService, getCustomerErrorMessage } from "../../services/customerService";
 import type { Customer } from "../../types/customer";
 
-const TAB_LABELS = ["Overview", "Deals", "Activities", "Tickets"] as const;
+const TAB_LABELS = ["Tổng quan", "Cơ hội (Deal)", "Hoạt động", "Ticket hỗ trợ"] as const;
 const currencyFormatter = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" });
 
 interface SummaryCardProps {
@@ -128,10 +128,10 @@ export default function CustomerDetailPage() {
             </div>
 
             <div className="crm-kpi-grid mb-5">
-                <SummaryCard label="Total Deals" value={deals.length} icon={BriefcaseBusiness} />
-                <SummaryCard label="Total Deal Value" value={currencyFormatter.format(totalDealValue)} icon={BadgeDollarSign} />
-                <SummaryCard label="Activities" value={activities.length} icon={Activity} />
-                <SummaryCard label="Open Tickets" value={openTickets} icon={TicketCheck} />
+                <SummaryCard label="Tổng số Deal" value={deals.length} icon={BriefcaseBusiness} />
+                <SummaryCard label="Tổng giá trị Deal" value={currencyFormatter.format(totalDealValue)} icon={BadgeDollarSign} />
+                <SummaryCard label="Hoạt động" value={activities.length} icon={Activity} />
+                <SummaryCard label="Ticket đang mở" value={openTickets} icon={TicketCheck} />
             </div>
 
             <div className="mb-5 overflow-hidden rounded-lg border border-(--crm-border) bg-(--crm-surface)">

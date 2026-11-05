@@ -1,4 +1,5 @@
 import { CalendarDays } from "lucide-react";
+import { useRef } from "react";
 import type { AnalyticsRange } from "../../types/analytics";
 
 interface AnalyticsFilterProps {
@@ -15,17 +16,32 @@ const rangeOptions: Array<{ value: AnalyticsRange; label: string }> = [
 ];
 
 export default function AnalyticsFilter({ value, onChange }: AnalyticsFilterProps) {
+  const selectRef = useRef<HTMLSelectElement>(null);
+
+  const handleWrapperClick = () => {
+    try {
+      selectRef.current?.showPicker?.();
+    } catch {
+      selectRef.current?.focus();
+    }
+  };
+
   return (
-    <label className="crm-filter-chip crm-range-filter">
-      <CalendarDays size={17} aria-hidden="true" />
-      <span className="sr-only">Khoảng thời gian</span>
-      <select value={value} onChange={(event) => onChange(event.target.value as AnalyticsRange)}>
+    <div className="crm-range-filter" onClick={handleWrapperClick}>
+      <CalendarDays size={16} className="crm-range-filter__icon" aria-hidden="true" />
+      <select
+        ref={selectRef}
+        aria-label="Khoảng thời gian"
+        value={value}
+        onChange={(event) => onChange(event.target.value as AnalyticsRange)}
+        className="crm-range-filter__select"
+      >
         {rangeOptions.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
       </select>
-    </label>
+    </div>
   );
 }

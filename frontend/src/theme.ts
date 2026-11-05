@@ -5,20 +5,21 @@ export const theme = createTheme({
         primary: {
             main: "#007f9b",
             dark: "#006278",
-            light: "#bee3e8",
+            light: "#e8f5f7",
+            contrastText: "#ffffff",
         },
         success: {
-            main: "#00a86b",
+            main: "#00c875",
         },
         warning: {
-            main: "#d98c00",
+            main: "#fdab3d",
         },
         error: {
-            main: "#d83a52",
+            main: "#e2445c",
         },
         background: {
             default: "#f6f7fb",
-            paper: "#FFFFFF",
+            paper: "#ffffff",
         },
         text: {
             primary: "#323338",
@@ -72,7 +73,7 @@ export const theme = createTheme({
         MuiCard: {
             styleOverrides: {
                 root: {
-                    border: "1px solid #e6e9ef",
+                    border: "1px solid #d0d4e4",
                     boxShadow: "none",
                     borderRadius: 8,
                 },

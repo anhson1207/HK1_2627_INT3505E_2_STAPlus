@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -30,11 +31,42 @@ public class LeadController {
     );
 
     private final LeadService service;
+    private final lead_service.service.LeadAssignmentService assignmentService;
+
+    @GetMapping("/assignment-rules")
+    public ResponseEntity<lead_service.dto.AssignmentRuleDTO> getAssignmentRules() {
+        return ResponseEntity.ok(assignmentService.getRules());
+    }
+
+    @PutMapping("/assignment-rules")
+    public ResponseEntity<lead_service.dto.AssignmentRuleDTO> updateAssignmentRules(
+            @RequestBody lead_service.dto.AssignmentRuleDTO dto) {
+        return ResponseEntity.ok(assignmentService.updateRules(dto));
+    }
+
+    @PostMapping("/auto-assign")
+    public ResponseEntity<lead_service.dto.AutoAssignResultDTO> autoAssign() {
+        return ResponseEntity.ok(assignmentService.autoAssignPendingLeads());
+    }
 
     @PostMapping
     public ResponseEntity<LeadResponse> create(@Valid @RequestBody LeadRequest request) {
         LeadResponse created = service.create(request);
         return ResponseEntity.created(URI.create(ApiPaths.LEADS + "/" + created.id())).body(created);
+    }
+
+    @PostMapping("/webhook/{channel}")
+    public ResponseEntity<LeadResponse> captureWebhook(
+            @PathVariable String channel,
+            @RequestBody lead_service.dto.LeadWebhookRequest request) {
+        LeadResponse created = service.captureWebhook(channel, request);
+        return ResponseEntity.created(URI.create(ApiPaths.LEADS + "/" + created.id())).body(created);
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<lead_service.dto.BatchLeadResponse> importBatch(
+            @RequestBody List<LeadRequest> requests) {
+        return ResponseEntity.ok(service.importBatch(requests));
     }
 
     @GetMapping("/{id}")

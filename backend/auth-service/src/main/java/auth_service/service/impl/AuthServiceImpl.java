@@ -8,6 +8,7 @@ import auth_service.jwt.JwtService;
 import auth_service.mapper.UserMapper;
 import auth_service.repository.*;
 import auth_service.service.AuthService;
+import auth_service.service.AuditLogService;
 import auth_service.service.EmailService;
 import auth_service.service.OtpResetService;
 
@@ -43,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper mapper;
     private final EmailService emailService;
     private final OtpResetService otpResetService;
+    private final AuditLogService auditLogService;
 
     @Value("${jwt.refresh-expiration-ms}")
     private long refreshExpirationMs;
@@ -70,7 +72,22 @@ public class AuthServiceImpl implements AuthService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return mapper.toResponse(users.save(u));
+        User saved = users.save(u);
+        auditLogService.log(
+                saved.getId(),
+                saved.getEmail(),
+                saved.getUsername(),
+                "UNASSIGNED",
+                "CREATE",
+                "AUTH",
+                "User",
+                saved.getId().toString(),
+                "Đăng ký tài khoản người dùng mới: " + saved.getUsername(),
+                "127.0.0.1",
+                "SUCCESS",
+                null
+        );
+        return mapper.toResponse(saved);
     }
 
     public AuthResponse login(LoginRequest r) {
@@ -111,6 +128,21 @@ public class AuthServiceImpl implements AuthService {
                         )
                         .revoked(false)
                         .build()
+        );
+
+        auditLogService.log(
+                u.getId(),
+                u.getEmail(),
+                u.getUsername(),
+                u.getRole().name(),
+                "LOGIN",
+                "AUTH",
+                "User",
+                u.getId().toString(),
+                "Đăng nhập hệ thống thành công với vai trò " + u.getRole().name(),
+                "127.0.0.1",
+                "SUCCESS",
+                "{\"method\": \"PASSWORD\"}"
         );
 
         return AuthResponse.builder()

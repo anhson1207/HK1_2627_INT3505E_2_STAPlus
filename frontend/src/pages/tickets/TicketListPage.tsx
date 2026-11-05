@@ -149,7 +149,7 @@ export default function TicketListPage() {
 
     const summaries = [
         {
-            label: "Open Tickets",
+            label: "Đang mở",
             value: allTickets.filter(
                 (ticket) => ticket.status === "OPEN",
             ).length,
@@ -157,7 +157,7 @@ export default function TicketListPage() {
             color: "bg-(--crm-info-soft) text-(--crm-primary)",
         },
         {
-            label: "In Progress",
+            label: "Đang xử lý",
             value: allTickets.filter(
                 (ticket) => ticket.status === "IN_PROGRESS",
             ).length,
@@ -165,7 +165,7 @@ export default function TicketListPage() {
             color: "bg-(--crm-surface-selected) text-(--crm-purple)",
         },
         {
-            label: "Resolved",
+            label: "Đã giải quyết",
             value: allTickets.filter(
                 (ticket) => ticket.status === "RESOLVED",
             ).length,
@@ -173,7 +173,7 @@ export default function TicketListPage() {
             color: "bg-(--crm-success-soft) text-(--crm-green-dark)",
         },
         {
-            label: "Urgent",
+            label: "Khẩn cấp",
             value: allTickets.filter(
                 (ticket) => ticket.priority === "URGENT",
             ).length,
@@ -249,6 +249,7 @@ export default function TicketListPage() {
 
                         <input
                             type="search"
+                            aria-label="Tìm kiếm Ticket"
                             value={search}
                             onChange={(event) => {
                                 setSearch(event.target.value);
@@ -260,6 +261,7 @@ export default function TicketListPage() {
                     </label>
 
                     <select
+                        aria-label="Lọc theo trạng thái"
                         value={status}
                         onChange={(event) => {
                             setStatus(
@@ -281,6 +283,7 @@ export default function TicketListPage() {
                     </select>
 
                     <select
+                        aria-label="Lọc theo độ ưu tiên"
                         value={priority}
                         onChange={(event) => {
                             setPriority(
@@ -343,14 +346,14 @@ export default function TicketListPage() {
                         <table className="crm-table">
                             <thead>
                                 <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
-                                    <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">ID</th>
-                                    <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Tiêu đề</th>
-                                    <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Khách hàng</th>
-                                    <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Ưu tiên</th>
-                                    <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Trạng thái</th>
-                                    <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">SLA</th>
-                                    <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Phân công</th>
-                                    <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Ngày tạo</th>
+                                    <th style={{ width: "7%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">ID</th>
+                                    <th style={{ width: "25%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Tiêu đề</th>
+                                    <th style={{ width: "16%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Khách hàng</th>
+                                    <th style={{ width: "11%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Ưu tiên</th>
+                                    <th style={{ width: "11%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Trạng thái</th>
+                                    <th style={{ width: "11%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">SLA</th>
+                                    <th style={{ width: "10%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Phân công</th>
+                                    <th style={{ width: "9%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Ngày tạo</th>
                                 </tr>
                             </thead>
 
@@ -367,11 +370,11 @@ export default function TicketListPage() {
                                             key={ticket.id}
                                             className="border-b border-(--crm-border-subtle) last:border-0 hover:bg-(--crm-surface-subtle)"
                                         >
-                                            <td className="px-4 py-4 text-center text-sm font-medium text-(--crm-text-secondary)">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center text-sm font-medium text-(--crm-text-secondary)">
                                                 #{ticket.id}
                                             </td>
 
-                                            <td className="px-4 py-4 text-center">
+                                            <td className="px-5 py-4 text-center">
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -379,13 +382,14 @@ export default function TicketListPage() {
                                                             `/tickets/${ticket.id}`,
                                                         )
                                                     }
-                                                    className="inline-block text-center text-sm font-medium text-(--crm-primary) hover:underline"
+                                                    className="inline-block max-w-full truncate text-center text-sm font-medium text-(--crm-primary) hover:underline"
+                                                    title={ticket.subject}
                                                 >
                                                     {ticket.subject}
                                                 </button>
                                             </td>
 
-                                            <td className="px-4 py-4 text-center">
+                                            <td className="px-5 py-4 text-center">
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -393,25 +397,26 @@ export default function TicketListPage() {
                                                             `/customers/${ticket.customerId}`,
                                                         )
                                                     }
-                                                    className="inline-block text-center text-sm text-(--crm-text) hover:text-(--crm-primary) hover:underline"
+                                                    className="inline-block max-w-full truncate text-center text-sm text-(--crm-text) hover:text-(--crm-primary) hover:underline"
+                                                    title={ticket.customerName}
                                                 >
                                                     {ticket.customerName}
                                                 </button>
                                             </td>
 
-                                            <td className="px-4 py-4 text-center">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center">
                                                 <TicketPriorityBadge
                                                     priority={ticket.priority}
                                                 />
                                             </td>
 
-                                            <td className="px-4 py-4 text-center">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center">
                                                 <TicketStatusBadge
                                                     status={ticket.status}
                                                 />
                                             </td>
 
-                                            <td className="px-4 py-4 text-center">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center">
                                                 <span
                                                     className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${SLA_COLOR[sla.state]}`}
                                                     title={
@@ -428,11 +433,13 @@ export default function TicketListPage() {
                                                 </span>
                                             </td>
 
-                                            <td className="px-4 py-4 text-center text-sm text-(--crm-text-secondary)">
-                                                {ticket.assignedTo || "—"}
+                                            <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
+                                                <span className="block truncate text-center" title={ticket.assignedTo || undefined}>
+                                                    {ticket.assignedTo || "—"}
+                                                </span>
                                             </td>
 
-                                            <td className="px-4 py-4 text-center text-sm text-(--crm-text-secondary)">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
                                                 {dateFormatter.format(
                                                     new Date(ticket.createdAt),
                                                 )}
@@ -454,6 +461,7 @@ export default function TicketListPage() {
                             </span>
 
                             <select
+                                aria-label="Số Ticket mỗi trang"
                                 value={pageSize}
                                 onChange={(event) => {
                                     setPageSize(Number(event.target.value));
@@ -472,6 +480,7 @@ export default function TicketListPage() {
                         <div className="flex gap-1">
                             <button
                                 type="button"
+                                aria-label="Trang trước"
                                 disabled={page === 0}
                                 onClick={() =>
                                     setPage((value) => value - 1)
@@ -485,6 +494,7 @@ export default function TicketListPage() {
                                 <button
                                     type="button"
                                     key={number}
+                                    aria-label={`Trang ${number + 1}`}
                                     onClick={() => setPage(number)}
                                     className={`rounded px-3 py-1.5 text-xs ${
                                         number === page
@@ -498,6 +508,7 @@ export default function TicketListPage() {
 
                             <button
                                 type="button"
+                                aria-label="Trang sau"
                                 disabled={page + 1 >= result.totalPages}
                                 onClick={() =>
                                     setPage((value) => value + 1)

@@ -17,7 +17,6 @@ export default function RecentActivities({ data }: RecentActivitiesProps) {
     <section className="crm-widget crm-activity-widget">
       <div className="crm-widget__header">
         <div>
-          <p className="crm-widget__eyebrow">Hoạt động</p>
           <h2>Hoạt động gần đây</h2>
         </div>
         <span className="crm-widget__icon crm-tone--teal"><Activity size={20} aria-hidden="true" /></span>

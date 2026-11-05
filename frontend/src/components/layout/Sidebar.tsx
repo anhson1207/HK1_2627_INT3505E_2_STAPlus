@@ -10,7 +10,7 @@ import {
     Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 
 import { useAuthStore } from "../../stores/authStore";
 import { rolesWithPermission } from "../../config/rolePermissions";
@@ -67,6 +67,7 @@ const settingsNavigation: NavigationItem = {
 };
 
 export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = false }: SidebarProps) {
+    const location = useLocation();
     const role = useAuthStore((state) => state.user?.role);
     const visibleGroups = navigationGroups
         .map((group) => ({
@@ -75,25 +76,63 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
         }))
         .filter((group) => group.items.length > 0);
 
+    const isItemActive = (path: string, isActive: boolean) => {
+        if (isActive) return true;
+        if (path === "/support" && location.pathname.startsWith("/tickets")) return true;
+        if (path === "/deals" && location.pathname.startsWith("/deals")) return true;
+        if (path === "/leads" && location.pathname.startsWith("/leads")) return true;
+        if (path === "/customers" && location.pathname.startsWith("/customers")) return true;
+        if (path === "/settings/users" && location.pathname.startsWith("/settings")) return true;
+        return false;
+    };
+
+    const isHome = location.pathname === "/dashboard" || location.pathname === "/" || location.pathname === "/dashboard/";
+
+    const handleHomeClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        onNavigate?.();
+        if (isHome) {
+            e.preventDefault();
+            window.location.reload();
+        }
+    };
+
+    const handleNavItemClick = (path: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+        onNavigate?.();
+        if ((path === "/dashboard" || path === "/") && isHome) {
+            e.preventDefault();
+            window.location.reload();
+        }
+    };
+
     return (
         <aside className={`crm-sidebar ${collapsed ? "is-collapsed" : ""} ${mobile ? "is-open" : ""}`} aria-label="Điều hướng chính">
-            <div className="crm-sidebar__brand">
-                <span className="crm-sidebar__brand-mark" aria-hidden="true"><LayoutDashboard size={18} /></span>
-                {!collapsed && <span>CRM</span>}
-            </div>
+            <Link
+                to="/dashboard"
+                onClick={handleHomeClick}
+                className="crm-sidebar__brand"
+                title="Quay về trang chủ"
+                aria-label="CRM - Quay về trang chủ"
+            >
+                <div className="crm-sidebar__brand-mark-wrap">
+                    <span className="crm-sidebar__brand-mark" aria-hidden="true"><LayoutDashboard size={18} /></span>
+                </div>
+                <span className="crm-sidebar__brand-text">CRM</span>
+            </Link>
             <nav className="crm-sidebar__navigation crm-scrollbar">
                 {visibleGroups.map((group) => (
                     <div key={group.label} className="crm-sidebar__section">
-                        {!collapsed && <p className="crm-sidebar__label">{group.label}</p>}
+                        <p className="crm-sidebar__label">{group.label}</p>
                         <div className="crm-nav">
                             {group.items.map((item) => {
                                 const Icon = item.icon;
                                 return (
-                                    <NavLink key={item.path} to={item.path} onClick={onNavigate}
-                                        title={collapsed ? item.label : undefined} aria-label={collapsed ? item.label : undefined}
-                                        className={({ isActive }) => `crm-nav-item ${isActive ? "is-active" : ""}`}>
-                                        <Icon size={18} className="crm-nav-item__icon" />
-                                        {!collapsed && <span>{item.label}</span>}
+                                    <NavLink key={item.path} to={item.path} onClick={handleNavItemClick(item.path)}
+                                        title={item.label} aria-label={item.label}
+                                        className={({ isActive }) => `crm-nav-item ${isItemActive(item.path, isActive) ? "is-active" : ""}`}>
+                                        <span className="crm-nav-item__icon-wrap">
+                                            <Icon size={18} className="crm-nav-item__icon" />
+                                        </span>
+                                        <span className="crm-nav-item__label">{item.label}</span>
                                     </NavLink>
                                 );
                             })}
@@ -104,16 +143,21 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
             <div className="crm-sidebar__footer crm-nav">
                 {role && settingsNavigation.roles.includes(role) && (
                     <NavLink to={settingsNavigation.path} onClick={onNavigate}
-                        title={collapsed ? settingsNavigation.label : undefined} aria-label={collapsed ? settingsNavigation.label : undefined}
-                        className={({ isActive }) => `crm-nav-item ${isActive ? "is-active" : ""}`}>
-                        <Settings size={18} className="crm-nav-item__icon" />
-                        {!collapsed && <span>{settingsNavigation.label}</span>}
+                        title={settingsNavigation.label} aria-label={settingsNavigation.label}
+                        className={({ isActive }) => `crm-nav-item ${isItemActive(settingsNavigation.path, isActive) ? "is-active" : ""}`}>
+                        <span className="crm-nav-item__icon-wrap">
+                            <Settings size={18} className="crm-nav-item__icon" />
+                        </span>
+                        <span className="crm-nav-item__label">{settingsNavigation.label}</span>
                     </NavLink>
                 )}
-                <button type="button" onClick={onToggle} className="crm-nav-item"
+                <button type="button" onClick={onToggle} className="crm-nav-item crm-sidebar__toggle-btn"
+                    title={mobile ? "Đóng thanh bên" : collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
                     aria-label={mobile ? "Đóng thanh bên" : collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}>
-                    {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-                    {!collapsed && <span>{mobile ? "Đóng thanh bên" : "Thu gọn thanh bên"}</span>}
+                    <span className="crm-nav-item__icon-wrap">
+                        {collapsed ? <PanelLeftOpen size={18} className="crm-nav-item__icon" /> : <PanelLeftClose size={18} className="crm-nav-item__icon" />}
+                    </span>
+                    <span className="crm-nav-item__label">{mobile ? "Đóng thanh bên" : "Thu gọn thanh bên"}</span>
                 </button>
             </div>
         </aside>

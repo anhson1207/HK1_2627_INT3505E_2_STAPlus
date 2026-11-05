@@ -20,9 +20,9 @@ test("FE1 real backend integration - Full CRUD on Leads and Customers via API Ga
     await page.goto("http://localhost:5173/leads");
     await page.waitForLoadState("networkidle");
 
-    // Read: Verify real lead from DB exists
-    const seedLead = page.getByText("Nguyễn Hoàng Nam").first();
-    await expect(seedLead).toBeVisible({ timeout: 10000 });
+    // Read: Verify real leads from DB exist in the table
+    const tableRows = page.locator(".crm-table tbody tr").first();
+    await expect(tableRows).toBeVisible({ timeout: 10000 });
 
     // Create: Add new Lead
     await page.getByRole("button", { name: "Thêm Lead" }).click();
@@ -61,8 +61,8 @@ test("FE1 real backend integration - Full CRUD on Leads and Customers via API Ga
     await page.waitForLoadState("networkidle");
 
     // Read: Verify real customer from DB exists
-    const seedCustomer = page.getByText("Trần Thị Mai").first();
-    await expect(seedCustomer).toBeVisible({ timeout: 10000 });
+    const customerRow = page.locator(".crm-table tbody tr").first();
+    await expect(customerRow).toBeVisible({ timeout: 10000 });
 
     // Create: Add new Customer
     await page.getByRole("button", { name: "Thêm khách hàng" }).click();

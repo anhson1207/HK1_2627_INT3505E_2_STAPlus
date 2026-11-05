@@ -32,20 +32,29 @@ export default function CustomerDeals({ deals }: CustomerDealsProps) {
         <div className="crm-board">
             <div className="crm-table-wrap">
                 <table className="crm-table">
-                    <thead><tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
-                        {["Deal", "Giá trị", "Stage", "Expected Close Date"].map((label) => <th key={label} className="px-5 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">{label}</th>)}
-                    </tr></thead>
-                    <tbody>{deals.map((deal) => {
-                        const stage = stageConfig[deal.stage];
-                        return (
-                            <tr key={deal.id} className="border-b border-(--crm-border-subtle) last:border-0 hover:bg-(--crm-surface-subtle)">
-                                <td className="px-5 py-4 text-center text-sm font-medium text-(--crm-heading)">{deal.name}</td>
-                                <td className="px-5 py-4 text-center text-sm text-(--crm-text)">{currencyFormatter.format(deal.value)}</td>
-                                <td className="px-5 py-4 text-center"><span className={`crm-status ${stage.className}`}>{stage.label}</span></td>
-                                <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">{dateFormatter.format(new Date(`${deal.expectedCloseDate}T00:00:00`))}</td>
-                            </tr>
-                        );
-                    })}</tbody>
+                    <thead>
+                        <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
+                            <th style={{ width: "35%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Tên Deal</th>
+                            <th style={{ width: "25%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Giá trị</th>
+                            <th style={{ width: "20%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Giai đoạn</th>
+                            <th style={{ width: "20%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Ngày dự kiến đóng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {deals.map((deal) => {
+                            const stage = stageConfig[deal.stage];
+                            return (
+                                <tr key={deal.id} className="border-b border-(--crm-border-subtle) last:border-0 hover:bg-(--crm-surface-subtle)">
+                                    <td className="px-5 py-4 text-center text-sm font-medium text-(--crm-heading)">
+                                        <span className="block truncate text-center" title={deal.name}>{deal.name}</span>
+                                    </td>
+                                    <td className="whitespace-nowrap px-5 py-4 text-center text-sm text-(--crm-text)">{currencyFormatter.format(deal.value)}</td>
+                                    <td className="whitespace-nowrap px-5 py-4 text-center"><span className={`crm-status ${stage.className}`}>{stage.label}</span></td>
+                                    <td className="whitespace-nowrap px-5 py-4 text-center text-sm text-(--crm-text-secondary)">{dateFormatter.format(new Date(`${deal.expectedCloseDate}T00:00:00`))}</td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
                 </table>
             </div>
         </div>

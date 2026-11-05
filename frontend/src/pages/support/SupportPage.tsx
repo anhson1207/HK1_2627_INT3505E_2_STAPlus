@@ -32,5 +32,4 @@ export const SupportPage: React.FC = () => {
     </div>
   );
 };
-console.log("supportpage")
 export default SupportPage;

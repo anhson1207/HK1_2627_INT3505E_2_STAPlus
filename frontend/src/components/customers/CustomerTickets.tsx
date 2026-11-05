@@ -41,22 +41,32 @@ export default function CustomerTickets({ tickets }: CustomerTicketsProps) {
         <div className="crm-board">
             <div className="crm-table-wrap">
                 <table className="crm-table">
-                    <thead><tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
-                        {["Ticket ID", "Subject", "Priority", "Status", "Created At"].map((label) => <th key={label} className="px-5 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">{label}</th>)}
-                    </tr></thead>
-                    <tbody>{tickets.map((ticket) => {
-                        const priority = priorityConfig[ticket.priority];
-                        const status = statusConfig[ticket.status];
-                        return (
-                            <tr key={ticket.id} className="border-b border-(--crm-border-subtle) last:border-0 hover:bg-(--crm-surface-subtle)">
-                                <td className="px-5 py-4 text-center text-sm font-medium text-(--crm-primary)">#{ticket.id}</td>
-                                <td className="px-5 py-4 text-center text-sm font-medium text-(--crm-heading)">{ticket.subject}</td>
-                                <td className="px-5 py-4 text-center"><span className={`crm-status ${priority.className}`}>{priority.label}</span></td>
-                                <td className="px-5 py-4 text-center"><span className={`crm-status ${status.className}`}>{status.label}</span></td>
-                                <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">{dateTimeFormatter.format(new Date(ticket.createdAt))}</td>
-                            </tr>
-                        );
-                    })}</tbody>
+                    <thead>
+                        <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
+                            <th style={{ width: "14%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Mã Ticket</th>
+                            <th style={{ width: "36%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Tiêu đề</th>
+                            <th style={{ width: "16%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Độ ưu tiên</th>
+                            <th style={{ width: "16%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Trạng thái</th>
+                            <th style={{ width: "18%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Ngày tạo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tickets.map((ticket) => {
+                            const priority = priorityConfig[ticket.priority];
+                            const status = statusConfig[ticket.status];
+                            return (
+                                <tr key={ticket.id} className="border-b border-(--crm-border-subtle) last:border-0 hover:bg-(--crm-surface-subtle)">
+                                    <td className="whitespace-nowrap px-5 py-4 text-center text-sm font-medium text-(--crm-primary)">#{ticket.id}</td>
+                                    <td className="px-5 py-4 text-center text-sm font-medium text-(--crm-heading)">
+                                        <span className="block truncate text-center" title={ticket.subject}>{ticket.subject}</span>
+                                    </td>
+                                    <td className="whitespace-nowrap px-5 py-4 text-center"><span className={`crm-status ${priority.className}`}>{priority.label}</span></td>
+                                    <td className="whitespace-nowrap px-5 py-4 text-center"><span className={`crm-status ${status.className}`}>{status.label}</span></td>
+                                    <td className="whitespace-nowrap px-5 py-4 text-center text-sm text-(--crm-text-secondary)">{dateTimeFormatter.format(new Date(ticket.createdAt))}</td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
                 </table>
             </div>
         </div>

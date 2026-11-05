@@ -1,3 +1,4 @@
+import PageHeader from "../../components/common/PageHeader";
 import { Alert } from "@mui/material";
 import { UserRound } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
@@ -24,18 +25,14 @@ export default function ProfilePage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-(--crm-heading)">
-                    Thông tin cá nhân
-                </h1>
-                <p className="mt-1 text-sm text-(--crm-text-secondary)">
-                    Quản lý thông tin hồ sơ và tài khoản của bạn.
-                </p>
-            </div>
+            <PageHeader
+                title="Thông tin cá nhân"
+                description="Quản lý thông tin hồ sơ và tài khoản của bạn."
+            />
 
             <section className="crm-card crm-card__body">
-                <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-blue-100 text-3xl font-semibold text-blue-700">
+                <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
+                    <div className="flex h-18 w-18 shrink-0 items-center justify-center rounded-full bg-(--crm-indigo) text-2xl font-bold text-white shadow-sm">
                         {avatarLabel}
                     </div>
 
@@ -48,9 +45,11 @@ export default function ProfilePage() {
                             Tên đăng nhập
                         </p>
 
-                        <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
-                            <UserRound size={15} />
-                            {roleLabel}
+                        <div className="mt-3 inline-flex items-center gap-1.5">
+                            <span className="crm-pill">
+                                <UserRound size={14} />
+                                {roleLabel}
+                            </span>
                         </div>
                     </div>
                 </div>

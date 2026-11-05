@@ -18,7 +18,6 @@ export default function CustomerGrowthChart({ data }: CustomerGrowthChartProps) 
     <section className="crm-widget crm-widget--half crm-card__body">
       <div className="crm-widget__header">
         <div>
-          <p className="crm-widget__eyebrow">Tăng trưởng</p>
           <h2>Khách hàng mới</h2>
         </div>
       </div>

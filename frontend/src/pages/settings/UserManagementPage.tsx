@@ -11,7 +11,6 @@ import {
 import {
     Check,
     Pencil,
-    Plus,
     Search,
     UserRoundCheck,
     UserRoundX,
@@ -19,6 +18,7 @@ import {
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import UserForm from "../../components/settings/UserForm";
+import AdminSettingsNav from "../../components/settings/AdminSettingsNav";
 import { userService } from "../../services/userService";
 import { useAuthStore } from "../../stores/authStore";
 import type { CRMUser, UserRole, UserStatus } from "../../types/user";
@@ -97,7 +97,11 @@ export default function UserManagementPage() {
                 (!role || user.role === role) &&
                 (!status || user.status === status) &&
                 (!keyword ||
-                    [user.fullName, user.email, user.department]
+                    [
+                        user.fullName,
+                        user.email,
+                        user.department || "Chưa phân bổ",
+                    ]
                         .filter(Boolean)
                         .some((value) =>
                             value!.toLocaleLowerCase("vi").includes(keyword)
@@ -121,12 +125,6 @@ export default function UserManagementPage() {
     const pendingCount = users.filter(
         (user) => user.status === "PENDING"
     ).length;
-
-    const openCreate = () => {
-        setEditing(null);
-        setFormError("");
-        setFormOpen(true);
-    };
 
     const openEdit = (user: CRMUser) => {
         setEditing(user);
@@ -245,23 +243,15 @@ export default function UserManagementPage() {
             <div className="crm-page-header">
                 <div>
                     <h2 className="text-lg font-semibold text-(--crm-heading)">
-                        Quản lý người dùng
+                        Quản trị hệ thống
                     </h2>
                     <p className="crm-page-description">
-                        Quản lý vai trò, trạng thái và duyệt tài khoản đăng ký.
+                        Quản lý người dùng, phân quyền RBAC và nhật ký hoạt động hệ thống.
                     </p>
                 </div>
-
-                {isAdmin && (
-                    <Button
-                        variant="contained"
-                        startIcon={<Plus size={17} />}
-                        onClick={openCreate}
-                    >
-                        Thêm người dùng
-                    </Button>
-                )}
             </div>
+
+            <AdminSettingsNav />
 
             {pendingCount > 0 && (
                 <Alert severity="info" className="mb-4">
@@ -276,11 +266,11 @@ export default function UserManagementPage() {
             )}
 
             <div className="crm-board">
-                <div className="flex flex-wrap gap-3 border-b border-(--crm-border) p-4">
-                    <label className="flex min-w-48 flex-1 items-center gap-2 rounded-lg border border-(--crm-border) px-3">
+                <div className="crm-toolbar crm-toolbar--board">
+                    <label className="crm-search">
                         <Search
                             size={16}
-                            className="text-(--crm-text-muted)"
+                            className="mr-2 shrink-0 text-(--crm-text-muted)"
                         />
                         <input
                             type="search"
@@ -290,7 +280,8 @@ export default function UserManagementPage() {
                                 setPage(0);
                             }}
                             placeholder="Tìm tên, email, phòng ban..."
-                            className="h-9 w-full min-w-0 bg-transparent text-xs outline-none"
+                            className="w-full text-sm outline-none placeholder:text-(--crm-text-muted)"
+                            aria-label="Tìm kiếm người dùng"
                         />
                     </label>
 
@@ -338,14 +329,14 @@ export default function UserManagementPage() {
                     <div className="crm-table-wrap">
                         <table className="crm-table">
                             <thead>
-                                <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle) text-center text-xs text-(--crm-text-secondary)">
-                                    <th className="px-4 py-3 text-center">Tên</th>
-                                    <th className="px-4 py-3 text-center">Email</th>
-                                    <th className="px-4 py-3 text-center">Vai trò</th>
-                                    <th className="px-4 py-3 text-center">Phòng ban</th>
-                                    <th className="px-4 py-3 text-center">Trạng thái</th>
-                                    <th className="px-4 py-3 text-center">Ngày tạo</th>
-                                    <th className="px-4 py-3 text-center">Thao tác</th>
+                                <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle) text-center text-xs font-semibold text-(--crm-text-secondary)">
+                                    <th style={{ width: "20%" }} className="px-5 py-3.5 text-center">Tên</th>
+                                    <th style={{ width: "24%" }} className="px-5 py-3.5 text-center">Email</th>
+                                    <th style={{ width: "12%" }} className="px-5 py-3.5 text-center">Vai trò</th>
+                                    <th style={{ width: "14%" }} className="px-5 py-3.5 text-center">Phòng ban</th>
+                                    <th style={{ width: "12%" }} className="px-5 py-3.5 text-center">Trạng thái</th>
+                                    <th style={{ width: "10%" }} className="px-5 py-3.5 text-center">Ngày tạo</th>
+                                    <th style={{ width: "8%" }} className="px-5 py-3.5 text-center">Thao tác</th>
                                 </tr>
                             </thead>
 
@@ -355,51 +346,70 @@ export default function UserManagementPage() {
                                         user.status === "PENDING";
                                     const isBusy = busyId === user.id;
 
-                                    const statusClass =
+                                    const statusVariant =
                                         user.status === "ACTIVE"
-                                            ? "bg-(--crm-success-soft) text-(--crm-green-dark)"
+                                            ? "crm-status--active"
                                             : user.status === "PENDING"
-                                              ? "bg-amber-100 text-amber-800"
-                                              : "bg-(--crm-surface-hover) text-(--crm-text-secondary)";
+                                              ? "crm-status--contacted"
+                                              : "crm-status--inactive";
 
                                     return (
                                         <tr
                                             key={user.id}
                                             className="border-b border-(--crm-border-subtle) last:border-b-0 hover:bg-(--crm-surface-subtle)"
                                         >
-                                            <td className="px-4 py-3 text-center text-sm font-medium text-(--crm-heading)">
-                                                {user.fullName}
+                                            <td className="px-5 py-4 text-center text-sm font-semibold text-(--crm-heading)">
+                                                <span className="block truncate text-center" title={user.fullName}>
+                                                    {user.fullName}
+                                                </span>
                                             </td>
 
-                                            <td className="px-4 py-3 text-center text-xs text-(--crm-text-secondary)">
-                                                {user.email}
+                                            <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
+                                                <span className="block truncate text-center" title={user.email}>
+                                                    {user.email}
+                                                </span>
                                             </td>
 
-                                            <td className="px-4 py-3 text-center">
-                                                <span className="rounded-full bg-(--crm-info-soft) px-2.5 py-1 text-xs font-medium text-(--crm-primary)">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center">
+                                                <span className="crm-pill">
                                                     {getRoleLabel(user.role)}
                                                 </span>
                                             </td>
 
-                                            <td className="px-4 py-3 text-center text-xs text-(--crm-text-secondary)">
-                                                {user.department || "—"}
+                                            <td className="px-5 py-4 text-center text-sm">
+                                                <span
+                                                    className={`block truncate text-center ${
+                                                        !user.department || user.department === "—" || user.department === "Chờ phân bổ" || user.department === "Chưa phân bổ"
+                                                            ? "text-(--crm-text-muted) italic"
+                                                            : "text-(--crm-text-secondary)"
+                                                    }`}
+                                                    title={
+                                                        user.department && user.department !== "—" && user.department !== "Chờ phân bổ"
+                                                            ? user.department
+                                                            : "Chưa phân bổ"
+                                                    }
+                                                >
+                                                    {user.department && user.department !== "—" && user.department !== "Chờ phân bổ"
+                                                        ? user.department
+                                                        : "Chưa phân bổ"}
+                                                </span>
                                             </td>
 
-                                            <td className="px-4 py-3 text-center">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center">
                                                 <span
-                                                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass}`}
+                                                    className={`crm-status ${statusVariant}`}
                                                 >
                                                     {getStatusLabel(user.status)}
                                                 </span>
                                             </td>
 
-                                            <td className="px-4 py-3 text-center text-xs text-(--crm-text-secondary)">
+                                            <td className="whitespace-nowrap px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
                                                 {dateFormat.format(
                                                     new Date(user.createdAt)
                                                 )}
                                             </td>
 
-                                            <td className="px-4 py-3 text-center">
+                                            <td className="px-5 py-4 text-center">
                                                 <div className="flex justify-center gap-1">
                                                     {isAdmin && (
                                                         <button
@@ -504,26 +514,22 @@ export default function UserManagementPage() {
                 maxWidth="md"
             >
                 <DialogTitle>
-                    {editing
-                        ? editing.status === "PENDING"
-                            ? "Duyệt tài khoản"
-                            : "Chỉnh sửa người dùng"
-                        : "Thêm người dùng"}
+                    {editing?.status === "PENDING"
+                        ? "Duyệt tài khoản"
+                        : "Chỉnh sửa người dùng"}
                 </DialogTitle>
 
                 <DialogContent>
                     <div className="pt-2">
                         <UserForm
-                            key={editing?.id ?? "new"}
+                            key={editing?.id ?? "edit"}
                             initialData={editing ?? undefined}
                             onSubmit={save}
                             onCancel={() => setFormOpen(false)}
                             submitLabel={
                                 editing?.status === "PENDING"
                                     ? "Lưu phân quyền"
-                                    : editing
-                                      ? "Lưu thay đổi"
-                                      : "Tạo người dùng"
+                                    : "Lưu thay đổi"
                             }
                             error={formError}
                         />

@@ -1,11 +1,13 @@
 import PageHeader from "../../components/common/PageHeader";
 import { Alert, CircularProgress } from "@mui/material";
-import { Plus, RefreshCw } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Plus, RefreshCw, Search } from "lucide-react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import CustomerTable from "../../components/customers/CustomerTable";
 import { customerService, getCustomerErrorMessage, type CustomerListResponse } from "../../services/customerService";
+import type { CustomerStatus } from "../../types/customer";
+import { CUSTOMER_STATUS_OPTIONS } from "../../utils/constants";
 
 const EMPTY_RESULT: CustomerListResponse = {
     content: [],
@@ -17,9 +19,13 @@ const EMPTY_RESULT: CustomerListResponse = {
 
 export default function CustomerListPage() {
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [result, setResult] = useState<CustomerListResponse>(EMPTY_RESULT);
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
+    const search = searchParams.get("search") ?? "";
+    const deferredSearch = useDeferredValue(search);
+    const [status, setStatus] = useState<CustomerStatus | "">("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [refreshKey, setRefreshKey] = useState(0);
@@ -31,7 +37,7 @@ export default function CustomerListPage() {
             setLoading(true);
             setError("");
             try {
-                const data = await customerService.getCustomers(page, pageSize);
+                const data = await customerService.getCustomers(page, pageSize, deferredSearch, status || undefined);
                 if (active) setResult(data);
             } catch (loadError) {
                 if (active) setError(getCustomerErrorMessage(loadError));
@@ -42,7 +48,7 @@ export default function CustomerListPage() {
 
         void loadCustomers();
         return () => { active = false; };
-    }, [page, pageSize, refreshKey]);
+    }, [deferredSearch, page, pageSize, refreshKey, status]);
 
     const pageNumbers = useMemo(() => {
         if (result.totalPages <= 1) return result.totalPages === 1 ? [0] : [];
@@ -60,8 +66,45 @@ export default function CustomerListPage() {
                 </button>} />
 
             <div className="crm-board">
-                <div className="crm-toolbar crm-toolbar--board justify-end">
-                    <button type="button" aria-label="Tải lại danh sách" onClick={() => setRefreshKey((value) => value + 1)} className="crm-icon-btn ">
+                <div className="crm-toolbar crm-toolbar--board">
+                    <label className="crm-search">
+                        <Search size={16} className="mr-2 shrink-0 text-(--crm-text-muted)" />
+                        <input
+                            type="search"
+                            value={search}
+                            onChange={(event) => {
+                                const nextParams = new URLSearchParams(searchParams);
+                                if (event.target.value) nextParams.set("search", event.target.value);
+                                else nextParams.delete("search");
+                                setSearchParams(nextParams, { replace: true });
+                                setPage(0);
+                            }}
+                            placeholder="Tìm theo tên, email, SĐT, công ty..."
+                            className="w-full text-sm outline-none placeholder:text-(--crm-text-muted)"
+                        />
+                    </label>
+
+                    <select
+                        aria-label="Lọc theo trạng thái"
+                        value={status}
+                        onChange={(event) => {
+                            setStatus(event.target.value as CustomerStatus | "");
+                            setPage(0);
+                        }}
+                        className="crm-filter-chip"
+                    >
+                        <option value="">Tất cả trạng thái</option>
+                        {CUSTOMER_STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                    </select>
+
+                    <button
+                        type="button"
+                        aria-label="Tải lại danh sách"
+                        onClick={() => setRefreshKey((value) => value + 1)}
+                        className="crm-icon-btn ml-auto"
+                    >
                         <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
                     </button>
                 </div>

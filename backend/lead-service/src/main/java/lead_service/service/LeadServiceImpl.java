@@ -23,11 +23,16 @@ public class LeadServiceImpl implements LeadService {
 
     private final LeadRepository repository;
     private final LeadMapper mapper;
+    private final LeadAssignmentService assignmentService;
 
     @Override
     public LeadResponse create(LeadRequest request) {
+        Lead entity = mapper.toEntity(request);
+        if (entity.getAssignedUserId() == null) {
+            entity.setAssignedUserId(assignmentService.determineNextSalesId());
+        }
         return mapper.toResponse(
-                repository.save(mapper.toEntity(request))
+                repository.save(entity)
         );
     }
 
@@ -127,6 +132,74 @@ public class LeadServiceImpl implements LeadService {
     @Override
     public void delete(Long id) {
         repository.delete(find(id));
+    }
+
+    @Override
+    public LeadResponse captureWebhook(String channel, lead_service.dto.LeadWebhookRequest request) {
+        LeadSource source = LeadSource.WEBSITE;
+        if (request.source() != null) {
+            source = request.source();
+        } else if (channel != null) {
+            String ch = channel.trim().toLowerCase();
+            if (ch.contains("facebook") || ch.contains("fb")) {
+                source = LeadSource.FACEBOOK;
+            } else if (ch.contains("zalo")) {
+                source = LeadSource.ZALO;
+            } else if (ch.contains("google")) {
+                source = LeadSource.GOOGLE_ADS;
+            } else if (ch.contains("phone") || ch.contains("call")) {
+                source = LeadSource.PHONE;
+            } else {
+                source = LeadSource.WEBSITE;
+            }
+        }
+
+        Long assignedUserId = request.data() != null && request.data().get("assignedUserId") != null
+                ? Long.valueOf(request.data().get("assignedUserId").toString())
+                : assignmentService.determineNextSalesId();
+
+        Lead lead = Lead.builder()
+                .fullName(request.resolveFullName())
+                .email(blankToNull(request.email()))
+                .phone(blankToNull(request.resolvePhone()))
+                .company(blankToNull(request.company()))
+                .source(source)
+                .status(LeadStatus.NEW)
+                .assignedUserId(assignedUserId)
+                .notes(blankToNull(request.resolveNotes()))
+                .build();
+
+        return mapper.toResponse(repository.save(lead));
+    }
+
+    @Override
+    public lead_service.dto.BatchLeadResponse importBatch(java.util.List<LeadRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return lead_service.dto.BatchLeadResponse.success(0);
+        }
+
+        java.util.List<String> errors = new java.util.ArrayList<>();
+        int success = 0;
+
+        for (int i = 0; i < requests.size(); i++) {
+            LeadRequest req = requests.get(i);
+            try {
+                if (!hasText(req.email()) && !hasText(req.phone())) {
+                    errors.add("Dòng " + (i + 1) + ": Phải có email hoặc số điện thoại");
+                    continue;
+                }
+                Lead entity = mapper.toEntity(req);
+                if (entity.getAssignedUserId() == null) {
+                    entity.setAssignedUserId(assignmentService.determineNextSalesId());
+                }
+                repository.save(entity);
+                success++;
+            } catch (Exception ex) {
+                errors.add("Dòng " + (i + 1) + ": " + ex.getMessage());
+            }
+        }
+
+        return lead_service.dto.BatchLeadResponse.partial(requests.size(), success, errors);
     }
 
     private Lead find(Long id) {

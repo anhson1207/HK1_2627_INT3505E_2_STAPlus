@@ -1,10 +1,13 @@
 import PageHeader from "../../components/common/PageHeader";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Alert, CircularProgress, Snackbar } from "@mui/material";
-import { Plus, RefreshCw, Search } from "lucide-react";
+import { Plus, Radio, RefreshCw, Search, SlidersHorizontal, Upload } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import ConfirmDialog from "../../components/common/ConfirmDialog";
+import LeadAssignmentModal from "../../components/leads/LeadAssignmentModal";
+import LeadChannelsModal from "../../components/leads/LeadChannelsModal";
+import LeadImportModal from "../../components/leads/LeadImportModal";
 import LeadTable from "../../components/leads/LeadTable";
 import { getErrorMessage, leadService, type LeadListResponse } from "../../services/leadService";
 import type { Lead, LeadSource, LeadStatus } from "../../types/lead";
@@ -34,6 +37,9 @@ export default function LeadListPage() {
     const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [message, setMessage] = useState("");
+    const [importOpen, setImportOpen] = useState(false);
+    const [channelsOpen, setChannelsOpen] = useState(false);
+    const [assignmentOpen, setAssignmentOpen] = useState(false);
 
     useEffect(() => {
         let active = true;
@@ -88,13 +94,42 @@ export default function LeadListPage() {
 
     return (
         <div>
-            <PageHeader title="Lead" description="Quản lý khách hàng tiềm năng" actions={<button
-                    type="button"
-                    onClick={() => navigate("/leads/new")}
-                    className="crm-btn crm-btn--primary"
-                >
-                    <Plus size={16} /> Thêm Lead
-                </button>} />
+            <PageHeader
+                title="Lead"
+                description="Quản lý khách hàng tiềm năng"
+                actions={
+                    <div className="flex flex-wrap items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setAssignmentOpen(true)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
+                        >
+                            <SlidersHorizontal size={14} className="text-(--crm-primary)" /> Phân bổ tự động
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setChannelsOpen(true)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
+                        >
+                            <Radio size={14} className="text-(--crm-primary)" /> Kênh thu thập (Webhook)
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setImportOpen(true)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
+                        >
+                            <Upload size={14} /> Import Excel/CSV
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => navigate("/leads/new")}
+                            className="crm-btn crm-btn--primary"
+                        >
+                            <Plus size={16} /> Thêm Lead
+                        </button>
+                    </div>
+                }
+            />
 
             <div className="crm-board">
                 <div className="crm-toolbar crm-toolbar--board">
@@ -204,7 +239,35 @@ export default function LeadListPage() {
                 onClose={() => setLeadToDelete(null)}
                 onConfirm={handleDelete}
             />
-            <Snackbar open={Boolean(message)} autoHideDuration={3000} onClose={() => setMessage("")} message={message} />
+
+            <LeadImportModal
+                open={importOpen}
+                onClose={() => setImportOpen(false)}
+                onSuccess={(count) => {
+                    setMessage(`Đã import thành công ${count} Lead mới vào hệ thống!`);
+                    setRefreshKey((k) => k + 1);
+                }}
+            />
+
+            <LeadChannelsModal
+                open={channelsOpen}
+                onClose={() => setChannelsOpen(false)}
+                onSuccess={(msg) => {
+                    setMessage(msg);
+                    setRefreshKey((k) => k + 1);
+                }}
+            />
+
+            <LeadAssignmentModal
+                open={assignmentOpen}
+                onClose={() => setAssignmentOpen(false)}
+                onSuccess={(msg) => {
+                    setMessage(msg);
+                    setRefreshKey((k) => k + 1);
+                }}
+            />
+
+            <Snackbar open={Boolean(message)} autoHideDuration={4000} onClose={() => setMessage("")} message={message} />
         </div>
     );
 }

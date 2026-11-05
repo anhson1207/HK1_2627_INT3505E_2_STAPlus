@@ -28,6 +28,7 @@ export default function Table<T>({
                         {safeColumns.map((column) => (
                             <th
                                 key={String(column.key)}
+                                style={{ width: `${100 / Math.max(1, safeColumns.length)}%` }}
                                 className="p-3 text-center text-xs font-semibold uppercase text-(--crm-text-secondary)"
                             >
                                 {column.label}
@@ -64,4 +65,3 @@ export default function Table<T>({
         </div>
     );
 }
-console.log("table");

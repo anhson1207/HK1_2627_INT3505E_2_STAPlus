@@ -1,4 +1,4 @@
-import type { Customer, CustomerPayload } from "../types/customer";
+import type { Customer, CustomerPayload, CustomerStatus } from "../types/customer";
 
 const STORAGE_KEY = "crm-soa.customers";
 const MOCK_DELAY_MS = 250;
@@ -51,13 +51,26 @@ function writeCustomers(customers: Customer[]) {
 }
 
 export const customerMockApi = {
-    getCustomers: async (page = 0, size = 10) => {
+    getCustomers: async (page = 0, size = 10, search?: string, status?: CustomerStatus) => {
         await wait();
         const safePage = Math.max(0, page);
         const safeSize = Math.max(1, size);
-        const customers = readCustomers().sort(
+        let customers = readCustomers().sort(
             (first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime(),
         );
+        if (status) {
+            customers = customers.filter((customer) => customer.status === status);
+        }
+        if (search?.trim()) {
+            const query = search.trim().toLowerCase();
+            customers = customers.filter(
+                (customer) =>
+                    customer.name.toLowerCase().includes(query) ||
+                    customer.email.toLowerCase().includes(query) ||
+                    customer.phone.toLowerCase().includes(query) ||
+                    customer.company.toLowerCase().includes(query)
+            );
+        }
         const totalElements = customers.length;
         const totalPages = totalElements === 0 ? 0 : Math.ceil(totalElements / safeSize);
         const start = safePage * safeSize;

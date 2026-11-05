@@ -1,4 +1,17 @@
+import type { CustomerStatus } from "../types/customer";
 import type { LeadSource, LeadStatus } from "../types/lead";
+
+export const CUSTOMER_STATUS_OPTIONS: ReadonlyArray<{
+    value: CustomerStatus;
+    label: string;
+}> = [
+    { value: "ACTIVE", label: "Đang hoạt động" },
+    { value: "INACTIVE", label: "Ngừng hoạt động" },
+];
+
+export function getCustomerStatusLabel(status: CustomerStatus) {
+    return CUSTOMER_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
+}
 
 export const LEAD_STATUS_OPTIONS: ReadonlyArray<{
     value: LeadStatus;
@@ -15,12 +28,14 @@ export const LEAD_SOURCE_OPTIONS: ReadonlyArray<{
     value: LeadSource;
     label: string;
 }> = [
-    { value: "WEBSITE", label: "Website" },
-    { value: "FACEBOOK", label: "Facebook" },
-    { value: "ZALO", label: "Zalo" },
+    { value: "WEBSITE", label: "Form Website" },
+    { value: "FACEBOOK", label: "Facebook Ads" },
+    { value: "ZALO", label: "Zalo OA" },
     { value: "GOOGLE_ADS", label: "Google Ads" },
+    { value: "PHONE", label: "Điện thoại / Cold-call" },
     { value: "REFERRAL", label: "Giới thiệu" },
-    { value: "OTHER", label: "Khác" },
+    { value: "EVENT", label: "Sự kiện / Hội thảo" },
+    { value: "OTHER", label: "Khác / Import" },
 ];
 
 export function getLeadStatusLabel(status: LeadStatus) {

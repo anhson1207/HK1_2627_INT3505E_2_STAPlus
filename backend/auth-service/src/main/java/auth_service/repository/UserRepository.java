@@ -23,4 +23,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
  Optional<User> findByEmailForUpdate(
          @Param("email") String email
  );
+
+ @Query("SELECT u FROM User u WHERE u.status = :status AND u.role IS NOT NULL " +
+        "AND (:search IS NULL OR :search = '' " +
+        "     OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) " +
+        "     OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+        "ORDER BY u.username ASC")
+ java.util.List<User> searchColleagues(
+         @Param("status") auth_service.entity.UserStatus status,
+         @Param("search") String search
+ );
 }

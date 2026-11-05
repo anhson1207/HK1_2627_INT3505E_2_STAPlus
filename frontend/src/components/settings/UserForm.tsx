@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
     Alert,
@@ -9,6 +10,24 @@ import {
 import { Controller, useForm } from "react-hook-form";
 
 import { userSchema, type UserFormData } from "../../utils/settingsSchema";
+
+export const DEPARTMENTS_BY_ROLE: Record<string, string[]> = {
+    ADMIN: [
+        "Điều hành",
+        "Quản trị hệ thống",
+        "Ban Giám đốc",
+    ],
+    SALES: [
+        "Kinh doanh",
+        "Phát triển thị trường",
+        "Bán hàng B2B",
+    ],
+    SUPPORT: [
+        "Chăm sóc khách hàng",
+        "Hỗ trợ kỹ thuật",
+        "Dịch vụ sau bán hàng",
+    ],
+};
 
 interface UserFormProps {
     initialData?: Partial<UserFormData>;
@@ -25,10 +44,17 @@ export default function UserForm({
     error,
     submitLabel = "Lưu người dùng",
 }: UserFormProps) {
+    const rawDept = initialData?.department?.trim() ?? "";
+    const cleanDept =
+        !rawDept || rawDept === "Chưa phân bổ" || rawDept === "Chờ phân bổ" || rawDept === "—"
+            ? ""
+            : rawDept;
+
     const {
         control,
         handleSubmit,
         watch,
+        setValue,
         formState: { errors, isSubmitting },
     } = useForm<UserFormData>({
         resolver: zodResolver(userSchema),
@@ -36,13 +62,30 @@ export default function UserForm({
             fullName: initialData?.fullName ?? "",
             email: initialData?.email ?? "",
             phone: initialData?.phone ?? "",
-            department: initialData?.department ?? "",
+            department: cleanDept,
             avatar: initialData?.avatar ?? "",
             role: initialData?.role ?? "UNASSIGNED",
             status: initialData?.status ?? "PENDING",
         },
     });
+
     const selectedRole = watch("role");
+    const prevRoleRef = useRef(selectedRole);
+
+    const availableDepartments = useMemo(() => {
+        return (selectedRole && DEPARTMENTS_BY_ROLE[selectedRole]) || [];
+    }, [selectedRole]);
+
+    useEffect(() => {
+        if (prevRoleRef.current !== selectedRole) {
+            prevRoleRef.current = selectedRole;
+            const validDepartments = (selectedRole && DEPARTMENTS_BY_ROLE[selectedRole]) || [];
+            const currentDept = watch("department");
+            if (currentDept && !validDepartments.includes(currentDept)) {
+                setValue("department", "");
+            }
+        }
+    }, [selectedRole, setValue, watch]);
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="crm-form">
@@ -98,21 +141,6 @@ export default function UserForm({
                 />
 
                 <Controller
-                    name="department"
-                    control={control}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            label="Phòng ban"
-                            fullWidth
-                            disabled={isSubmitting}
-                            error={!!errors.department}
-                            helperText={errors.department?.message}
-                        />
-                    )}
-                />
-
-                <Controller
                     name="role"
                     control={control}
                     render={({ field }) => (
@@ -132,6 +160,42 @@ export default function UserForm({
                             <MenuItem value="SALES">Sales</MenuItem>
                             <MenuItem value="SUPPORT">Support</MenuItem>
                             <MenuItem value="ADMIN">Admin</MenuItem>
+                        </TextField>
+                    )}
+                />
+
+                <Controller
+                    name="department"
+                    control={control}
+                    render={({ field }) => (
+                        <TextField
+                            {...field}
+                            select
+                            label="Phòng ban"
+                            fullWidth
+                            disabled={isSubmitting}
+                            error={!!errors.department}
+                            helperText={
+                                errors.department?.message ||
+                                (selectedRole === "UNASSIGNED"
+                                    ? "Chọn vai trò trước để hiển thị phòng ban phù hợp"
+                                    : undefined)
+                            }
+                        >
+                            <MenuItem value="">
+                                <em>Chưa phân bổ</em>
+                            </MenuItem>
+                            {availableDepartments.map((dept) => (
+                                <MenuItem key={dept} value={dept}>
+                                    {dept}
+                                </MenuItem>
+                            ))}
+                            {field.value &&
+                                !availableDepartments.includes(field.value) && (
+                                    <MenuItem key={field.value} value={field.value}>
+                                        {field.value}
+                                    </MenuItem>
+                                )}
                         </TextField>
                     )}
                 />

@@ -98,36 +98,42 @@ export default function SupportDashboardPage() {
       value: openCount,
       description: "Đang chờ xử lý",
       icon: Inbox,
+      tone: "blue" as const,
     },
     {
       label: "Đang xử lý",
       value: inProgressCount,
       description: "Đang được giải quyết",
       icon: Clock3,
+      tone: "amber" as const,
     },
     {
       label: "Đã giải quyết",
       value: resolvedCount,
       description: "Yêu cầu hoàn tất",
       icon: CheckCircle2,
+      tone: "green" as const,
     },
     {
       label: "Khẩn cấp",
       value: urgentCount,
       description: "Cần ưu tiên xử lý",
       icon: AlertTriangle,
+      tone: "rose" as const,
     },
     {
       label: "SLA quá hạn",
       value: overdueCount,
       description: "Ticket đã vượt thời hạn",
       icon: AlertTriangle,
+      tone: "rose" as const,
     },
     {
       label: "SLA sắp đến hạn",
       value: atRiskCount,
       description: "Còn tối đa một giờ",
       icon: Clock3,
+      tone: "teal" as const,
     },
   ];
 
@@ -144,19 +150,19 @@ export default function SupportDashboardPage() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="crm-button crm-button--secondary"
+            className="crm-btn crm-btn--secondary"
             onClick={() => navigate("/tickets")}
           >
-            <List size={18} />
+            <List size={16} />
             Danh sách Ticket
           </button>
 
           <button
             type="button"
-            className="crm-button crm-button--primary"
+            className="crm-btn crm-btn--primary"
             onClick={() => navigate("/tickets/new")}
           >
-            <Plus size={18} />
+            <Plus size={16} />
             Tạo Ticket
           </button>
         </div>
@@ -168,6 +174,7 @@ export default function SupportDashboardPage() {
           action={
             <button
               type="button"
+              className="font-medium"
               onClick={() => window.location.reload()}
             >
               Thử lại
@@ -183,30 +190,19 @@ export default function SupportDashboardPage() {
           const Icon = item.icon;
 
           return (
-            <div
+            <article
               key={item.label}
-              className="crm-card crm-card__body"
+              className={`crm-kpi crm-kpi--accent crm-tone--${item.tone}`}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm text-gray-500">
-                    {item.label}
-                  </p>
-
-                  <p className="mt-2 text-3xl font-semibold">
-                    {loading ? "—" : item.value}
-                  </p>
-
-                  <p className="mt-2 text-sm text-gray-500">
-                    {item.description}
-                  </p>
-                </div>
-
-                <div className="rounded-lg bg-gray-100 p-3">
-                  <Icon size={22} />
-                </div>
+              <div className="crm-kpi__top">
+                <p className="crm-kpi__label">{item.label}</p>
+                <span className="crm-kpi__icon">
+                  <Icon size={18} />
+                </span>
               </div>
-            </div>
+              <p className="crm-kpi__value">{loading ? "—" : item.value}</p>
+              <p className="crm-kpi__trend">{item.description}</p>
+            </article>
           );
         })}
       </div>
@@ -220,23 +216,23 @@ export default function SupportDashboardPage() {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <div className="crm-card crm-card__body">
           <div className="flex items-start gap-4">
-            <div className="rounded-lg bg-gray-100 p-3">
+            <div className="rounded-lg bg-(--crm-info-soft) p-3 text-(--crm-primary)">
               <TicketIcon size={24} />
             </div>
 
             <div className="flex-1">
-              <h2 className="text-lg font-semibold">
+              <h2 className="text-lg font-semibold text-(--crm-heading)">
                 Quản lý Ticket
               </h2>
 
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-(--crm-text-secondary)">
                 Xem danh sách, tìm kiếm, lọc trạng thái và theo dõi
                 các yêu cầu hỗ trợ của khách hàng.
               </p>
 
               <button
                 type="button"
-                className="mt-5 inline-flex items-center gap-2 font-medium"
+                className="mt-5 inline-flex items-center gap-2 font-medium text-(--crm-primary) hover:underline"
                 onClick={() => navigate("/tickets")}
               >
                 Xem danh sách Ticket
@@ -248,23 +244,23 @@ export default function SupportDashboardPage() {
 
         <div className="crm-card crm-card__body">
           <div className="flex items-start gap-4">
-            <div className="rounded-lg bg-gray-100 p-3">
+            <div className="rounded-lg bg-(--crm-info-soft) p-3 text-(--crm-primary)">
               <Plus size={24} />
             </div>
 
             <div className="flex-1">
-              <h2 className="text-lg font-semibold">
+              <h2 className="text-lg font-semibold text-(--crm-heading)">
                 Tiếp nhận yêu cầu
               </h2>
 
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-(--crm-text-secondary)">
                 Tạo Ticket mới để ghi nhận vấn đề và bắt đầu quy
                 trình hỗ trợ khách hàng.
               </p>
 
               <button
                 type="button"
-                className="mt-5 inline-flex items-center gap-2 font-medium"
+                className="mt-5 inline-flex items-center gap-2 font-medium text-(--crm-primary) hover:underline"
                 onClick={() => navigate("/tickets/new")}
               >
                 Tạo yêu cầu hỗ trợ
@@ -278,21 +274,21 @@ export default function SupportDashboardPage() {
       <div className="crm-card crm-card__body">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold">
+            <h2 className="text-lg font-semibold text-(--crm-heading)">
               Theo dõi công việc
             </h2>
 
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-(--crm-text-secondary)">
               Truy cập nhanh để kiểm tra và xử lý các Ticket.
             </p>
           </div>
 
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"
+            className="crm-btn crm-btn--secondary"
             onClick={() => window.location.reload()}
           >
-            <RefreshCw size={16} />
+            <RefreshCw size={15} />
             Làm mới
           </button>
         </div>
@@ -300,19 +296,19 @@ export default function SupportDashboardPage() {
         <div className="mt-5 flex flex-wrap gap-3">
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg border px-4 py-3"
+            className="crm-btn crm-btn--secondary"
             onClick={() => navigate("/tickets")}
           >
-            <List size={18} />
+            <List size={16} />
             Danh sách tất cả Ticket
           </button>
 
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg border px-4 py-3"
+            className="crm-btn crm-btn--secondary"
             onClick={() => navigate("/tickets")}
           >
-            <Clock3 size={18} />
+            <Clock3 size={16} />
             Kiểm tra Ticket đang xử lý
           </button>
         </div>
@@ -320,4 +316,3 @@ export default function SupportDashboardPage() {
     </div>
   );
 }
-console.log("supportpagedashboard")

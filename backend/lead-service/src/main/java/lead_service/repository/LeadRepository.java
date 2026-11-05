@@ -30,4 +30,8 @@ public interface LeadRepository extends JpaRepository<Lead, Long> {
             @Param("assignedUserId") Long assignedUserId,
             Pageable pageable
     );
+
+    java.util.List<Lead> findByAssignedUserIdIsNull();
+
+    long countByAssignedUserIdAndStatusIn(Long assignedUserId, java.util.Collection<LeadStatus> statuses);
 }

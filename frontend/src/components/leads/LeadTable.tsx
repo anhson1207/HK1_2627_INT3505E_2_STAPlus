@@ -3,7 +3,7 @@ import { IconButton, Menu, MenuItem } from "@mui/material";
 import { useState, type MouseEvent } from "react";
 
 import type { Lead } from "../../types/lead";
-import { getLeadSourceLabel } from "../../utils/constants";
+import LeadSourceBadge from "./LeadSourceBadge";
 import StatusChip from "../common/StatusChip";
 
 interface LeadTableProps {
@@ -44,13 +44,13 @@ export default function LeadTable({ leads, onView, onEdit, onDelete }: LeadTable
                 <table className="crm-table">
                     <thead>
                         <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
-                            <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Tên Lead</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Email</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Số điện thoại</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Nguồn</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Trạng thái</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Phụ trách</th>
-                            <th className="w-16 px-4 py-3 text-center text-xs font-medium text-(--crm-text-secondary)">Thao tác</th>
+                            <th style={{ width: "19%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Tên Lead</th>
+                            <th style={{ width: "19%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Email</th>
+                            <th style={{ width: "12%" }} className="px-3 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Số điện thoại</th>
+                            <th style={{ width: "13%" }} className="px-3 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Nguồn</th>
+                            <th style={{ width: "11%" }} className="px-3 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Trạng thái</th>
+                            <th style={{ width: "18%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Phụ trách</th>
+                            <th style={{ width: "8%" }} className="px-2 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -60,25 +60,27 @@ export default function LeadTable({ leads, onView, onEdit, onDelete }: LeadTable
                                 className="cursor-pointer border-b border-(--crm-border-subtle) transition last:border-b-0 hover:bg-(--crm-surface-subtle)"
                                 onClick={() => onView(lead)}
                             >
-                                <td className="px-4 py-4 text-center">
-                                    <p className="text-center text-sm font-medium text-(--crm-heading)">{lead.firstName} {lead.lastName}</p>
-                                    <p className="mt-0.5 text-center text-xs text-(--crm-text-muted)">{lead.company || "Chưa có công ty"}</p>
+                                <td className="px-5 py-4 text-center">
+                                    <p className="truncate text-center text-sm font-semibold text-(--crm-heading)" title={`${lead.firstName} ${lead.lastName}`}>{lead.firstName} {lead.lastName}</p>
+                                    <p className="mt-1.5 truncate text-center text-xs text-(--crm-text-muted)" title={lead.company || "Chưa có công ty"}>{lead.company || "Chưa có công ty"}</p>
                                 </td>
-                                <td className="px-4 py-4 text-center text-sm text-(--crm-text-secondary)">{lead.email}</td>
-                                <td className="whitespace-nowrap px-4 py-4 text-center text-sm text-(--crm-text-secondary)">{lead.phone}</td>
-                                <td className="whitespace-nowrap px-4 py-4 text-center text-sm text-(--crm-text-secondary)">
-                                    {getLeadSourceLabel(lead.source)}
+                                <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
+                                    <span className="block truncate text-center" title={lead.email}>{lead.email}</span>
                                 </td>
-                                <td className="whitespace-nowrap px-4 py-4 text-center"><StatusChip status={lead.status} /></td>
+                                <td className="whitespace-nowrap px-3 py-4 text-center text-sm text-(--crm-text-secondary)">{lead.phone}</td>
+                                <td className="whitespace-nowrap px-2 py-4 text-center text-sm text-(--crm-text-secondary)">
+                                    <LeadSourceBadge source={lead.source} />
+                                </td>
+                                <td className="whitespace-nowrap px-5 py-4 text-center"><StatusChip status={lead.status} /></td>
                                 <td className="px-4 py-4 text-center">
                                     {lead.ownerName ? (
-                                        <div className="flex items-center justify-center gap-2">
-                                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-(--crm-info-soft) text-xs font-medium text-(--crm-primary)">
+                                        <div className="inline-flex w-[150px] items-center gap-2.5 text-left overflow-hidden">
+                                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-(--crm-info-soft) text-xs font-semibold text-(--crm-primary)">
                                                 {lead.ownerName.trim().charAt(0).toLocaleUpperCase("vi")}
                                             </div>
-                                            <span className="whitespace-nowrap text-sm text-(--crm-text-secondary)">{lead.ownerName}</span>
+                                            <span className="truncate text-sm text-(--crm-text-secondary)" title={lead.ownerName}>{lead.ownerName}</span>
                                         </div>
-                                    ) : <span className="text-sm text-(--crm-text-muted)">Chưa phân công</span>}
+                                    ) : <span className="inline-block w-[150px] text-center text-sm text-(--crm-text-muted)">Chưa phân công</span>}
                                 </td>
                                 <td className="px-4 py-4 text-center">
                                     <IconButton size="small" aria-label={`Thao tác với ${lead.firstName} ${lead.lastName}`} onClick={(event) => openMenu(event, lead)}>

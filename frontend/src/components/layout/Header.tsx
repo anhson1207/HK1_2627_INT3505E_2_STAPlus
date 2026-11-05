@@ -1,5 +1,5 @@
 import { ListItemIcon, Menu, MenuItem } from "@mui/material";
-import { Bell, CalendarDays, ChevronDown, CircleHelp, LogOut, Menu as MenuIcon, Plus, Search, UserRound } from "lucide-react";
+import { Bell, CalendarDays, ChevronDown, CircleHelp, LogOut, Menu as MenuIcon, Search, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -22,16 +22,30 @@ function getPageName(pathname: string) {
     if (/^\/leads\/\d+$/.test(pathname)) return "Lead / Chi tiết";
     if (pathname.startsWith("/leads")) return "Lead";
 
-    // Support Routes (/support)
-    if (pathname === "/support/new") return "Hỗ trợ / Tạo mới";
-    if (/^\/support\/[^/]+\/edit$/.test(pathname)) return "Hỗ trợ / Chỉnh sửa";
-    if (/^\/support\/[^/]+$/.test(pathname)) return "Hỗ trợ / Chi tiết";
+    // Customer Routes
+    if (pathname === "/customers/new") return "Khách hàng / Thêm mới";
+    if (/^\/customers\/\d+\/edit$/.test(pathname)) return "Khách hàng / Chỉnh sửa";
+    if (/^\/customers\/\d+$/.test(pathname)) return "Khách hàng / Chi tiết";
+    if (pathname.startsWith("/customers")) return "Khách hàng";
+
+    // Deal Routes
+    if (pathname === "/deals/new") return "Cơ hội / Thêm mới";
+    if (pathname === "/deals/kanban") return "Cơ hội / Kanban";
+    if (/^\/deals\/\d+\/edit$/.test(pathname)) return "Cơ hội / Chỉnh sửa";
+    if (/^\/deals\/\d+$/.test(pathname)) return "Cơ hội / Chi tiết";
+    if (pathname.startsWith("/deals")) return "Cơ hội";
+
+    // Ticket & Support Routes
+    if (pathname === "/tickets/new") return "Ticket / Tạo mới";
+    if (/^\/tickets\/[^/]+\/edit$/.test(pathname)) return "Ticket / Chỉnh sửa";
+    if (/^\/tickets\/[^/]+$/.test(pathname)) return "Ticket / Chi tiết";
+    if (pathname.startsWith("/tickets")) return "Ticket";
     if (pathname.startsWith("/support")) return "Hỗ trợ";
 
-    if (pathname.startsWith("/customers")) return "Khách hàng";
-    if (pathname.startsWith("/deals")) return "Cơ hội";
     if (pathname.startsWith("/analytics")) return "Phân tích";
+    if (pathname === "/settings/users") return "Cài đặt / Người dùng";
     if (pathname.startsWith("/settings")) return "Cài đặt";
+    if (pathname === "/profile") return "Hồ sơ cá nhân";
     return "CRM";
 }
 
@@ -42,8 +56,6 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
     const [search, setSearch] = useState("");
     const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(null);
     const { user, logout } = useAuthStore();
-    console.log("Header user:", user);
-    console.log("Header role:", user?.role);
 
     const roleLabels: Record<UserRole, string> = {
         ADMIN: "Quản trị viên",
@@ -55,6 +67,7 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
     const avatarLabel = user?.username.charAt(0).toLocaleUpperCase("vi") ?? "U";
 
     const isSupportPage = location.pathname.startsWith("/support");
+    const isCustomerPage = location.pathname.startsWith("/customers");
 
     useEffect(() => {
         const handleShortcut = (event: KeyboardEvent) => {
@@ -70,7 +83,9 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
     const handleSearch = (event: FormEvent) => {
         event.preventDefault();
         const keyword = search.trim();
-        if (isSupportPage) {
+        if (isCustomerPage) {
+            navigate(keyword ? `/customers?search=${encodeURIComponent(keyword)}` : "/customers");
+        } else if (isSupportPage) {
             navigate(keyword ? `/support?search=${encodeURIComponent(keyword)}` : "/support");
         } else {
             navigate(keyword ? `/leads?search=${encodeURIComponent(keyword)}` : "/leads");
@@ -104,26 +119,16 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                         <input
                             ref={searchRef}
                             type="search"
-                            aria-label="Tìm Lead"
+                            aria-label={isCustomerPage ? "Tìm khách hàng" : isSupportPage ? "Tìm Ticket" : "Tìm Lead"}
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Tìm Lead theo tên, email, số điện thoại..."
+                            placeholder={isCustomerPage ? "Tìm khách hàng theo tên, email, SĐT..." : isSupportPage ? "Tìm Ticket theo tiêu đề, mã..." : "Tìm Lead theo tên, email, số điện thoại..."}
                         />
+                        <kbd className="crm-search__kbd" title="Nhấn ⌘K hoặc Ctrl+K để tìm kiếm">⌘K</kbd>
                     </form>
                 </RoleGuard>
 
                 <div className="crm-header__right">
-                    <RoleGuard allowedRoles={rolesWithPermission("leads")}>
-                        <button
-                            type="button"
-                            aria-label="Tạo Lead"
-                            onClick={() => navigate("/leads/new")}
-                            className="crm-btn crm-btn--primary crm-header__create"
-                        >
-                            <Plus size={16} />
-                            <span className="crm-header__create-label">Tạo Lead</span>
-                        </button>
-                    </RoleGuard>
                     <button type="button" title="Lịch" aria-label="Lịch" className="crm-icon-btn crm-header__optional">
                         <CalendarDays size={18} />
                     </button>

@@ -10,7 +10,9 @@ export type LeadSource =
     | "FACEBOOK"
     | "ZALO"
     | "GOOGLE_ADS"
+    | "PHONE"
     | "REFERRAL"
+    | "EVENT"
     | "OTHER";
 
 export interface Lead {
@@ -22,6 +24,7 @@ export interface Lead {
     company?: string;
     source: LeadSource;
     status: LeadStatus;
+    ownerId?: number;
     ownerName?: string;
     createdAt: string;
     updatedAt?: string;
@@ -35,4 +38,20 @@ export interface LeadQuery {
     search?: string;
     status?: LeadStatus | "";
     source?: LeadSource | "";
+}
+
+export type AssignmentStrategy = "ROUND_ROBIN" | "LOAD_BALANCED" | "MANUAL";
+
+export interface AssignmentRule {
+    enabled: boolean;
+    strategy: AssignmentStrategy;
+    activeSalesIds: number[];
+    unassignedCount: number;
+}
+
+export interface AutoAssignResult {
+    assignedCount: number;
+    totalUnassignedBefore: number;
+    strategyUsed: string;
+    assignmentSummary: Record<number, number>;
 }
