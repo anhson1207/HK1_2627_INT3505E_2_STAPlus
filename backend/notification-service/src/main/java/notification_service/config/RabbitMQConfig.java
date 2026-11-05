@@ -27,6 +27,9 @@ public class RabbitMQConfig {
     private static final String discountApprovedQueueName = "notification.discount-approval-approved.queue";
     private static final String discountApprovedRoutingKey = "discount.approval-approved";
 
+    private static final String ticketAssignedQueueName = "notification.ticket-assigned.queue";
+    private static final String ticketAssignedRoutingKey = "ticket.assigned";
+
     @Bean
     TopicExchange exchange(){
         return new TopicExchange(topicExchangeName);
@@ -58,6 +61,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    Queue ticketAssignedQueue() {
+        return new Queue(ticketAssignedQueueName, true);
+    }
+
+    @Bean
     Binding binding(@Qualifier("dealCreatedQueue")Queue queue, TopicExchange exchange){
         return BindingBuilder.bind(queue).to(exchange).with(routingKey);
     }
@@ -83,9 +91,12 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    JacksonJsonMessageConverter jsonConverter(){
-        JacksonJsonMessageConverter converter = new JacksonJsonMessageConverter();
-        return converter;
+    Binding ticketAssignedBinding(@Qualifier("ticketAssignedQueue") Queue queue, TopicExchange exchange){
+        return BindingBuilder.bind(queue).to(exchange).with(ticketAssignedRoutingKey);
     }
 
+    @Bean
+    JacksonJsonMessageConverter jsonConverter(){
+        return new JacksonJsonMessageConverter();
+    }
 }
