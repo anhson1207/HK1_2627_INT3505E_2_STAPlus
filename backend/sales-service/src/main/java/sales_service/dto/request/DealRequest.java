@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 
 public class DealRequest {
 
+    private String dealName;
+
     private String owner;
 
 
@@ -17,10 +19,19 @@ public class DealRequest {
 
     }
 
-    public DealRequest(String owner, Double amount, String stage){
+    public DealRequest(String dealName, String owner, Double amount, String stage){
+        this.dealName = dealName;
         this.owner = owner;
         this.amount = amount;
         this.stage = stage;
+    }
+
+    public String getDealName() {
+        return dealName;
+    }
+
+    public void setDealName(String dealName) {
+        this.dealName = dealName;
     }
 
     public String getOwner() {

@@ -61,7 +61,8 @@ public class TicketController {
     public ResponseEntity<Ticket> patchTicket(@PathVariable Long ticketId
             , @RequestBody TicketRequest request){
         //Long supportId = 1L;
-        return ResponseEntity.ok(ticketService.patchTicket(ticketId,request));
+        Long managerId = 1000L;
+        return ResponseEntity.ok(ticketService.patchTicket(ticketId,request, managerId));
     }
 
     /*@DeleteMapping("/{ticketId}")

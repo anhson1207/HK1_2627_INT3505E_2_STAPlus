@@ -2,6 +2,7 @@ package sales_service.controller;
 
 import org.springframework.data.domain.Page;
 import sales_service.dto.request.DealFilterRequest;
+import sales_service.dto.request.DiscountApprovalRequestDTO;
 import sales_service.model.Deal;
 import sales_service.dto.request.DealRequest;
 import sales_service.service.DealService;
@@ -41,6 +42,24 @@ public class DealController {
         Long salesId = 1L; // put auth here idk lol lmao
         Deal d = dealService.createDeal(request, salesId);
         return ResponseEntity.status(HttpStatus.CREATED).body(d);
+    }
+
+    @PostMapping("/{dealId}/discount-requests")
+    public ResponseEntity<Void>requestDiscount(@PathVariable Long dealId,
+                                               @RequestBody DiscountApprovalRequestDTO request){
+        Long salesId = 1L;
+        Long managerId = 1000L; //I don't know how to get manager ID, I don't work on that part
+        dealService.requestDiscount(dealId, salesId, managerId,request);
+        return ResponseEntity.noContent().build();
+
+    }
+
+    @PatchMapping("/discount-requests/{discountId}")
+    public ResponseEntity<Void>updateDiscountDecision(@PathVariable Long discountId,
+                                                      @RequestParam String status){
+        Long managerId= 1000L;
+        dealService.approveDiscount(discountId, managerId, status);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{dealId}")

@@ -7,24 +7,30 @@ import org.springframework.data.jpa.domain.JpaSort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import support_service.dto.event.TicketAssignedEvent;
 import support_service.dto.request.TicketFilterRequest;
 import support_service.dto.request.TicketRequest;
 import support_service.filter.Filter;
 import support_service.model.Ticket;
+import support_service.publisher.TicketEventPublisher;
 import support_service.repository.TicketRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import Utilities.PaginationCheck;
 
 @Service
 public class TicketService {
     private final TicketRepository ticketRepository;
+    private final TicketEventPublisher ticketEventPublisher;
 
-    public TicketService(TicketRepository ticketRepository){
+    public TicketService(TicketRepository ticketRepository
+            , TicketEventPublisher ticketEventPublisher){
         this.ticketRepository = ticketRepository;
+        this.ticketEventPublisher = ticketEventPublisher;
     }
 
     public Ticket getTicketByIdAndSupportId(Long id, Long supportId){
@@ -105,12 +111,13 @@ public class TicketService {
         ticket.setDescription(request.getDescription());
         ticket.setPriority(request.getPriority());
         ticket.setStatus(request.getStatus());
+        ticket.setUpdatedAt(LocalDateTime.now());
 
         return ticketRepository.save(ticket);
 
     }
 
-    public Ticket patchTicket(Long id, TicketRequest request){
+    public Ticket patchTicket(Long id, TicketRequest request, Long assignedByUserId){
         /*Ticket ticket = ticketRepository.findByIdAndSupportId(id, supportId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -121,6 +128,9 @@ public class TicketService {
                 HttpStatus.NOT_FOUND,
                 "Ticket not found"
         ));
+
+        Long previousSupportId = ticket.getSupportId();
+
         if(request.getSubject() != null){
             ticket.setSubject(request.getSubject());
         }
@@ -141,7 +151,23 @@ public class TicketService {
             ticket.setSupportId(request.getSupportId());
         }
 
-        return ticketRepository.save(ticket);
+        Ticket savedTicket = ticketRepository.save(ticket);
+        if (request.getSupportId() != null &&
+                !Objects.equals(previousSupportId, savedTicket.getSupportId())) {
+
+            TicketAssignedEvent event = new TicketAssignedEvent();
+
+            event.setEventId(UUID.randomUUID());
+            event.setTicketId(savedTicket.getId());
+            event.setTicketTitle(savedTicket.getSubject());
+            event.setSupportId(savedTicket.getSupportId());
+            event.setAssignedByUserId(assignedByUserId);
+            event.setCreatedAt(LocalDateTime.now());
+
+            ticketEventPublisher.publishTicketAssigned(event);
+        }
+
+        return savedTicket;
     }
 
     //how do I only allow admin to do this

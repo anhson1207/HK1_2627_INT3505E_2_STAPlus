@@ -11,4 +11,7 @@ public interface DealRepository extends JpaRepository<Deal, Long>,
         JpaSpecificationExecutor<Deal> {
     Optional<Deal> findByIdAndSalesId(Long id, Long salesId);
     List<Deal> findBySalesId(Long salesId);
+
+    //start here I think
+
 }

@@ -14,6 +14,9 @@ public class Deal {
     @Column(name = "sales_id", nullable = false)
     private Long salesId;
 
+    @Column(name = "deal_name", nullable = true)
+    private String dealName;
+
     @Column(name = "owner", nullable = false)
     private String owner;
 
@@ -51,6 +54,14 @@ public class Deal {
 
     public void setSalesId(Long salesId) {
         this.salesId = salesId;
+    }
+
+    public String getDealName() {
+        return dealName;
+    }
+
+    public void setDealName(String dealName) {
+        this.dealName = dealName;
     }
 
     public double getAmount() {
