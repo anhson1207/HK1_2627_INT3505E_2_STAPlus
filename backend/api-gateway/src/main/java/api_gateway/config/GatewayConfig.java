@@ -33,6 +33,12 @@ public class GatewayConfig {
     @Value("${services.chat.url:http://localhost:8086}")
     private String chatServiceUrl;
 
+    @Value("${services.notification.url:http://localhost:8087}")
+    private String notificationServiceUrl;
+
+    @Value("${services.analytics.url:http://localhost:8088}")
+    private String analyticsServiceUrl;
+
     @Bean
     public RouterFunction<ServerResponse> authRoute() {
         return GatewayRouterFunctions.route("auth-service")
@@ -102,6 +108,26 @@ public class GatewayConfig {
                                         || request.path().startsWith("/api/v1/tickets"),
                         http())
                 .before(uri(supportServiceUrl))
+                .after(dedupeResponseHeader("Access-Control-Allow-Origin", DedupeStrategy.RETAIN_UNIQUE))
+                .after(dedupeResponseHeader("Access-Control-Allow-Credentials", DedupeStrategy.RETAIN_UNIQUE))
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> notificationRoute() {
+        return GatewayRouterFunctions.route("notification-service")
+                .route(request -> request.path().startsWith("/api/v1/notifications"), http())
+                .before(uri(notificationServiceUrl))
+                .after(dedupeResponseHeader("Access-Control-Allow-Origin", DedupeStrategy.RETAIN_UNIQUE))
+                .after(dedupeResponseHeader("Access-Control-Allow-Credentials", DedupeStrategy.RETAIN_UNIQUE))
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> analyticsRoute() {
+        return GatewayRouterFunctions.route("analytics-service")
+                .route(request -> request.path().startsWith("/api/v1/analytics"), http())
+                .before(uri(analyticsServiceUrl))
                 .after(dedupeResponseHeader("Access-Control-Allow-Origin", DedupeStrategy.RETAIN_UNIQUE))
                 .after(dedupeResponseHeader("Access-Control-Allow-Credentials", DedupeStrategy.RETAIN_UNIQUE))
                 .build();

@@ -2,14 +2,14 @@ package support_service.controller;
 
 import org.springframework.data.domain.Page;
 import support_service.dto.request.TicketFilterRequest;
-import support_service.filter.Filter;
 import support_service.model.Ticket;
 import support_service.dto.request.TicketRequest;
 import support_service.service.TicketService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/tickets")
@@ -20,56 +20,81 @@ public class TicketController {
         this.ticketService = ticketService;
     }
 
+    private Long resolveUserId(Long headerId) {
+        return (headerId != null && headerId > 0) ? headerId : 1L;
+    }
+
+    private boolean isManagerOrAdmin(String role) {
+        return "ADMIN".equalsIgnoreCase(role) || "MANAGER".equalsIgnoreCase(role);
+    }
+
     @GetMapping
     public ResponseEntity<Page<Ticket>> getTickets(
-            @ModelAttribute TicketFilterRequest filterRequest){
-        //handle role here
-        Long supportId = 1L;
-        //return ResponseEntity.ok(ticketService.getTicketsBySupportId(supportId));
-        filterRequest.setSupportId(supportId);
-        //return ResponseEntity.ok(ticketService.getTicketsBySupportId(supportId));
+            @ModelAttribute TicketFilterRequest filterRequest,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId,
+            @RequestHeader(value = "X-User-Role", required = false) String currentUserRole){
 
-        //change the name already
+        if (filterRequest.getSupportId() == null && !isManagerOrAdmin(currentUserRole)) {
+            filterRequest.setSupportId(resolveUserId(currentUserId));
+        }
+
         return ResponseEntity.ok(ticketService.getTicketsBySupportId(filterRequest));
     }
 
     @GetMapping("/{ticketId}")
-    public ResponseEntity<Ticket> getTicket(@PathVariable Long ticketId){
-        //handle roles in here
+    public ResponseEntity<Ticket> getTicket(
+            @PathVariable Long ticketId,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId,
+            @RequestHeader(value = "X-User-Role", required = false) String currentUserRole){
 
-        Long supportId = 1L;
+        Long supportId = isManagerOrAdmin(currentUserRole) ? null : resolveUserId(currentUserId);
         return ResponseEntity.ok(ticketService.getTicketByIdAndSupportId(ticketId, supportId));
     }
 
+    @GetMapping("/unassigned")
+    public ResponseEntity<List<Ticket>> getUnassignedTickets() {
+        return ResponseEntity.ok(ticketService.getUnassignedTickets());
+    }
+
     @PostMapping
-    public ResponseEntity<Ticket> createTicket(@RequestBody TicketRequest request){
-        Long salesId = 1L;
-        Ticket t = ticketService.createTicket(request, salesId);
+    public ResponseEntity<Ticket> createTicket(
+            @RequestBody TicketRequest request,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId){
+
+        Long customerOrSalesId = resolveUserId(currentUserId);
+        Ticket t = ticketService.createTicket(request, customerOrSalesId);
         return ResponseEntity.status(HttpStatus.CREATED).body(t);
     }
 
-    //who gets to do this again?
     @PutMapping("/{ticketId}")
-    public ResponseEntity<Ticket> updateTicket(@PathVariable Long ticketId
-            , @RequestBody TicketRequest request){
-        Long supportId = 1L;
+    public ResponseEntity<Ticket> updateTicket(
+            @PathVariable Long ticketId,
+            @RequestBody TicketRequest request,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId,
+            @RequestHeader(value = "X-User-Role", required = false) String currentUserRole){
+
+        Long supportId = isManagerOrAdmin(currentUserRole) ? null : resolveUserId(currentUserId);
         return ResponseEntity.ok(ticketService.updateTicket(ticketId, request, supportId));
     }
 
-    //admin or manager only
     @PatchMapping("/{ticketId}")
-    public ResponseEntity<Ticket> patchTicket(@PathVariable Long ticketId
-            , @RequestBody TicketRequest request){
-        //Long supportId = 1L;
-        Long managerId = 1000L;
-        return ResponseEntity.ok(ticketService.patchTicket(ticketId,request, managerId));
+    public ResponseEntity<Ticket> patchTicket(
+            @PathVariable Long ticketId,
+            @RequestBody TicketRequest request,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId){
+
+        Long managerId = (currentUserId != null && currentUserId > 0) ? currentUserId : 1000L;
+        return ResponseEntity.ok(ticketService.patchTicket(ticketId, request, managerId));
     }
 
-    /*@DeleteMapping("/{ticketId}")
-    public ResponseEntity<Void> deleteTicket(@PathVariable Long ticketId
-    , @RequestBody TicketRequest request){
+    @DeleteMapping("/{ticketId}")
+    public ResponseEntity<Void> deleteTicket(
+            @PathVariable Long ticketId,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId,
+            @RequestHeader(value = "X-User-Role", required = false) String currentUserRole){
 
-    }*/
-
-
+        Long supportId = isManagerOrAdmin(currentUserRole) ? null : resolveUserId(currentUserId);
+        ticketService.deleteTicket(ticketId, supportId);
+        return ResponseEntity.noContent().build();
+    }
 }
