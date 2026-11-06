@@ -212,9 +212,7 @@ public class AuthServiceImpl implements AuthService {
                 .orElse(null);
 
         if (u == null) {
-            return ForgotPasswordResponse.builder()
-                    .message(message)
-                    .build();
+            throw new UserNotFoundException("Email này chưa được đăng ký trong hệ thống.");
         }
 
         List<PasswordResetToken> tokens =

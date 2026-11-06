@@ -1,4 +1,4 @@
-import { Activity, BellRing, Building2, LockKeyhole, ShieldCheck, UserRound, Users } from "lucide-react";
+import { Activity, BellRing, Building2, LockKeyhole, UserRound, Users } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 
 import { canAccess, type CRMResource } from "../../config/rolePermissions";
@@ -8,7 +8,6 @@ const sections: Array<{ label: string; path: string; resource: CRMResource; icon
     { label: "Hồ sơ", path: "/settings/profile", resource: "profile", icon: UserRound },
     { label: "Người dùng", path: "/settings/users", resource: "users", icon: Users },
     { label: "Nhật ký hoạt động", path: "/settings/audit-logs", resource: "audit-logs", icon: Activity },
-    { label: "Vai trò & quyền", path: "/settings/roles", resource: "roles", icon: ShieldCheck },
     { label: "Cài đặt chung", path: "/settings/general", resource: "general", icon: Building2 },
     { label: "Thông báo", path: "/settings/notifications", resource: "notifications", icon: BellRing },
     { label: "Bảo mật", path: "/settings/security", resource: "security", icon: LockKeyhole },

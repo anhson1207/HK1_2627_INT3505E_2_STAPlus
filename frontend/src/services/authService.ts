@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { authApi } from "./api";
+import { authApi, ApiError } from "./api";
 import {
     USER_ROLES,
     type ForgotPasswordRequest,
@@ -379,15 +379,35 @@ export const authService = {
                 message: "Mã OTP đã được gửi về email của bạn.",
             };
         } catch (apiError) {
-            // Nếu là lỗi nghiệp vụ từ backend 4xx (trừ mất kết nối mạng)
-            if (apiError instanceof Error && "status" in apiError) {
+            // Nếu là lỗi nghiệp vụ từ backend 4xx (ví dụ 404 Email chưa đăng ký, 400, v.v.)
+            if (apiError instanceof ApiError) {
+                if (apiError.status >= 400 && apiError.status < 500) {
+                    throw apiError;
+                }
+            } else if (apiError instanceof Error && "status" in apiError) {
                 const status = (apiError as { status: number }).status;
-                if (status >= 400 && status < 500 && status !== 404) {
+                if (status >= 400 && status < 500) {
                     throw apiError;
                 }
             }
 
-            // 2. Chế độ Offline / Fallback khi backend chưa chạy hoặc chưa cấu hình SMTP
+            // 2. Chế độ Offline / Fallback khi backend chưa chạy
+            const registeredEmails = [
+                "admin@crm.local",
+                "son@crm.com",
+                "sales@crm.com",
+                "support@crm.com",
+                "tranminh@crm.local",
+            ];
+            const storedUsers = getStoredAuthUsers();
+            const exists =
+                registeredEmails.includes(trimmedEmail.toLowerCase()) ||
+                storedUsers.some((u) => u.email && u.email.toLowerCase() === trimmedEmail.toLowerCase());
+
+            if (!exists) {
+                throw new Error("Email này chưa được đăng ký trong hệ thống.");
+            }
+
             const mockToken = `demo-token-${Date.now().toString(36)}`;
             localStorage.setItem(`crm-soa.reset-token.${mockToken}`, trimmedEmail.toLowerCase());
 
@@ -460,7 +480,7 @@ export const authService = {
 
 
 // import { z } from "zod";
-// import { authApi } from "./api";
+// import { authApi, ApiError } from "./api";
 // import { USER_ROLES, type LoginRequest, type LoginResponse, type RegisterRequest, type RegisterResponse } from "../types/auth";
 
 // const loginResponseSchema = z.object({

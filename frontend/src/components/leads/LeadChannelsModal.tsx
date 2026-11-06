@@ -1,5 +1,5 @@
-import { Alert, CircularProgress, Dialog, DialogContent, DialogTitle, Tab, Tabs } from "@mui/material";
-import { Check, Copy, Globe, Megaphone, MessageCircle, MessageSquare, Radio, Send, X } from "lucide-react";
+import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
+import { Check, ChevronDown, ChevronUp, Copy, Globe, Megaphone, MessageCircle, MessageSquare, Radio, Send, X } from "lucide-react";
 import { useState } from "react";
 import { leadService } from "../../services/leadService";
 
@@ -9,393 +9,327 @@ interface LeadChannelsModalProps {
     onSuccess: (message: string) => void;
 }
 
+const CHANNELS = [
+    {
+        id: "website",
+        name: "Website",
+        icon: Globe,
+        color: "text-blue-600",
+        bg: "bg-blue-50 text-blue-600 border-blue-200",
+        activeBorder: "border-blue-600",
+        tag: "Form liên hệ",
+        desc: "Nhận khách tự động khi điền form đăng ký trên Website hoặc Landing page.",
+        url: "http://localhost:8080/api/v1/leads/webhook/website",
+        sampleLead: {
+            fullName: "Nguyễn Văn An",
+            email: "an.nguyen@congtyabc.vn",
+            phone: "0988776655",
+            company: "Tập đoàn ABC",
+            notes: "Đăng ký tư vấn giải pháp qua form website",
+        },
+    },
+    {
+        id: "facebook",
+        name: "Facebook Ads",
+        icon: MessageSquare,
+        color: "text-indigo-600",
+        bg: "bg-indigo-50 text-indigo-600 border-indigo-200",
+        activeBorder: "border-indigo-600",
+        tag: "Lead Ads",
+        desc: "Tự động nhận khách ngay khi điền biểu mẫu (Instant Form) trên Facebook & Instagram.",
+        url: "http://localhost:8080/api/v1/leads/webhook/facebook",
+        verifyToken: "staplus_fb_leadgen_secret_2026",
+        sampleLead: {
+            fullName: "Trần Bảo Trâm",
+            email: "baotram@fashion.vn",
+            phone: "0918822334",
+            company: "Bảo Trâm Studio",
+            notes: "Khách hàng điền form chiến dịch Facebook Ads T11/2026",
+        },
+    },
+    {
+        id: "zalo",
+        name: "Zalo OA",
+        icon: MessageCircle,
+        color: "text-cyan-600",
+        bg: "bg-cyan-50 text-cyan-600 border-cyan-200",
+        activeBorder: "border-cyan-600",
+        tag: "Zalo OA",
+        desc: "Tự động lưu khách hàng khi quan tâm hoặc gửi số điện thoại qua Zalo Official Account.",
+        url: "http://localhost:8080/api/v1/leads/webhook/zalo",
+        sampleLead: {
+            fullName: "Lê Hoàng Phúc",
+            email: "phuc.le@solar.vn",
+            phone: "0909988776",
+            company: "Hoàng Phúc Solar",
+            notes: "Khách quan tâm và chia sẻ SĐT qua tin nhắn Zalo OA",
+        },
+    },
+    {
+        id: "google-ads",
+        name: "Google Ads",
+        icon: Megaphone,
+        color: "text-amber-600",
+        bg: "bg-amber-50 text-amber-600 border-amber-200",
+        activeBorder: "border-amber-600",
+        tag: "Search Ads",
+        desc: "Nhận khách điền tiện ích biểu mẫu (Lead Form) trực tiếp từ kết quả tìm kiếm Google.",
+        url: "http://localhost:8080/api/v1/leads/webhook/google-ads",
+        sampleLead: {
+            fullName: "Võ Minh Khang",
+            email: "khang.vo@vietnamtech.io",
+            phone: "0938112299",
+            company: "Việt Nam Tech Hub",
+            notes: "Tìm kiếm từ khóa 'phần mềm crm b2b' trên Google Search",
+        },
+    },
+];
+
 export default function LeadChannelsModal({ open, onClose, onSuccess }: LeadChannelsModalProps) {
-    const [tabIndex, setTabIndex] = useState(0);
-    const [copied, setCopied] = useState<string | null>(null);
+    const [selectedChannelId, setSelectedChannelId] = useState("website");
+    const [copiedKey, setCopiedKey] = useState<string | null>(null);
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showSnippet, setShowSnippet] = useState(false);
 
-    // Simulator form state
-    const [testName, setTestName] = useState("Nguyễn Văn An");
-    const [testEmail, setTestEmail] = useState("an.nguyen@congtyabc.vn");
-    const [testPhone, setTestPhone] = useState("0988776655");
-    const [testCompany, setTestCompany] = useState("Tập đoàn ABC");
-    const [testNotes, setTestNotes] = useState("Quan tâm gói CRM doanh nghiệp qua form website");
+    const activeChannel = CHANNELS.find((c) => c.id === selectedChannelId) || CHANNELS[0];
 
-    const copyToClipboard = (text: string, id: string) => {
+    const copyToClipboard = (text: string, key: string) => {
         void navigator.clipboard.writeText(text);
-        setCopied(id);
-        setTimeout(() => setCopied(null), 2000);
+        setCopiedKey(key);
+        setTimeout(() => setCopiedKey(null), 2000);
     };
 
-    const handleSimulateWebhook = async (channel: string, customPayload?: { fullName: string; email?: string; phone?: string; company?: string; notes?: string }) => {
+    const handleSimulate = async () => {
         setSending(true);
         setError(null);
         try {
-            const payload = customPayload || {
-                fullName: testName,
-                email: testEmail,
-                phone: testPhone,
-                company: testCompany,
-                notes: testNotes,
-            };
-            await leadService.captureWebhookLead(channel, payload);
-            onSuccess(`Đã thu thập thành công 1 Lead mới từ kênh ${channel.toUpperCase()}!`);
+            await leadService.captureWebhookLead(activeChannel.id, activeChannel.sampleLead);
+            onSuccess(`Đã nhận thành công 1 khách mới từ kênh ${activeChannel.name}!`);
             onClose();
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Gửi webhook thất bại");
+            setError(err instanceof Error ? err.message : "Gửi thử nghiệm thất bại");
         } finally {
             setSending(false);
         }
     };
 
-    const websiteWebhookUrl = "http://localhost:8080/api/v1/leads/webhook/website";
-    const facebookWebhookUrl = "http://localhost:8080/api/v1/leads/webhook/facebook";
-    const zaloWebhookUrl = "http://localhost:8080/api/v1/leads/webhook/zalo";
-    const googleWebhookUrl = "http://localhost:8080/api/v1/leads/webhook/google-ads";
-
-    const websiteCodeSnippet = `<!-- Nhúng vào sự kiện Submit Form trên website -->
-<script>
-async function submitLeadToCRM(formData) {
-  try {
-    const response = await fetch('${websiteWebhookUrl}', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        company: formData.company,
-        notes: formData.message,
-        source: 'WEBSITE'
-      })
-    });
-    console.log('Lead đã được chuyển vào STAPlus CRM');
-  } catch (err) {
-    console.error('Lỗi gửi lead:', err);
-  }
-}
-</script>`;
+    const snippetCode = `fetch('${activeChannel.url}', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    fullName: 'Nguyễn Văn An',
+    email: 'an.nguyen@test.vn',
+    phone: '0988776655',
+    company: 'Công ty ABC'
+  })
+});`;
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-            <DialogTitle className="flex items-center justify-between border-b border-(--crm-border) px-6 py-4">
-                <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-(--crm-info-soft) text-(--crm-primary)">
-                        <Radio size={20} />
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="sm"
+            fullWidth
+            slotProps={{
+                paper: {
+                    sx: {
+                        borderRadius: "20px",
+                        overflow: "hidden",
+                        border: "1px solid #e2e8f0",
+                        boxShadow: "0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04)",
+                    },
+                },
+            }}
+        >
+            {/* Header */}
+            <DialogTitle className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 shadow-2xs">
+                        <Radio size={19} />
                     </div>
                     <div>
-                        <h2 className="text-base font-semibold text-(--crm-heading)">Thu thập Lead đa kênh (Webhooks & APIs)</h2>
-                        <p className="text-xs text-(--crm-text-secondary)">Tự động kết nối và ghi nhận Lead từ Form Website, Facebook Lead Ads, Zalo OA và Google Ads</p>
+                        <h2 className="text-base font-bold text-slate-900">Kênh thu thập khách hàng</h2>
+                        <p className="text-xs text-slate-500">Tự động kết nối và nhận khách từ Website & Mạng xã hội</p>
                     </div>
                 </div>
                 <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-lg p-1 text-(--crm-text-muted) hover:bg-(--crm-surface-hover) hover:text-(--crm-text)"
+                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
                     aria-label="Đóng"
                 >
                     <X size={18} />
                 </button>
             </DialogTitle>
 
-            <div className="border-b border-(--crm-border) bg-(--crm-surface-subtle) px-6">
-                <Tabs value={tabIndex} onChange={(_, val) => setTabIndex(val)} variant="scrollable" scrollButtons="auto">
-                    <Tab label="Form Website" icon={<Globe size={16} />} iconPosition="start" />
-                    <Tab label="Facebook Lead Ads" icon={<MessageSquare size={16} />} iconPosition="start" />
-                    <Tab label="Zalo OA" icon={<MessageCircle size={16} />} iconPosition="start" />
-                    <Tab label="Google Ads" icon={<Megaphone size={16} />} iconPosition="start" />
-                </Tabs>
-            </div>
-
-            <DialogContent className="space-y-4 px-6 py-5">
-                {error && <Alert severity="error">{error}</Alert>}
-
-                {tabIndex === 0 && (
-                    <div className="space-y-5">
-                        <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-4 dark:border-blue-900 dark:bg-blue-950/20">
-                            <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300">Kết nối Form Liên hệ & Landing Page</h3>
-                            <p className="mt-1 text-xs text-blue-800 dark:text-blue-400">
-                                Khi khách hàng điền form nhận báo giá, đăng ký tư vấn hoặc liên hệ trên website của bạn, dữ liệu sẽ được đẩy trực tiếp về STAPlus CRM mà không cần thao tác thủ công.
-                            </p>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold text-(--crm-text-secondary) uppercase tracking-wider mb-1.5">
-                                Webhook Endpoint URL (POST)
-                            </label>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    readOnly
-                                    value={websiteWebhookUrl}
-                                    className="flex-1 rounded-lg border border-(--crm-border) bg-(--crm-surface-subtle) px-3 py-2 text-xs font-mono text-(--crm-heading) outline-none"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => copyToClipboard(websiteWebhookUrl, "web_url")}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
-                                >
-                                    {copied === "web_url" ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
-                                    <span>{copied === "web_url" ? "Đã chép" : "Sao chép"}</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="flex items-center justify-between mb-1.5">
-                                <label className="text-xs font-semibold text-(--crm-text-secondary) uppercase tracking-wider">
-                                    Mã nhúng mẫu (HTML / JavaScript)
-                                </label>
-                                <button
-                                    type="button"
-                                    onClick={() => copyToClipboard(websiteCodeSnippet, "web_code")}
-                                    className="inline-flex items-center gap-1 text-xs font-semibold text-(--crm-primary) hover:underline"
-                                >
-                                    {copied === "web_code" ? <Check size={13} /> : <Copy size={13} />}
-                                    <span>{copied === "web_code" ? "Đã sao chép mã" : "Sao chép mã"}</span>
-                                </button>
-                            </div>
-                            <pre className="overflow-x-auto rounded-lg bg-slate-900 p-3.5 text-[11px] leading-relaxed text-slate-200 font-mono">
-                                {websiteCodeSnippet}
-                            </pre>
-                        </div>
-
-                        <div className="rounded-xl border border-(--crm-border) p-4 bg-(--crm-surface-subtle)">
-                            <h4 className="text-sm font-semibold text-(--crm-heading) mb-2">Thử nghiệm gửi Lead từ Website ngay</h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                                <div>
-                                    <label className="text-xs text-(--crm-text-secondary) block mb-1">Họ và tên</label>
-                                    <input
-                                        type="text"
-                                        value={testName}
-                                        onChange={(e) => setTestName(e.target.value)}
-                                        className="w-full rounded-md border border-(--crm-border) bg-white px-2.5 py-1.5 text-xs text-(--crm-text) outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-(--crm-text-secondary) block mb-1">Email</label>
-                                    <input
-                                        type="email"
-                                        value={testEmail}
-                                        onChange={(e) => setTestEmail(e.target.value)}
-                                        className="w-full rounded-md border border-(--crm-border) bg-white px-2.5 py-1.5 text-xs text-(--crm-text) outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-(--crm-text-secondary) block mb-1">Số điện thoại</label>
-                                    <input
-                                        type="text"
-                                        value={testPhone}
-                                        onChange={(e) => setTestPhone(e.target.value)}
-                                        className="w-full rounded-md border border-(--crm-border) bg-white px-2.5 py-1.5 text-xs text-(--crm-text) outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-(--crm-text-secondary) block mb-1">Công ty</label>
-                                    <input
-                                        type="text"
-                                        value={testCompany}
-                                        onChange={(e) => setTestCompany(e.target.value)}
-                                        className="w-full rounded-md border border-(--crm-border) bg-white px-2.5 py-1.5 text-xs text-(--crm-text) outline-none"
-                                    />
-                                </div>
-                            </div>
-                            <div className="mb-3">
-                                <label className="text-xs text-(--crm-text-secondary) block mb-1">Tin nhắn / Nhu cầu</label>
-                                <input
-                                    type="text"
-                                    value={testNotes}
-                                    onChange={(e) => setTestNotes(e.target.value)}
-                                    className="w-full rounded-md border border-(--crm-border) bg-white px-2.5 py-1.5 text-xs text-(--crm-text) outline-none"
-                                />
-                            </div>
-                            <button
-                                type="button"
-                                disabled={sending}
-                                onClick={() => void handleSimulateWebhook("website")}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-(--crm-primary) px-4 py-2 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50 shadow-xs"
-                            >
-                                {sending ? <CircularProgress size={14} color="inherit" /> : <Send size={14} />}
-                                <span>{sending ? "Đang gửi..." : "Gửi Lead thử nghiệm từ Form Website"}</span>
-                            </button>
-                        </div>
-                    </div>
+            {/* Content */}
+            <DialogContent className="space-y-4 px-6 py-5 bg-slate-50/60">
+                {error && (
+                    <Alert severity="error" onClose={() => setError(null)} className="rounded-xl">
+                        {error}
+                    </Alert>
                 )}
 
-                {tabIndex === 1 && (
-                    <div className="space-y-5">
-                        <div className="rounded-lg border border-indigo-200 bg-indigo-50/60 p-4 dark:border-indigo-900 dark:bg-indigo-950/20">
-                            <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-300">Tích hợp Facebook Lead Ads (Meta Webhook)</h3>
-                            <p className="mt-1 text-xs text-indigo-800 dark:text-indigo-400">
-                                Tự động hứng dữ liệu khách hàng tiềm năng khi họ nhấn vào quảng cáo và điền biểu mẫu (Instant Form) trên Facebook & Instagram.
-                            </p>
-                        </div>
+                {/* 1. Channel Selector Pills */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {CHANNELS.map((ch) => {
+                        const Icon = ch.icon;
+                        const isSelected = ch.id === selectedChannelId;
+                        return (
+                            <button
+                                key={ch.id}
+                                type="button"
+                                onClick={() => {
+                                    setSelectedChannelId(ch.id);
+                                    setShowSnippet(false);
+                                }}
+                                className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition text-center select-none ${
+                                    isSelected
+                                        ? "bg-white border-blue-600 ring-2 ring-blue-500/20 shadow-xs"
+                                        : "bg-white/80 border-slate-200 hover:border-slate-300 hover:bg-white"
+                                }`}
+                            >
+                                <div className={`flex h-8 w-8 items-center justify-center rounded-xl transition ${
+                                    isSelected ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500"
+                                }`}>
+                                    <Icon size={16} />
+                                </div>
+                                <span className={`text-xs font-bold leading-tight ${isSelected ? "text-slate-900" : "text-slate-600"}`}>
+                                    {ch.name}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
 
-                        <div>
-                            <label className="block text-xs font-semibold text-(--crm-text-secondary) uppercase tracking-wider mb-1.5">
-                                Callback URL (Cấu hình trên Meta App Dashboard)
-                            </label>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    readOnly
-                                    value={facebookWebhookUrl}
-                                    className="flex-1 rounded-lg border border-(--crm-border) bg-(--crm-surface-subtle) px-3 py-2 text-xs font-mono text-(--crm-heading) outline-none"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => copyToClipboard(facebookWebhookUrl, "fb_url")}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
-                                >
-                                    {copied === "fb_url" ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
-                                    <span>{copied === "fb_url" ? "Đã chép" : "Sao chép"}</span>
-                                </button>
-                            </div>
+                {/* 2. Channel Details Card */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs space-y-3.5">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-slate-900">{activeChannel.name}</span>
+                            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${activeChannel.bg}`}>
+                                {activeChannel.tag}
+                            </span>
                         </div>
+                    </div>
 
-                        <div>
-                            <label className="block text-xs font-semibold text-(--crm-text-secondary) uppercase tracking-wider mb-1.5">
-                                Verify Token
-                            </label>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                        {activeChannel.desc}
+                    </p>
+
+                    {/* Webhook URL Field */}
+                    <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                            Đường dẫn kết nối (Webhook URL)
+                        </label>
+                        <div className="flex items-center gap-2">
                             <input
                                 readOnly
-                                value="staplus_fb_leadgen_secret_2026"
-                                className="w-full rounded-lg border border-(--crm-border) bg-(--crm-surface-subtle) px-3 py-2 text-xs font-mono text-(--crm-heading) outline-none"
+                                value={activeChannel.url}
+                                className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono text-slate-700 outline-none select-all"
                             />
-                        </div>
-
-                        <div className="rounded-xl border border-(--crm-border) p-4 bg-(--crm-surface-subtle)">
-                            <h4 className="text-sm font-semibold text-(--crm-heading) mb-2">Thử nghiệm nhận Lead từ chiến dịch Facebook Ads</h4>
-                            <p className="text-xs text-(--crm-text-secondary) mb-3">
-                                Bấm nút bên dưới để mô phỏng một khách hàng vừa hoàn tất form đăng ký từ chiến dịch quảng cáo "Lead Ads T10/2026" trên Facebook.
-                            </p>
                             <button
                                 type="button"
-                                disabled={sending}
-                                onClick={() => void handleSimulateWebhook("facebook", {
-                                    fullName: "Trần Bảo Trâm",
-                                    email: "baotram_fb@meta-demo.com",
-                                    phone: "0918822334",
-                                    company: "Bảo Trâm Fashion",
-                                    notes: "[Facebook Lead Ads] Chiến dịch: Mở rộng bán hàng qua MXH | Form ID: 88291039",
-                                })}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 shadow-xs"
+                                onClick={() => copyToClipboard(activeChannel.url, "url")}
+                                className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition active:scale-98"
                             >
-                                {sending ? <CircularProgress size={14} color="inherit" /> : <Send size={14} />}
-                                <span>{sending ? "Đang gửi..." : "Mô phỏng Lead từ Facebook Ads"}</span>
+                                {copiedKey === "url" ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                                <span>{copiedKey === "url" ? "Đã chép" : "Sao chép"}</span>
                             </button>
                         </div>
                     </div>
-                )}
 
-                {tabIndex === 2 && (
-                    <div className="space-y-5">
-                        <div className="rounded-lg border border-cyan-200 bg-cyan-50/60 p-4 dark:border-cyan-900 dark:bg-cyan-950/20">
-                            <h3 className="text-sm font-semibold text-cyan-900 dark:text-cyan-300">Tích hợp Zalo Official Account (Zalo OA)</h3>
-                            <p className="mt-1 text-xs text-cyan-800 dark:text-cyan-400">
-                                Tự động đồng bộ khách hàng quan tâm và để lại số điện thoại qua tin nhắn hoặc Zalo Form vào danh sách Lead.
-                            </p>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold text-(--crm-text-secondary) uppercase tracking-wider mb-1.5">
-                                Webhook URL (Cấu hình trên Zalo for Developers)
+                    {/* Optional Token for Facebook */}
+                    {activeChannel.verifyToken && (
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                                Verify Token
                             </label>
                             <div className="flex items-center gap-2">
                                 <input
                                     readOnly
-                                    value={zaloWebhookUrl}
-                                    className="flex-1 rounded-lg border border-(--crm-border) bg-(--crm-surface-subtle) px-3 py-2 text-xs font-mono text-(--crm-heading) outline-none"
+                                    value={activeChannel.verifyToken}
+                                    className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono text-slate-700 outline-none"
                                 />
                                 <button
                                     type="button"
-                                    onClick={() => copyToClipboard(zaloWebhookUrl, "zalo_url")}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
+                                    onClick={() => copyToClipboard(activeChannel.verifyToken!, "token")}
+                                    className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition active:scale-98"
                                 >
-                                    {copied === "zalo_url" ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
-                                    <span>{copied === "zalo_url" ? "Đã chép" : "Sao chép"}</span>
+                                    {copiedKey === "token" ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                                    <span>{copiedKey === "token" ? "Đã chép" : "Sao chép"}</span>
                                 </button>
                             </div>
                         </div>
+                    )}
 
-                        <div className="rounded-xl border border-(--crm-border) p-4 bg-(--crm-surface-subtle)">
-                            <h4 className="text-sm font-semibold text-(--crm-heading) mb-2">Thử nghiệm nhận Lead từ Zalo OA</h4>
-                            <p className="text-xs text-(--crm-text-secondary) mb-3">
-                                Bấm nút bên dưới để mô phỏng một khách hàng gửi thông tin liên hệ qua trang Zalo OA của công ty.
-                            </p>
-                            <button
-                                type="button"
-                                disabled={sending}
-                                onClick={() => void handleSimulateWebhook("zalo", {
-                                    fullName: "Lê Hoàng Phúc",
-                                    email: "phuc.le@zalo-corp.vn",
-                                    phone: "0909988776",
-                                    company: "Hoàng Phúc Solar",
-                                    notes: "[Zalo OA] Khách hàng nhấn 'Quan tâm' và chia sẻ số điện thoại qua tin nhắn tự động",
-                                })}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-700 px-4 py-2 text-xs font-semibold text-white hover:bg-cyan-800 disabled:opacity-50 shadow-xs"
-                            >
-                                {sending ? <CircularProgress size={14} color="inherit" /> : <Send size={14} />}
-                                <span>{sending ? "Đang gửi..." : "Mô phỏng Lead từ Zalo OA"}</span>
-                            </button>
-                        </div>
+                    {/* Code snippet collapse (Clean & compact) */}
+                    <div className="pt-1">
+                        <button
+                            type="button"
+                            onClick={() => setShowSnippet(!showSnippet)}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 transition"
+                        >
+                            <span>{showSnippet ? "Thu gọn mẫu code" : "Xem code mẫu nhúng Webhook"}</span>
+                            {showSnippet ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        </button>
+
+                        {showSnippet && (
+                            <div className="mt-2 relative">
+                                <pre className="rounded-xl bg-slate-800 p-3 text-[11px] font-mono text-slate-200 overflow-x-auto leading-relaxed">
+                                    {snippetCode}
+                                </pre>
+                                <button
+                                    type="button"
+                                    onClick={() => copyToClipboard(snippetCode, "snippet")}
+                                    className="absolute top-2 right-2 rounded-lg bg-slate-700/80 px-2 py-1 text-[11px] font-semibold text-white hover:bg-slate-700 transition flex items-center gap-1"
+                                >
+                                    {copiedKey === "snippet" ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                                    <span>{copiedKey === "snippet" ? "Đã chép" : "Chép code"}</span>
+                                </button>
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
 
-                {tabIndex === 3 && (
-                    <div className="space-y-5">
-                        <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900 dark:bg-amber-950/20">
-                            <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-300">Tích hợp Google Ads (Lead Form Extension)</h3>
-                            <p className="mt-1 text-xs text-amber-800 dark:text-amber-400">
-                                Thu thập thông tin khách hàng điền tiện ích biểu mẫu khách hàng tiềm năng trực tiếp từ mẫu quảng cáo Google Search Ads.
-                            </p>
+                {/* 3. Fast Test Simulation Banner */}
+                <div className="flex items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50/70 p-3.5 shadow-2xs">
+                    <div className="flex items-center gap-2.5">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
+                            <Send size={15} />
                         </div>
-
                         <div>
-                            <label className="block text-xs font-semibold text-(--crm-text-secondary) uppercase tracking-wider mb-1.5">
-                                Google Webhook URL
-                            </label>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    readOnly
-                                    value={googleWebhookUrl}
-                                    className="flex-1 rounded-lg border border-(--crm-border) bg-(--crm-surface-subtle) px-3 py-2 text-xs font-mono text-(--crm-heading) outline-none"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => copyToClipboard(googleWebhookUrl, "google_url")}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
-                                >
-                                    {copied === "google_url" ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
-                                    <span>{copied === "google_url" ? "Đã chép" : "Sao chép"}</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="rounded-xl border border-(--crm-border) p-4 bg-(--crm-surface-subtle)">
-                            <h4 className="text-sm font-semibold text-(--crm-heading) mb-2">Thử nghiệm nhận Lead từ Google Ads</h4>
-                            <p className="text-xs text-(--crm-text-secondary) mb-3">
-                                Bấm nút bên dưới để mô phỏng người dùng tìm kiếm từ khóa và điền biểu mẫu Google Lead Form.
+                            <p className="text-xs font-bold text-blue-950">
+                                Thử nghiệm kênh {activeChannel.name}
                             </p>
-                            <button
-                                type="button"
-                                disabled={sending}
-                                onClick={() => void handleSimulateWebhook("google-ads", {
-                                    fullName: "Võ Minh Khang",
-                                    email: "khang.vo@vietnamtech.io",
-                                    phone: "0938112299",
-                                    company: "Việt Nam Tech Hub",
-                                    notes: "[Google Ads] Từ khóa: 'phần mềm quản trị crm b2b' | Tiện ích biểu mẫu mở rộng",
-                                })}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-50 shadow-xs"
-                            >
-                                {sending ? <CircularProgress size={14} color="inherit" /> : <Send size={14} />}
-                                <span>{sending ? "Đang gửi..." : "Mô phỏng Lead từ Google Ads"}</span>
-                            </button>
+                            <p className="text-[11px] text-blue-700">
+                                Gửi 1 khách hàng mẫu ({activeChannel.sampleLead.fullName}) vào CRM
+                            </p>
                         </div>
                     </div>
-                )}
+                    <button
+                        type="button"
+                        disabled={sending}
+                        onClick={() => void handleSimulate()}
+                        className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-blue-700 active:scale-98 transition shadow-xs disabled:opacity-50"
+                    >
+                        {sending ? <CircularProgress size={13} color="inherit" /> : <Send size={13} />}
+                        <span>{sending ? "Đang gửi..." : "Gửi thử ngay"}</span>
+                    </button>
+                </div>
             </DialogContent>
+
+            {/* Footer */}
+            <DialogActions className="border-t border-slate-100 bg-white px-6 py-3.5 flex justify-end">
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="rounded-xl border border-slate-200 px-5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+                >
+                    Đóng
+                </button>
+            </DialogActions>
         </Dialog>
     );
 }
-

@@ -246,7 +246,7 @@ export default function UserManagementPage() {
                         Quản trị hệ thống
                     </h2>
                     <p className="crm-page-description">
-                        Quản lý người dùng, phân quyền RBAC và nhật ký hoạt động hệ thống.
+                        Quản lý tài khoản người dùng và nhật ký hoạt động hệ thống.
                     </p>
                 </div>
             </div>

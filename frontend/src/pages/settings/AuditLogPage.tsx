@@ -369,11 +369,11 @@ export default function AuditLogPage() {
                         <table className="crm-table">
                             <thead>
                                 <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)">
-                                    <th style={{ width: "16%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Thời gian</th>
-                                    <th style={{ width: "19%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Người thực hiện</th>
-                                    <th style={{ width: "12%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Thao tác</th>
+                                    <th style={{ width: "15%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Thời gian</th>
+                                    <th style={{ width: "22%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Người thực hiện</th>
+                                    <th style={{ width: "11%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Thao tác</th>
                                     <th style={{ width: "10%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Phân hệ</th>
-                                    <th style={{ width: "26%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Mô tả hoạt động</th>
+                                    <th style={{ width: "25%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Mô tả hoạt động</th>
                                     <th style={{ width: "10%" }} className="px-4 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Trạng thái</th>
                                     <th style={{ width: "7%" }} className="px-3 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Xem</th>
                                 </tr>
@@ -392,11 +392,11 @@ export default function AuditLogPage() {
 
                                         {/* Actor */}
                                         <td className="px-4 py-3.5 text-center">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
+                                            <div className="inline-flex items-center gap-2.5 text-left w-48 max-w-full">
+                                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-700">
                                                     {(logItem.userName || "H").charAt(0).toUpperCase()}
                                                 </div>
-                                                <div className="truncate text-left">
+                                                <div className="min-w-0 flex-1 truncate text-left">
                                                     <p className="truncate text-xs font-semibold text-(--crm-heading)" title={logItem.userName || "Hệ thống"}>
                                                         {logItem.userName || "Hệ thống"}
                                                     </p>
@@ -422,8 +422,8 @@ export default function AuditLogPage() {
                                         </td>
 
                                         {/* Description */}
-                                        <td className="px-4 py-3.5 text-left">
-                                            <p className="text-xs text-(--crm-text) line-clamp-2" title={logItem.description}>
+                                        <td className="px-4 py-3.5 text-center">
+                                            <p className="text-xs text-(--crm-text) line-clamp-2 text-center" title={logItem.description}>
                                                 {logItem.description}
                                             </p>
                                         </td>

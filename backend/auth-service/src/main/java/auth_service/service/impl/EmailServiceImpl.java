@@ -19,7 +19,7 @@ public class EmailServiceImpl implements EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.username:}")
     private String from;
 
     @Override
@@ -27,6 +27,11 @@ public class EmailServiceImpl implements EmailService {
             String to,
             String token
     ) {
+        if (from == null || from.trim().isEmpty()) {
+            log.info("[OTP RESET] Chưa cấu hình SMTP (MAIL_USERNAME trống). Mã OTP đặt lại mật khẩu của {}: [{}]", to, token);
+            return;
+        }
+
         String plainText =
                 "Xin chào,\n\n"
                         + "Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản CRM của bạn.\n\n"
@@ -80,20 +85,15 @@ public class EmailServiceImpl implements EmailService {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-            helper.setFrom(from);
+            helper.setFrom(from.trim());
             helper.setTo(to);
             helper.setSubject("CRM - Mã OTP đặt lại mật khẩu của bạn");
             helper.setText(plainText, htmlContent);
 
             mailSender.send(mimeMessage);
-        } catch (MessagingException e) {
-            log.warn("Không thể gửi email dạng HTML, chuyển sang dạng plain text: {}", e.getMessage());
-            SimpleMailMessage simpleMessage = new SimpleMailMessage();
-            simpleMessage.setFrom(from);
-            simpleMessage.setTo(to);
-            simpleMessage.setSubject("CRM - Mã OTP đặt lại mật khẩu của bạn");
-            simpleMessage.setText(plainText);
-            mailSender.send(simpleMessage);
+            log.info("Đã gửi email OTP đặt lại mật khẩu thành công tới {}", to);
+        } catch (Exception e) {
+            log.warn("Không thể gửi email OTP qua SMTP ({}). Mã OTP dự phòng của {}: [{}]", e.getMessage(), to, token);
         }
     }
 }

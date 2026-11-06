@@ -20,6 +20,12 @@ frontend/dist/
 frontend/test-results/
 frontend/playwright-report/
 
+# Runtime, logs & environment
+.env
+*.log
+logs/
+.pids
+
 # Uploads & Temporary Media
 uploads/
 **/uploads/
