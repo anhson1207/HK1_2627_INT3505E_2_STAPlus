@@ -7,6 +7,8 @@ import RoleGuard from "../auth/RoleGuard";
 import { rolesWithPermission } from "../../config/rolePermissions";
 import { useAuthStore } from "../../stores/authStore";
 import type { UserRole } from "../../types/auth";
+import NotificationDropdown from "../notifications/NotificationDropdown";
+import { NOTIFICATIONS_CHANGED_EVENT, notificationService } from "../../services/notificationService";
 
 interface HeaderProps {
     onOpenSidebar: () => void;
@@ -56,6 +58,26 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
     const [search, setSearch] = useState("");
     const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(null);
     const { user, logout } = useAuthStore();
+    const [notificationOpen, setNotificationOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        let active = true;
+        const loadUnreadCount = async () => {
+            try {
+                const count = await notificationService.getUnreadCount();
+                if (active) setUnreadCount(count);
+            } catch {
+                // ignore
+            }
+        };
+        void loadUnreadCount();
+        window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, loadUnreadCount);
+        return () => {
+            active = false;
+            window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, loadUnreadCount);
+        };
+    }, []);
 
     const roleLabels: Record<UserRole, string> = {
         ADMIN: "Quản trị viên",
@@ -135,10 +157,28 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                     <button type="button" title="Trợ giúp" aria-label="Trợ giúp" className="crm-icon-btn crm-header__optional">
                         <CircleHelp size={18} />
                     </button>
-                    <button type="button" title="Thông báo" aria-label="Thông báo" className="crm-icon-btn relative">
-                        <Bell size={18} />
-                        <span className="crm-unread-dot" />
-                    </button>
+                    <div className="relative">
+                        <button
+                            type="button"
+                            data-notification-trigger
+                            title="Thông báo"
+                            aria-label="Thông báo"
+                            aria-expanded={notificationOpen}
+                            onClick={() => setNotificationOpen((prev) => !prev)}
+                            className="crm-icon-btn relative"
+                        >
+                            <Bell size={18} />
+                            {unreadCount > 0 && (
+                                <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-(--crm-danger) px-1 text-[10px] font-bold text-white shadow-sm ring-2 ring-(--crm-surface)">
+                                    {unreadCount > 99 ? "99+" : unreadCount}
+                                </span>
+                            )}
+                        </button>
+                        <NotificationDropdown
+                            open={notificationOpen}
+                            onClose={() => setNotificationOpen(false)}
+                        />
+                    </div>
 
                     <button type="button" onClick={handleOpenUserMenu} aria-label="Mở menu người dùng" className="crm-header__user">
                         <div className="crm-avatar">

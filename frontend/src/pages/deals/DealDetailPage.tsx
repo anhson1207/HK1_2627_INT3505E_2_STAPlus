@@ -237,9 +237,13 @@ export default function DealDetailPage() {
         },
         {
             label: "Ngày dự kiến đóng",
-            value: dateFormatter.format(
-                new Date(`${deal.expectedCloseDate}T00:00:00`),
-            ),
+            value: deal.expectedCloseDate
+                ? dateFormatter.format(
+                      new Date(
+                          `${deal.expectedCloseDate.split("T")[0]}T00:00:00`,
+                      ),
+                  )
+                : "—",
             icon: CalendarDays,
         },
         {
