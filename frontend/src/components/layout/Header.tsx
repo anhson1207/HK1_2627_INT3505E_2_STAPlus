@@ -234,17 +234,6 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                     {user?.username}
                 </MenuItem>
 
-                <MenuItem
-                    onClick={() => {
-                        toggleTheme();
-                    }}
-                >
-                    <ListItemIcon>
-                        {isDark ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} className="text-slate-600" />}
-                    </ListItemIcon>
-                    Giao diện: {isDark ? "Tối (Dark)" : "Sáng (Light)"}
-                </MenuItem>
-
                 <MenuItem onClick={() => void handleLogout()}>
                     <ListItemIcon><LogOut size={17} /></ListItemIcon>
                     Đăng xuất
