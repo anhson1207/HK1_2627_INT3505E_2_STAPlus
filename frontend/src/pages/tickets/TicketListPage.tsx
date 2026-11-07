@@ -1,4 +1,3 @@
-
 import { Alert, CircularProgress, Snackbar } from "@mui/material";
 import {
     AlertTriangle,
@@ -135,6 +134,7 @@ export default function TicketListPage() {
                 ticket.createdAt,
                 ticket.priority,
                 ticket.status,
+                ticket.slaDeadline,
             ).state === "OVERDUE",
     ).length;
 
@@ -144,6 +144,7 @@ export default function TicketListPage() {
                 ticket.createdAt,
                 ticket.priority,
                 ticket.status,
+                ticket.slaDeadline,
             ).state === "AT_RISK",
     ).length;
 
@@ -351,8 +352,8 @@ export default function TicketListPage() {
                                     <th style={{ width: "16%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Khách hàng</th>
                                     <th style={{ width: "11%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Ưu tiên</th>
                                     <th style={{ width: "11%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Trạng thái</th>
-                                    <th style={{ width: "11%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">SLA</th>
-                                    <th style={{ width: "10%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Phân công</th>
+                                    <th style={{ width: "12%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">SLA</th>
+                                    <th style={{ width: "9%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Phân công</th>
                                     <th style={{ width: "9%" }} className="px-5 py-3.5 text-center text-xs font-semibold text-(--crm-text-secondary)">Ngày tạo</th>
                                 </tr>
                             </thead>
@@ -363,6 +364,7 @@ export default function TicketListPage() {
                                         ticket.createdAt,
                                         ticket.priority,
                                         ticket.status,
+                                        ticket.slaDeadline,
                                     );
 
                                     return (
@@ -398,9 +400,9 @@ export default function TicketListPage() {
                                                         )
                                                     }
                                                     className="inline-block max-w-full truncate text-center text-sm text-(--crm-text) hover:text-(--crm-primary) hover:underline"
-                                                    title={ticket.customerName}
+                                                    title={ticket.customerName || `Khách hàng #${ticket.customerId}`}
                                                 >
-                                                    {ticket.customerName}
+                                                    {ticket.customerName || `Khách hàng #${ticket.customerId}`}
                                                 </button>
                                             </td>
 
@@ -417,20 +419,32 @@ export default function TicketListPage() {
                                             </td>
 
                                             <td className="whitespace-nowrap px-5 py-4 text-center">
-                                                <span
-                                                    className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${SLA_COLOR[sla.state]}`}
-                                                    title={
-                                                        sla.deadline
-                                                            ? `Hạn xử lý: ${dateFormatter.format(
-                                                                  new Date(
-                                                                      sla.deadline,
-                                                                  ),
-                                                              )}`
-                                                            : undefined
-                                                    }
-                                                >
-                                                    {sla.label}
-                                                </span>
+                                                <div className="flex flex-col items-center gap-0.5">
+                                                    <span
+                                                        className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${SLA_COLOR[sla.state]}`}
+                                                        title={
+                                                            sla.deadline
+                                                                ? `Thời hạn giải quyết: ${dateFormatter.format(
+                                                                      new Date(
+                                                                          sla.deadline,
+                                                                      ),
+                                                                  )}`
+                                                                : undefined
+                                                        }
+                                                    >
+                                                        {sla.label}
+                                                    </span>
+                                                    {sla.deadline && (
+                                                        <span
+                                                            className="text-[11px] text-(--crm-text-muted)"
+                                                            title="Thời hạn giải quyết vé (SLA do hệ thống tính toán)"
+                                                        >
+                                                            {dateFormatter.format(
+                                                                new Date(sla.deadline),
+                                                            )}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
 
                                             <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">

@@ -1,4 +1,3 @@
-
 import { Alert, CircularProgress } from "@mui/material";
 import {
   AlertTriangle,
@@ -58,10 +57,7 @@ export default function SupportDashboardPage() {
     };
   }, []);
 
-  const openCount = tickets.filter(
-    (ticket) => ticket.status === "OPEN",
-  ).length;
-
+  const openCount = tickets.filter((ticket) => ticket.status === "OPEN").length;
   const inProgressCount = tickets.filter(
     (ticket) => ticket.status === "IN_PROGRESS",
   ).length;
@@ -73,11 +69,13 @@ export default function SupportDashboardPage() {
   const urgentCount = tickets.filter(
     (ticket) => ticket.priority === "URGENT",
   ).length;
+
   const overdueCount = tickets.filter((ticket) => {
     const sla = getTicketSla(
       ticket.createdAt,
       ticket.priority,
       ticket.status,
+      ticket.slaDeadline,
     );
 
     return sla.state === "OVERDUE";
@@ -88,10 +86,12 @@ export default function SupportDashboardPage() {
       ticket.createdAt,
       ticket.priority,
       ticket.status,
+      ticket.slaDeadline,
     );
 
     return sla.state === "AT_RISK";
   }).length;
+
   const summaries = [
     {
       label: "Ticket mới",
@@ -190,13 +190,10 @@ export default function SupportDashboardPage() {
           const Icon = item.icon;
 
           return (
-            <article
-              key={item.label}
-              className={`crm-kpi crm-kpi--accent crm-tone--${item.tone}`}
-            >
-              <div className="crm-kpi__top">
+            <article key={item.label} className="crm-kpi">
+              <div className="flex items-start justify-between">
                 <p className="crm-kpi__label">{item.label}</p>
-                <span className="crm-kpi__icon">
+                <span className={`crm-kpi__icon crm-kpi__icon--${item.tone}`}>
                   <Icon size={18} />
                 </span>
               </div>
