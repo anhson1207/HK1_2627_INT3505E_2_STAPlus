@@ -199,7 +199,7 @@ export default function AuditLogPage() {
                         type="button"
                         onClick={handleExport}
                         disabled={exporting || loading}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3.5 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-(--crm-surface) px-3.5 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs disabled:opacity-50"
                     >
                         {exporting ? <CircularProgress size={14} color="inherit" /> : <FileSpreadsheet size={15} className="text-emerald-600" />}
                         <span>Xuất CSV (Excel)</span>
@@ -208,7 +208,7 @@ export default function AuditLogPage() {
                         type="button"
                         onClick={() => void loadData()}
                         disabled={loading}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3.5 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-(--crm-surface) px-3.5 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
                     >
                         <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
                         <span>Tải lại</span>
@@ -221,7 +221,7 @@ export default function AuditLogPage() {
 
             {/* Stat Cards */}
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-xl border border-(--crm-border) bg-white p-4 shadow-2xs">
+                <div className="rounded-xl border border-(--crm-border) bg-(--crm-surface) p-4 shadow-2xs">
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-(--crm-text-secondary)">Tổng số nhật ký</span>
                         <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
@@ -236,7 +236,7 @@ export default function AuditLogPage() {
                     </div>
                 </div>
 
-                <div className="rounded-xl border border-(--crm-border) bg-white p-4 shadow-2xs">
+                <div className="rounded-xl border border-(--crm-border) bg-(--crm-surface) p-4 shadow-2xs">
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-(--crm-text-secondary)">Hoạt động hôm nay</span>
                         <div className="rounded-lg bg-emerald-50 p-2 text-emerald-600">
@@ -251,7 +251,7 @@ export default function AuditLogPage() {
                     </div>
                 </div>
 
-                <div className="rounded-xl border border-(--crm-border) bg-white p-4 shadow-2xs">
+                <div className="rounded-xl border border-(--crm-border) bg-(--crm-surface) p-4 shadow-2xs">
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-(--crm-text-secondary)">Tỷ lệ thành công</span>
                         <div className="rounded-lg bg-purple-50 p-2 text-purple-600">
@@ -266,7 +266,7 @@ export default function AuditLogPage() {
                     </div>
                 </div>
 
-                <div className="rounded-xl border border-(--crm-border) bg-white p-4 shadow-2xs">
+                <div className="rounded-xl border border-(--crm-border) bg-(--crm-surface) p-4 shadow-2xs">
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-(--crm-text-secondary)">Phân hệ sôi động nhất</span>
                         <div className="rounded-lg bg-amber-50 p-2 text-amber-600">

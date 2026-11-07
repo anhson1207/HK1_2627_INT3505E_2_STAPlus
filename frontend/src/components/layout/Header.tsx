@@ -1,11 +1,12 @@
 import { ListItemIcon, Menu, MenuItem } from "@mui/material";
-import { Bell, CalendarDays, ChevronDown, CircleHelp, LogOut, Menu as MenuIcon, Search, UserRound } from "lucide-react";
+import { Bell, CalendarDays, ChevronDown, CircleHelp, LogOut, Menu as MenuIcon, Moon, Search, Sun, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import RoleGuard from "../auth/RoleGuard";
 import { rolesWithPermission } from "../../config/rolePermissions";
 import { useAuthStore } from "../../stores/authStore";
+import { useThemeStore } from "../../stores/themeStore";
 import type { UserRole } from "../../types/auth";
 
 interface HeaderProps {
@@ -56,6 +57,8 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
     const [search, setSearch] = useState("");
     const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(null);
     const { user, logout } = useAuthStore();
+    const { mode, toggleTheme } = useThemeStore();
+    const isDark = mode === "dark";
 
     const roleLabels: Record<UserRole, string> = {
         ADMIN: "Quản trị viên",
@@ -129,6 +132,20 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                 </RoleGuard>
 
                 <div className="crm-header__right">
+                    <button
+                        type="button"
+                        onClick={toggleTheme}
+                        title={isDark ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
+                        aria-label={isDark ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
+                        className="crm-icon-btn text-(--crm-text-secondary) hover:text-(--crm-heading) transition-colors"
+                    >
+                        {isDark ? (
+                            <Sun size={18} className="text-amber-400" />
+                        ) : (
+                            <Moon size={18} className="text-slate-600" />
+                        )}
+                    </button>
+
                     <button type="button" title="Lịch" aria-label="Lịch" className="crm-icon-btn crm-header__optional">
                         <CalendarDays size={18} />
                     </button>
@@ -163,22 +180,18 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                 >
                     <ListItemIcon><UserRound size={17} /></ListItemIcon>
                     {user?.username}
-                    
                 </MenuItem>
 
-
-                {/* <MenuItem
+                <MenuItem
                     onClick={() => {
-                        setUserMenuAnchor(null);
-                        navigate("/profile");
+                        toggleTheme();
                     }}
                 >
                     <ListItemIcon>
-                        <UserRound size={17} />
+                        {isDark ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} className="text-slate-600" />}
                     </ListItemIcon>
-                    Thông tin cá nhân
-                </MenuItem> */}
-
+                    Giao diện: {isDark ? "Tối (Dark)" : "Sáng (Light)"}
+                </MenuItem>
 
                 <MenuItem onClick={() => void handleLogout()}>
                     <ListItemIcon><LogOut size={17} /></ListItemIcon>

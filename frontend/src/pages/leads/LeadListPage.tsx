@@ -102,21 +102,21 @@ export default function LeadListPage() {
                         <button
                             type="button"
                             onClick={() => setAssignmentOpen(true)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-(--crm-surface) px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
                         >
                             <SlidersHorizontal size={14} className="text-(--crm-primary)" /> Phân bổ tự động
                         </button>
                         <button
                             type="button"
                             onClick={() => setChannelsOpen(true)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-(--crm-surface) px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
                         >
                             <Radio size={14} className="text-(--crm-primary)" /> Kênh thu thập
                         </button>
                         <button
                             type="button"
                             onClick={() => setImportOpen(true)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-(--crm-surface) px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
                         >
                             <FileSpreadsheet size={14} className="text-emerald-600" /> Nhập Excel/CSV
                         </button>

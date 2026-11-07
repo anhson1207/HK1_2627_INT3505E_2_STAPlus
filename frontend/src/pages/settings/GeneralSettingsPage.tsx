@@ -2,10 +2,12 @@ import { Button, MenuItem, Snackbar, TextField } from "@mui/material";
 import { useState } from "react";
 
 import { useSettingsStore, type GeneralSettings } from "../../stores/settingsStore";
+import { useThemeStore, type ThemeMode } from "../../stores/themeStore";
 
 export default function GeneralSettingsPage() {
     const saved = useSettingsStore((state) => state.general);
     const saveGeneral = useSettingsStore((state) => state.saveGeneral);
+    const { mode, setMode } = useThemeStore();
     const [form, setForm] = useState<GeneralSettings>(saved);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
@@ -18,6 +20,7 @@ export default function GeneralSettingsPage() {
     return <div className="crm-card crm-card__body"><div className="mb-6"><h2 className="text-lg font-semibold text-(--crm-heading)">Cài đặt chung</h2><p className="crm-page-description">Thông tin và định dạng mặc định của CRM</p></div><div className="crm-form-grid">
         <TextField label="Tên CRM" value={form.crmName} onChange={(event) => update("crmName", event.target.value)} required fullWidth />
         <TextField label="Tên công ty" value={form.companyName} onChange={(event) => update("companyName", event.target.value)} required fullWidth />
+        <TextField select label="Chế độ giao diện" value={mode} onChange={(event) => setMode(event.target.value as ThemeMode)} fullWidth><MenuItem value="light">Sáng (Light Mode)</MenuItem><MenuItem value="dark">Tối (Dark Mode)</MenuItem></TextField>
         <TextField select label="Đơn vị tiền tệ" value={form.currency} onChange={(event) => update("currency", event.target.value as GeneralSettings["currency"])} fullWidth><MenuItem value="VND">VND — Việt Nam đồng</MenuItem><MenuItem value="USD">USD — US Dollar</MenuItem></TextField>
         <TextField select label="Múi giờ" value={form.timezone} onChange={(event) => update("timezone", event.target.value)} fullWidth><MenuItem value="Asia/Ho_Chi_Minh">Asia/Ho_Chi_Minh (GMT+7)</MenuItem><MenuItem value="UTC">UTC</MenuItem></TextField>
         <TextField select label="Ngôn ngữ mặc định" value={form.language} onChange={(event) => update("language", event.target.value as GeneralSettings["language"])} fullWidth><MenuItem value="vi">Tiếng Việt</MenuItem><MenuItem value="en">English</MenuItem></TextField>
