@@ -588,6 +588,24 @@ select.crm-filter-chip:focus{border-color:var(--crm-primary);box-shadow:0 0 0 3p
   border-color: var(--crm-border-subtle);
 }
 
+/* Notifications in dark mode */
+.crm-dark .crm-notification {
+  background-color: var(--crm-surface);
+  border-bottom-color: var(--crm-border-subtle);
+}
+
+.crm-dark .crm-notification:hover {
+  background-color: var(--crm-surface-hover);
+}
+
+.crm-dark .crm-notification.is-unread {
+  background-color: #1a2730;
+}
+
+.crm-dark .crm-notification.is-unread:hover {
+  background-color: #20313c;
+}
+
 /* All generic white cards and containers adapt to dark surface in dark mode */
 .crm-dark .bg-white {
   background-color: var(--crm-surface) !important;

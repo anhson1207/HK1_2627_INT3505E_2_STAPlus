@@ -35,6 +35,7 @@ import VerifyEmailPendingPage from '../pages/auth/VerifyEmailPendingPage';
 import VerifyEmailSuccessPage from '../pages/auth/VerifyEmailSuccessPage';
 import ProfilePage from "../pages/settings/ProfilePage";
 import ChatPage from "../pages/chat/ChatPage";
+import NotificationPage from "../pages/notifications/NotificationPage";
 export default function AppRoutes() {
     return (
         <BrowserRouter>
@@ -58,6 +59,7 @@ export default function AppRoutes() {
                             <Route path="/settings/roles" element={<Navigate to="/settings/users" replace />}/>
                         </Route>
                         <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/notifications" element={<NotificationPage />} />
                         <Route path="/dashboard" element={<DashboardPage />} />
 
                         <Route element={<RoleGuard allowedRoles={rolesWithPermission("chat")} fallback={<Navigate to="/dashboard" replace />}><Outlet /></RoleGuard>}>

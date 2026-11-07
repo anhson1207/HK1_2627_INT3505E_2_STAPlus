@@ -1,10 +1,12 @@
 import { ListItemIcon, Menu, MenuItem } from "@mui/material";
-import { Bell, CalendarDays, ChevronDown, CircleHelp, LogOut, Menu as MenuIcon, Moon, Search, Sun, UserRound } from "lucide-react";
+import { Bell, ChevronDown, LogOut, Menu as MenuIcon, Moon, Search, Sun, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import RoleGuard from "../auth/RoleGuard";
+import NotificationDropdown from "../notifications/NotificationDropdown";
 import { rolesWithPermission } from "../../config/rolePermissions";
+import { NOTIFICATIONS_CHANGED_EVENT, notificationService } from "../../services/notificationService";
 import { useAuthStore } from "../../stores/authStore";
 import { useThemeStore } from "../../stores/themeStore";
 import type { UserRole } from "../../types/auth";
@@ -16,6 +18,7 @@ interface HeaderProps {
 
 function getPageName(pathname: string) {
     if (pathname === "/dashboard") return "Tổng quan";
+    if (pathname.startsWith("/notifications")) return "Thông báo";
 
     // Lead Routes
     if (pathname === "/leads/new") return "Lead / Thêm mới";
@@ -54,11 +57,50 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
     const navigate = useNavigate();
     const location = useLocation();
     const searchRef = useRef<HTMLInputElement>(null);
+    const notifRef = useRef<HTMLDivElement>(null);
     const [search, setSearch] = useState("");
     const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(null);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const { user, logout } = useAuthStore();
     const { mode, toggleTheme } = useThemeStore();
     const isDark = mode === "dark";
+
+    useEffect(() => {
+        let active = true;
+        const updateUnread = async () => {
+            try {
+                const count = await notificationService.getUnreadCount();
+                if (active) setUnreadCount(count);
+            } catch {
+                // Ignore count errors
+            }
+        };
+        void updateUnread();
+        window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, updateUnread);
+        return () => {
+            active = false;
+            window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, updateUnread);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!notificationsOpen) return;
+        const handleClickOutside = (event: globalThis.MouseEvent) => {
+            if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+                setNotificationsOpen(false);
+            }
+        };
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") setNotificationsOpen(false);
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [notificationsOpen]);
 
     const roleLabels: Record<UserRole, string> = {
         ADMIN: "Quản trị viên",
@@ -146,16 +188,26 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                         )}
                     </button>
 
-                    <button type="button" title="Lịch" aria-label="Lịch" className="crm-icon-btn crm-header__optional">
-                        <CalendarDays size={18} />
-                    </button>
-                    <button type="button" title="Trợ giúp" aria-label="Trợ giúp" className="crm-icon-btn crm-header__optional">
-                        <CircleHelp size={18} />
-                    </button>
-                    <button type="button" title="Thông báo" aria-label="Thông báo" className="crm-icon-btn relative">
-                        <Bell size={18} />
-                        <span className="crm-unread-dot" />
-                    </button>
+                    <div ref={notifRef} className="relative">
+                        <button
+                            type="button"
+                            title="Thông báo"
+                            aria-label={unreadCount > 0 ? `Thông báo (${unreadCount} chưa đọc)` : "Thông báo"}
+                            aria-expanded={notificationsOpen}
+                            onClick={() => setNotificationsOpen((prev) => !prev)}
+                            className={`crm-icon-btn relative transition-colors ${notificationsOpen ? "bg-(--crm-surface-hover) text-(--crm-primary)" : ""}`}
+                        >
+                            <Bell size={18} />
+                            {unreadCount > 0 && (
+                                <span className="crm-unread-dot" />
+                            )}
+                        </button>
+
+                        <NotificationDropdown
+                            open={notificationsOpen}
+                            onClose={() => setNotificationsOpen(false)}
+                        />
+                    </div>
 
                     <button type="button" onClick={handleOpenUserMenu} aria-label="Mở menu người dùng" className="crm-header__user">
                         <div className="crm-avatar">
