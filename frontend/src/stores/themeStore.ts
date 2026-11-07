@@ -4,6 +4,18 @@ export type ThemeMode = "light" | "dark";
 
 const STORAGE_KEY = "crm-theme-mode";
 
+export function isAuthPath(pathname?: string): boolean {
+    if (typeof window === "undefined") return false;
+    const path = pathname || window.location.pathname;
+    return (
+        path === "/login" ||
+        path === "/register" ||
+        path.startsWith("/forgot-password") ||
+        path.startsWith("/reset-password") ||
+        path.startsWith("/verify-email")
+    );
+}
+
 function getInitialMode(): ThemeMode {
     if (typeof window === "undefined") return "light";
 
@@ -16,11 +28,7 @@ function getInitialMode(): ThemeMode {
         // LocalStorage access might fail in strict private browsing environments
     }
 
-    if (typeof window.matchMedia === "function") {
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        return prefersDark ? "dark" : "light";
-    }
-
+    // Default theme is always light mode
     return "light";
 }
 
@@ -42,9 +50,10 @@ export function applyThemeToDOM(mode: ThemeMode) {
     }
 }
 
-// Execute immediately when script evaluates to prevent Flash of Unstyled Content (FOUC)
+// Execute immediately when script evaluates to prevent Flash of Unstyled Content (FOUC).
+// If opening an auth page directly (e.g. /login or /register), always start in light mode.
 const initialMode = getInitialMode();
-applyThemeToDOM(initialMode);
+applyThemeToDOM(isAuthPath() ? "light" : initialMode);
 
 interface ThemeState {
     mode: ThemeMode;
