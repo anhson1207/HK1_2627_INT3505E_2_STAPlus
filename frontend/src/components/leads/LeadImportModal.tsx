@@ -1,5 +1,5 @@
 import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
-import { CheckCircle2, Download, FileSpreadsheet, Upload, X } from "lucide-react";
+import { CheckCircle2, Download, FileSpreadsheet, RefreshCw, Upload, X } from "lucide-react";
 import { useState, type ChangeEvent } from "react";
 import { leadService } from "../../services/leadService";
 import type { LeadPayload, LeadSource } from "../../types/lead";
@@ -67,7 +67,7 @@ export default function LeadImportModal({ open, onClose, onSuccess }: LeadImport
             const text = await file.text();
             const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
             if (lines.length < 2) {
-                setError("File CSV không có dữ liệu (cần ít nhất 1 dòng tiêu đề và 1 dòng dữ liệu).");
+                setError("File không có dữ liệu (cần ít nhất 1 dòng tiêu đề và 1 dòng dữ liệu).");
                 return;
             }
 
@@ -111,7 +111,7 @@ export default function LeadImportModal({ open, onClose, onSuccess }: LeadImport
                 }
 
                 if (!email && !phone) {
-                    continue; // Skip invalid row without contact info
+                    continue;
                 }
 
                 leads.push({
@@ -126,13 +126,13 @@ export default function LeadImportModal({ open, onClose, onSuccess }: LeadImport
             }
 
             if (leads.length === 0) {
-                setError("Không tìm thấy dòng dữ liệu hợp lệ trong file. Vui lòng kiểm tra định dạng email hoặc số điện thoại.");
+                setError("Không tìm thấy dòng hợp lệ. Vui lòng kiểm tra email hoặc số điện thoại.");
                 return;
             }
 
             setParsedLeads(leads);
         } catch {
-            setError("Lỗi khi đọc file. Vui lòng kiểm tra định dạng UTF-8 hoặc tải file mẫu.");
+            setError("Lỗi đọc file. Vui lòng kiểm tra định dạng UTF-8 hoặc tải file mẫu.");
         }
     };
 
@@ -157,7 +157,7 @@ export default function LeadImportModal({ open, onClose, onSuccess }: LeadImport
             onSuccess(result.imported);
             handleClose();
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Đã có lỗi xảy ra khi import danh sách Lead.");
+            setError(err instanceof Error ? err.message : "Đã có lỗi xảy ra khi nhập danh sách.");
         } finally {
             setImporting(false);
         }
@@ -172,45 +172,69 @@ export default function LeadImportModal({ open, onClose, onSuccess }: LeadImport
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-            <DialogTitle className="flex items-center justify-between border-b border-(--crm-border) px-6 py-4">
-                <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-(--crm-info-soft) text-(--crm-primary)">
-                        <FileSpreadsheet size={20} />
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            maxWidth="md"
+            fullWidth
+            slotProps={{
+                paper: {
+                    sx: {
+                        borderRadius: "20px",
+                        overflow: "hidden",
+                        border: "1px solid #e2e8f0",
+                        boxShadow: "0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04)",
+                    },
+                },
+            }}
+        >
+            {/* Header */}
+            <DialogTitle className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 shadow-2xs">
+                        <FileSpreadsheet size={19} />
                     </div>
                     <div>
-                        <h2 className="text-base font-semibold text-(--crm-heading)">Import Lead từ Excel / CSV</h2>
-                        <p className="text-xs text-(--crm-text-secondary)">Thu thập hàng loạt Lead từ file danh sách khách hàng</p>
+                        <h2 className="text-base font-bold text-slate-900">Nhập khách hàng từ Excel / CSV</h2>
+                        <p className="text-xs text-slate-500">Thêm nhanh hàng loạt khách hàng từ file danh sách</p>
                     </div>
                 </div>
                 <button
                     type="button"
                     onClick={handleClose}
-                    className="rounded-lg p-1 text-(--crm-text-muted) hover:bg-(--crm-surface-hover) hover:text-(--crm-text)"
+                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
                     aria-label="Đóng"
                 >
                     <X size={18} />
                 </button>
             </DialogTitle>
 
-            <DialogContent className="space-y-4 px-6 py-5">
-                {error && <Alert severity="error">{error}</Alert>}
+            {/* Content */}
+            <DialogContent className="space-y-4 px-6 py-5 bg-slate-50/60">
+                {error && (
+                    <Alert severity="error" onClose={() => setError(null)} className="rounded-xl">
+                        {error}
+                    </Alert>
+                )}
 
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-(--crm-border-subtle) bg-(--crm-surface-subtle) p-4">
+                {/* 1. Download Template Card */}
+                <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
                     <div>
-                        <p className="text-sm font-medium text-(--crm-heading)">Chưa có file mẫu chuẩn?</p>
-                        <p className="text-xs text-(--crm-text-secondary)">Tải file mẫu CSV có sẵn các cột Họ, Tên, Email, SĐT, Công ty, Nguồn.</p>
+                        <p className="text-sm font-bold text-slate-800">Chưa có file mẫu chuẩn?</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Tải file mẫu có sẵn các cột chuẩn để nhập liệu dễ dàng</p>
                     </div>
                     <button
                         type="button"
                         onClick={handleDownloadTemplate}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-white px-3 py-1.5 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
+                        className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition active:scale-98"
                     >
-                        <Download size={14} /> Tải file mẫu CSV
+                        <Download size={14} className="text-emerald-600" />
+                        <span>Tải file mẫu (.csv)</span>
                     </button>
                 </div>
 
-                <div className="rounded-xl border-2 border-dashed border-(--crm-border) p-6 text-center hover:border-(--crm-primary) transition bg-white">
+                {/* 2. File Upload Dropzone */}
+                <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-6 text-center hover:border-emerald-500 hover:bg-emerald-50/20 transition cursor-pointer relative shadow-2xs">
                     <input
                         type="file"
                         id="lead-file-input"
@@ -219,47 +243,53 @@ export default function LeadImportModal({ open, onClose, onSuccess }: LeadImport
                         className="hidden"
                     />
                     <label htmlFor="lead-file-input" className="cursor-pointer flex flex-col items-center">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--crm-surface-hover) text-(--crm-primary) mb-3">
-                            <Upload size={24} />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 mb-2.5 shadow-2xs">
+                            <Upload size={22} />
                         </div>
-                        <p className="text-sm font-semibold text-(--crm-heading)">
-                            {fileName ? fileName : "Nhấn để chọn file CSV hoặc kéo thả vào đây"}
+                        <p className="text-sm font-bold text-slate-800">
+                            {fileName ? fileName : "Kéo thả file vào đây hoặc bấm để chọn"}
                         </p>
-                        <p className="mt-1 text-xs text-(--crm-text-muted)">
+                        <p className="text-xs text-slate-400 mt-1">
                             Hỗ trợ định dạng .csv, .txt (mã hóa UTF-8)
                         </p>
+                        {fileName && (
+                            <span className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                                <RefreshCw size={12} /> Đổi file khác
+                            </span>
+                        )}
                     </label>
                 </div>
 
+                {/* 3. Preview Section */}
                 {parsedLeads.length > 0 && (
-                    <div className="space-y-3">
+                    <div className="space-y-2.5 pt-1">
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
-                                <CheckCircle2 size={15} />
-                                <span>Đã phân tích {parsedLeads.length} Lead hợp lệ</span>
+                            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                                <CheckCircle2 size={14} />
+                                <span>Nhận diện {parsedLeads.length} khách hàng hợp lệ</span>
                             </div>
-                            <span className="text-xs text-(--crm-text-muted)">Xem trước 5 bản ghi đầu tiên</span>
+                            <span className="text-[11px] text-slate-400">Xem trước 5 dòng đầu tiên</span>
                         </div>
 
-                        <div className="overflow-x-auto rounded-lg border border-(--crm-border)">
+                        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-2xs">
                             <table className="w-full text-left text-xs">
-                                <thead className="bg-(--crm-surface-subtle) border-b border-(--crm-border) text-(--crm-text-secondary) font-semibold">
+                                <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold">
                                     <tr>
-                                        <th className="px-3 py-2">Họ & Tên</th>
-                                        <th className="px-3 py-2">Email</th>
-                                        <th className="px-3 py-2">Số điện thoại</th>
-                                        <th className="px-3 py-2">Công ty</th>
-                                        <th className="px-3 py-2">Nguồn</th>
+                                        <th className="px-3.5 py-2.5">Họ và tên</th>
+                                        <th className="px-3.5 py-2.5">Số điện thoại</th>
+                                        <th className="px-3.5 py-2.5">Email</th>
+                                        <th className="px-3.5 py-2.5">Công ty</th>
+                                        <th className="px-3.5 py-2.5">Nguồn</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-(--crm-border-subtle)">
+                                <tbody className="divide-y divide-slate-100">
                                     {parsedLeads.slice(0, 5).map((lead, idx) => (
-                                        <tr key={idx} className="hover:bg-(--crm-surface-hover)">
-                                            <td className="px-3 py-2 font-medium text-(--crm-heading)">{lead.firstName} {lead.lastName}</td>
-                                            <td className="px-3 py-2 text-(--crm-text-secondary)">{lead.email || "—"}</td>
-                                            <td className="px-3 py-2 text-(--crm-text-secondary)">{lead.phone || "—"}</td>
-                                            <td className="px-3 py-2 text-(--crm-text-secondary)">{lead.company || "—"}</td>
-                                            <td className="px-3 py-2"><LeadSourceBadge source={lead.source} /></td>
+                                        <tr key={idx} className="hover:bg-slate-50/60 transition">
+                                            <td className="px-3.5 py-2.5 font-semibold text-slate-800">{lead.firstName} {lead.lastName}</td>
+                                            <td className="px-3.5 py-2.5 text-slate-600 font-mono">{lead.phone || "—"}</td>
+                                            <td className="px-3.5 py-2.5 text-slate-500">{lead.email || "—"}</td>
+                                            <td className="px-3.5 py-2.5 text-slate-500">{lead.company || "—"}</td>
+                                            <td className="px-3.5 py-2.5"><LeadSourceBadge source={lead.source} /></td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -269,12 +299,13 @@ export default function LeadImportModal({ open, onClose, onSuccess }: LeadImport
                 )}
             </DialogContent>
 
-            <DialogActions className="border-t border-(--crm-border) px-6 py-3">
+            {/* Footer */}
+            <DialogActions className="border-t border-slate-100 bg-white px-6 py-3.5 flex justify-end gap-2.5">
                 <button
                     type="button"
                     onClick={handleClose}
                     disabled={importing}
-                    className="rounded-lg border border-(--crm-border) px-4 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) disabled:opacity-50"
+                    className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition disabled:opacity-50"
                 >
                     Hủy
                 </button>
@@ -282,13 +313,12 @@ export default function LeadImportModal({ open, onClose, onSuccess }: LeadImport
                     type="button"
                     onClick={() => void handleImport()}
                     disabled={parsedLeads.length === 0 || importing}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-(--crm-primary) px-4 py-2 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50 shadow-xs"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 active:scale-98 transition shadow-xs disabled:opacity-50"
                 >
-                    {importing ? <CircularProgress size={14} color="inherit" /> : <Upload size={14} />}
-                    <span>{importing ? "Đang import..." : `Tiến hành Import (${parsedLeads.length} Lead)`}</span>
+                    {importing ? <CircularProgress size={13} color="inherit" /> : <Upload size={14} />}
+                    <span>{importing ? "Đang nhập dữ liệu..." : `Nhập ${parsedLeads.length} khách hàng`}</span>
                 </button>
             </DialogActions>
         </Dialog>
     );
 }
-

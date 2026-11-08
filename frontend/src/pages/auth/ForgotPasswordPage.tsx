@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
                         if (error) setError("");
                     }}
                     error={!!error}
-                    helperText={error || "Nhập email đã đăng ký tài khoản CRM của bạn."}
+                    helperText={error}
                 />
 
                 {message && (

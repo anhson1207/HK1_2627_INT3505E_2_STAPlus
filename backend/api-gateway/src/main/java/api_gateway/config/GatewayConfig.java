@@ -45,7 +45,12 @@ public class GatewayConfig {
                 .route(request ->
                                 request.path().startsWith("/api/v1/auth/")
                                         || request.path().startsWith("/api/v1/users")
-                                        || request.path().startsWith("/api/v1/audit-logs"),
+                                        || request.path().startsWith("/api/v1/audit-logs")
+                                        || request.path().startsWith("/api/v1/setup")
+                                        || request.path().startsWith("/api/v1/organization")
+                                        || request.path().startsWith("/api/v1/invitations")
+                                        || request.path().startsWith("/api/v1/admin/")
+                                        || request.path().startsWith("/api/v1/me/"),
                         http())
                 .before(uri(authServiceUrl))
                 .after(dedupeResponseHeader("Access-Control-Allow-Origin", DedupeStrategy.RETAIN_UNIQUE))

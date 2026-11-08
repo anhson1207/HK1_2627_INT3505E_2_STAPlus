@@ -473,7 +473,220 @@ select.crm-filter-chip:focus{border-color:var(--crm-primary);box-shadow:0 0 0 3p
 @media(max-width:640px){:root{--crm-page-gutter:14px}.crm-page{padding-top:16px}.crm-page-header,.crm-board-header__top{align-items:stretch;flex-direction:column}.crm-page-header__actions{width:100%}.crm-toolbar{align-items:stretch}.crm-search{width:100%}.crm-kpi-grid{grid-template-columns:1fr}.crm-auth-card{padding:22px 18px}.crm-modal{width:calc(100vw - 20px)}.crm-drawer{width:100%}.crm-pagination{align-items:flex-start;flex-direction:column}}
 
 /* OPTIONAL DARK THEME */
-.crm-dark{--crm-bg:#171820;--crm-surface:#20212b;--crm-surface-subtle:#252731;--crm-surface-hover:#2d2f3a;--crm-surface-selected:#183e46;--crm-text:#f1f2f5;--crm-text-secondary:#b7bac5;--crm-text-muted:#8f93a2;--crm-heading:#fff;--crm-border:#3a3d49;--crm-border-subtle:#30333e;--crm-border-strong:#505361;--crm-primary-soft:#004858;--crm-primary-soft-hover:#003844}.crm-dark .crm-header,.crm-dark .crm-card,.crm-dark .crm-board,.crm-dark .crm-table,.crm-dark .crm-table tbody td,.crm-dark .crm-kpi,.crm-dark .crm-widget,.crm-dark .crm-detail-card,.crm-dark .crm-modal,.crm-dark .crm-popover,.crm-dark .crm-menu,.crm-dark .crm-drawer{background:var(--crm-surface)}.crm-dark .crm-table thead th{background:#252731}.crm-dark .crm-table tbody tr:hover td{background:#292b35}
+.crm-dark{--crm-bg:#171820;--crm-surface:#20212b;--crm-surface-subtle:#252731;--crm-surface-hover:#2d2f3a;--crm-surface-selected:#183e46;--crm-text:#f1f2f5;--crm-text-secondary:#b7bac5;--crm-text-muted:#8f93a2;--crm-heading:#fff;--crm-border:#3a3d49;--crm-border-subtle:#30333e;--crm-border-strong:#505361;--crm-primary-soft:#004858;--crm-primary-soft-hover:#003844}.crm-dark .crm-header,.crm-dark .crm-card,.crm-dark .crm-board,.crm-dark .crm-table,.crm-dark .crm-table tbody td,.crm-dark .crm-kpi,.crm-dark .crm-widget,.crm-dark .crm-detail-card,.crm-dark .crm-modal,.crm-dark .crm-popover,.crm-dark .crm-menu,.crm-dark .crm-drawer{background:var(--crm-surface)}.crm-dark .crm-table thead th{background:#252731;color:var(--crm-text-secondary)}.crm-dark .crm-table tbody tr:hover td{background:#292b35}
+
+/* Dark mode inputs, selects, and textareas */
+.crm-dark select,
+.crm-dark .crm-input,
+.crm-dark .crm-select,
+.crm-dark .crm-textarea,
+.crm-dark select.crm-filter-chip,
+.crm-dark .crm-filter-chip,
+.crm-dark .crm-range-filter__select,
+.crm-dark .crm-pagination select {
+  background-color: var(--crm-surface-subtle);
+  color: var(--crm-text);
+  border-color: var(--crm-border);
+}
+
+.crm-dark select.bg-transparent,
+.crm-dark select[class*="bg-transparent"] {
+  background-color: transparent !important;
+}
+
+.crm-dark .crm-input:hover,
+.crm-dark .crm-select:hover,
+.crm-dark .crm-textarea:hover,
+.crm-dark select.crm-filter-chip:hover,
+.crm-dark .crm-filter-chip:hover {
+  border-color: var(--crm-border-strong);
+  background-color: var(--crm-surface-hover);
+}
+
+.crm-dark .crm-input:focus,
+.crm-dark .crm-select:focus,
+.crm-dark .crm-textarea:focus {
+  background-color: var(--crm-surface);
+  border-color: var(--crm-primary);
+}
+
+.crm-dark select option {
+  background-color: var(--crm-surface);
+  color: var(--crm-text);
+}
+
+/* Secondary buttons */
+.crm-dark .crm-btn--secondary {
+  background: var(--crm-surface-subtle);
+  color: var(--crm-text);
+  border-color: var(--crm-border);
+}
+
+.crm-dark .crm-btn--secondary:hover:not(:disabled) {
+  background: var(--crm-surface-hover);
+  border-color: var(--crm-border-strong);
+}
+
+/* Search bar */
+.crm-dark .crm-search input {
+  background: var(--crm-surface-subtle);
+  color: var(--crm-text);
+  border-color: var(--crm-border);
+}
+
+.crm-dark .crm-search input:focus {
+  background: var(--crm-surface);
+  border-color: var(--crm-primary);
+}
+
+.crm-dark .crm-search__kbd {
+  background: var(--crm-primary-soft);
+  border-color: var(--crm-primary-soft-hover);
+  color: #ffffff;
+}
+
+/* Kanban board */
+.crm-dark .crm-kanban-column {
+  background: var(--crm-surface-subtle);
+  border-color: var(--crm-border);
+}
+
+.crm-dark .crm-kanban-card {
+  background: var(--crm-surface);
+  border-color: var(--crm-border-subtle);
+}
+
+.crm-dark .crm-kanban-card:hover {
+  border-color: var(--crm-border);
+}
+
+/* Board header & pagination */
+.crm-dark .crm-board-header {
+  background: var(--crm-surface);
+  border-color: var(--crm-border-subtle);
+}
+
+.crm-dark .crm-pagination {
+  background: var(--crm-surface);
+  border-color: var(--crm-border-subtle);
+  color: var(--crm-text-secondary);
+}
+
+.crm-dark .crm-page-btn {
+  color: var(--crm-text-secondary);
+}
+
+.crm-dark .crm-page-btn:hover {
+  background: var(--crm-surface-hover);
+  color: var(--crm-text);
+}
+
+/* Chat & Realtime components */
+.crm-dark .crm-chat-page {
+  background-color: var(--crm-surface);
+  border-color: var(--crm-border);
+}
+
+.crm-dark .crm-chat-page aside,
+.crm-dark .crm-chat-page header,
+.crm-dark .crm-chat-page footer {
+  background-color: var(--crm-surface);
+  border-color: var(--crm-border-subtle);
+}
+
+/* Notifications in dark mode */
+.crm-dark .crm-notification {
+  background-color: var(--crm-surface);
+  border-bottom-color: var(--crm-border-subtle);
+}
+
+.crm-dark .crm-notification:hover {
+  background-color: var(--crm-surface-hover);
+}
+
+.crm-dark .crm-notification.is-unread {
+  background-color: #1a2730;
+}
+
+.crm-dark .crm-notification.is-unread:hover {
+  background-color: #20313c;
+}
+
+/* All generic white cards and containers adapt to dark surface in dark mode */
+.crm-dark .bg-white {
+  background-color: var(--crm-surface) !important;
+}
+
+.crm-dark .bg-white\/95 {
+  background-color: rgba(32, 33, 43, 0.95) !important;
+}
+
+.crm-dark .bg-white\/80 {
+  background-color: rgba(32, 33, 43, 0.8) !important;
+}
+
+.crm-dark .bg-white\/50 {
+  background-color: rgba(32, 33, 43, 0.5) !important;
+}
+
+.crm-dark .border-slate-200,
+.crm-dark .border-slate-200\/90,
+.crm-dark .border-slate-100 {
+  border-color: var(--crm-border-subtle) !important;
+}
+
+.crm-dark .text-slate-900,
+.crm-dark .text-slate-800,
+.crm-dark .text-slate-700,
+.crm-dark .text-gray-900,
+.crm-dark .text-gray-800 {
+  color: var(--crm-text) !important;
+}
+
+.crm-dark .text-slate-600,
+.crm-dark .text-slate-500,
+.crm-dark .text-slate-400,
+.crm-dark .text-gray-600,
+.crm-dark .text-gray-500,
+.crm-dark .text-gray-400 {
+  color: var(--crm-text-secondary) !important;
+}
+
+.crm-dark .bg-slate-50,
+.crm-dark .bg-slate-100,
+.crm-dark .bg-gray-50,
+.crm-dark .bg-gray-100 {
+  background-color: var(--crm-surface-subtle) !important;
+}
+
+.crm-dark .hover\:bg-slate-50:hover,
+.crm-dark .hover\:bg-slate-50\/80:hover {
+  background-color: var(--crm-surface-hover) !important;
+}
+
+/* Charts & Tooltips */
+.crm-dark .recharts-default-tooltip {
+  background-color: var(--crm-surface) !important;
+  border-color: var(--crm-border) !important;
+  color: var(--crm-text) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+.crm-dark .recharts-tooltip-item,
+.crm-dark .recharts-tooltip-label {
+  color: var(--crm-text) !important;
+}
+
+/* Tailwind soft badge adaptation in dark mode */
+.crm-dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.15) !important; color: #6ee7b7 !important; border-color: rgba(16, 185, 129, 0.3) !important; }
+.crm-dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.15) !important; color: #93c5fd !important; border-color: rgba(59, 130, 246, 0.3) !important; }
+.crm-dark .bg-rose-50 { background-color: rgba(244, 63, 94, 0.15) !important; color: #fda4af !important; border-color: rgba(244, 63, 94, 0.3) !important; }
+.crm-dark .bg-purple-50 { background-color: rgba(168, 85, 247, 0.15) !important; color: #d8b4fe !important; border-color: rgba(168, 85, 247, 0.3) !important; }
+.crm-dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.15) !important; color: #fcd34d !important; border-color: rgba(245, 158, 11, 0.3) !important; }
+.crm-dark .bg-indigo-50 { background-color: rgba(99, 102, 241, 0.15) !important; color: #a5b4fc !important; border-color: rgba(99, 102, 241, 0.3) !important; }
+.crm-dark .bg-teal-50 { background-color: rgba(20, 184, 166, 0.15) !important; color: #5eead4 !important; border-color: rgba(20, 184, 166, 0.3) !important; }
+.crm-dark .bg-slate-100 { background-color: rgba(148, 163, 184, 0.15) !important; color: #cbd5e1 !important; border-color: rgba(148, 163, 184, 0.3) !important; }
+
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
 @media print{.crm-sidebar,.crm-header,.crm-toolbar,.crm-page-header__actions{display:none!important}.crm-main{margin-left:0;padding-top:0}.crm-page{padding:0}.crm-card,.crm-board,.crm-widget{box-shadow:none}}

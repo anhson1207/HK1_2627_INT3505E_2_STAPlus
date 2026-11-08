@@ -26,6 +26,15 @@ public class AuthController {
           .body(service.register(r));
  }
 
+ @PostMapping("/register/employee")
+ public ResponseEntity<UserResponse> registerEmployee(
+         @Valid @RequestBody EmployeeRegisterRequest r
+ ) {
+  return ResponseEntity
+          .status(201)
+          .body(service.registerEmployee(r));
+ }
+
  @PostMapping("/login")
  AuthResponse login(
          @Valid @RequestBody LoginRequest r
@@ -77,5 +86,28 @@ public class AuthController {
          @AuthenticationPrincipal User u
  ) {
   return service.me(u);
+ }
+
+ @PutMapping("/profile")
+ UserResponse updateProfile(
+         @AuthenticationPrincipal User u,
+         @Valid @RequestBody UpdateProfileRequest r
+ ) {
+  return service.updateProfile(u, r);
+ }
+
+ @GetMapping("/preferences")
+ UserPreferenceResponse getPreferences(
+         @AuthenticationPrincipal User u
+ ) {
+  return service.getPreferences(u);
+ }
+
+ @PutMapping("/preferences")
+ UserPreferenceResponse updatePreferences(
+         @AuthenticationPrincipal User u,
+         @RequestBody UserPreferenceRequest r
+ ) {
+  return service.updatePreferences(u, r);
  }
 }

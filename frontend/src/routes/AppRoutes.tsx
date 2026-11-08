@@ -10,7 +10,7 @@ import CustomerCreatePage from "../pages/customers/CustomerCreatePage";
 import CustomerDetailPage from "../pages/customers/CustomerDetailPage";
 import CustomerEditPage from "../pages/customers/CustomerEditPage";
 import LoginPage from "../pages/auth/LoginPage";
-import RegisterPage from "../pages/auth/RegisterPage";
+import RegisterChoicePage from "../pages/auth/RegisterChoicePage";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicOnlyRoute from "./PublicOnlyRoute";
 import RoleGuard from "../components/auth/RoleGuard";
@@ -29,36 +29,73 @@ import AnalyticsPage from "../pages/analytics/AnalyticsPage";
 import SupportDashboardPage from "../pages/support/SupportDashboardPage";
 import UserManagementPage from "../pages/settings/UserManagementPage";
 import AuditLogPage from "../pages/settings/AuditLogPage";
-import RoleManagementPage from "../pages/settings/RoleManagementPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import VerifyEmailPendingPage from '../pages/auth/VerifyEmailPendingPage';
 import VerifyEmailSuccessPage from '../pages/auth/VerifyEmailSuccessPage';
 import ProfilePage from "../pages/settings/ProfilePage";
+import SettingsPage from "../pages/settings/SettingsPage";
+import SecuritySettingsPage from "../pages/settings/SecuritySettingsPage";
+import NotificationSettingsPage from "../pages/settings/NotificationSettingsPage";
+import AppearanceSettingsPage from "../pages/settings/AppearanceSettingsPage";
+import GeneralSettingsPage from "../pages/settings/GeneralSettingsPage";
 import ChatPage from "../pages/chat/ChatPage";
+import NotificationPage from "../pages/notifications/NotificationPage";
+import CompanySetupPage from "../pages/auth/CompanySetupPage";
+import EmployeeJoinPage from "../pages/auth/EmployeeJoinPage";
+import PendingApprovalPage from "../pages/auth/PendingApprovalPage";
+import WelcomePage from "../pages/auth/WelcomePage";
+import CompanySettingsPage from "../pages/settings/CompanySettingsPage";
+import CompanyInvitationsPage from "../pages/settings/CompanyInvitationsPage";
+import JoinRequestsPage from "../pages/settings/JoinRequestsPage";
+
 export default function AppRoutes() {
     return (
         <BrowserRouter>
             <Routes>
                 
                 <Route element={<PublicOnlyRoute />}>
+                    <Route path="/" element={<WelcomePage />} />
+                    <Route path="/welcome" element={<Navigate to="/" replace />} />
+                    <Route path="/get-started" element={<Navigate to="/" replace />} />
                     <Route path="/login" element={<LoginPage />} />
-                    <Route path="/register" element={<RegisterPage />} />
-                    <Route path="/verify-email-pending"element={<VerifyEmailPendingPage />}/>
+                    <Route path="/register" element={<RegisterChoicePage />} />
+                    <Route path="/register/company" element={<CompanySetupPage />} />
+                    <Route path="/register/employee" element={<EmployeeJoinPage />} />
+                    <Route path="/setup" element={<Navigate to="/register/company" replace />} />
+                    <Route path="/join" element={<Navigate to="/register/employee" replace />} />
+                    <Route path="/verify-email-pending" element={<VerifyEmailPendingPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
-                    <Route path="/verify-email-success"element={<VerifyEmailSuccessPage />}/>
+                    <Route path="/verify-email-success" element={<VerifyEmailSuccessPage />} />
                 </Route>
 
                 <Route element={<ProtectedRoute />}>
+                    <Route path="/pending-approval" element={<PendingApprovalPage />} />
+
                     <Route element={<MainLayout />}>
-                        <Route element={ <RoleGuard allowedRoles={["ADMIN"]} fallback={<Navigate to="/dashboard" replace />} ><Outlet /></RoleGuard>}>
-                            <Route path="/settings" element={<Navigate to="/settings/users" replace />} />
-                            <Route path="/settings/users" element={<UserManagementPage />}/>
-                            <Route path="/settings/audit-logs" element={<AuditLogPage />}/>
-                            <Route path="/settings/roles" element={<RoleManagementPage />}/>
+                        {/* Settings & RBAC Center */}
+                        <Route path="/settings" element={<SettingsPage />}>
+                            <Route index element={<Navigate to="/settings/profile" replace />} />
+                            <Route path="profile" element={<ProfilePage />} />
+                            <Route path="security" element={<SecuritySettingsPage />} />
+                            <Route path="notifications" element={<NotificationSettingsPage />} />
+                            <Route path="appearance" element={<AppearanceSettingsPage />} />
+
+                            {/* Admin-only Settings */}
+                            <Route element={<RoleGuard allowedRoles={["ADMIN"]} fallback={<Navigate to="/settings/profile" replace />}><Outlet /></RoleGuard>}>
+                                <Route path="company" element={<CompanySettingsPage />} />
+                                <Route path="invitations" element={<CompanyInvitationsPage />} />
+                                <Route path="join-requests" element={<JoinRequestsPage />} />
+                                <Route path="users" element={<UserManagementPage />} />
+                                <Route path="audit-logs" element={<AuditLogPage />} />
+                                <Route path="audit" element={<Navigate to="/settings/audit-logs" replace />} />
+                                <Route path="general" element={<GeneralSettingsPage />} />
+                                <Route path="roles" element={<Navigate to="/settings/users" replace />} />
+                            </Route>
                         </Route>
-                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/profile" element={<Navigate to="/settings/profile" replace />} />
+                        <Route path="/notifications" element={<NotificationPage />} />
                         <Route path="/dashboard" element={<DashboardPage />} />
 
                         <Route element={<RoleGuard allowedRoles={rolesWithPermission("chat")} fallback={<Navigate to="/dashboard" replace />}><Outlet /></RoleGuard>}>
@@ -97,7 +134,7 @@ export default function AppRoutes() {
 
                 <Route
                     path="*"
-                    element={<Navigate to="/dashboard" replace />}
+                    element={<Navigate to="/" replace />}
                 />
             </Routes>
         </BrowserRouter>

@@ -1,6 +1,7 @@
 package auth_service.dto.response;
 
 import auth_service.entity.Role;
+import auth_service.entity.UserStatus;
 import lombok.*;
 
 @Data
@@ -9,10 +10,16 @@ import lombok.*;
 @AllArgsConstructor
 public class AuthResponse {
 
- private String accessToken;
- private String refreshToken;
- private String tokenType;
- private String username;
- private Role role;
- private String message;
+    private String accessToken;
+    private String refreshToken;
+    private String tokenType;
+    private Long userId;
+    private String username;
+    private String email;
+    private String fullName;
+    private Role role;
+    private UserStatus status;
+    private Boolean isOwner;
+    private String companyName;
+    private String message;
 }

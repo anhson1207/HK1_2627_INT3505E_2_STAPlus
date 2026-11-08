@@ -7,6 +7,7 @@ import Header from "../components/layout/Header";
 import { useChatSocket } from "../hooks/useChatSocket";
 import { useChatStore } from "../stores/chatStore";
 import { useAuthStore } from "../stores/authStore";
+import { useThemeStore, applyThemeToDOM } from "../stores/themeStore";
 import { ChatToastNotification } from "../components/chat/ChatToastNotification";
 
 export default function MainLayout() {
@@ -15,8 +16,13 @@ export default function MainLayout() {
     const isMobile = useMediaQuery("(max-width:900px)");
 
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const themeMode = useThemeStore((state) => state.mode);
     const handleRealtimeEvent = useChatStore((state) => state.handleRealtimeEvent);
     const fetchConversations = useChatStore((state) => state.fetchConversations);
+
+    useEffect(() => {
+        applyThemeToDOM(themeMode);
+    }, [themeMode]);
 
     // Kết nối WebSocket STOMP toàn cục khi người dùng đã đăng nhập vào hệ thống CRM
     const { isConnected, isReconnecting, reconnect } = useChatSocket({

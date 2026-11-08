@@ -1,11 +1,10 @@
-import { Activity, ShieldCheck, Users } from "lucide-react";
+import { Activity, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 export default function AdminSettingsNav() {
     const tabs = [
         { label: "Người dùng", path: "/settings/users", icon: Users },
         { label: "Nhật ký hoạt động (Audit Log)", path: "/settings/audit-logs", icon: Activity },
-        { label: "Vai trò & Phân quyền (RBAC)", path: "/settings/roles", icon: ShieldCheck },
     ];
 
     return (

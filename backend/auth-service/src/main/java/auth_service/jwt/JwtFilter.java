@@ -1,10 +1,13 @@
 package auth_service.jwt;
 
-import auth_service.entity.*;
+import auth_service.entity.User;
+import auth_service.entity.UserStatus;
 import auth_service.repository.UserRepository;
 import io.jsonwebtoken.JwtException;
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -47,18 +50,17 @@ public class JwtFilter extends OncePerRequestFilter {
             User u = userRepository.findByEmail(email).orElse(null);
 
             if (u != null
-                    && u.getStatus() == UserStatus.ACTIVE
-                    && u.getRole() != null
+                    && (u.getStatus() == UserStatus.ACTIVE || u.getStatus() == UserStatus.PENDING)
                     && jwtService.isTokenValid(token, u)
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                String authority = u.getRole() != null ? "ROLE_" + u.getRole().name() : "ROLE_UNASSIGNED";
 
                 var a = new UsernamePasswordAuthenticationToken(
                         u,
                         null,
                         List.of(
-                                new SimpleGrantedAuthority(
-                                        "ROLE_" + u.getRole().name()
-                                )
+                                new SimpleGrantedAuthority(authority)
                         )
                 );
 

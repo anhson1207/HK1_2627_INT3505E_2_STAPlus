@@ -2,9 +2,11 @@ package auth_service.controller;
 
 import auth_service.dto.request.*;
 import auth_service.dto.response.UserResponse;
+import auth_service.entity.User;
 import auth_service.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,16 +33,18 @@ public class UserController {
  @PatchMapping("/{id}/role")
  UserResponse role(
          @PathVariable Long id,
-         @Valid @RequestBody UpdateRoleRequest r
+         @Valid @RequestBody UpdateRoleRequest r,
+         @AuthenticationPrincipal User actor
  ) {
-  return service.updateRole(id, r);
+  return service.updateRole(id, r, actor);
  }
 
  @PatchMapping("/{id}/status")
  UserResponse status(
          @PathVariable Long id,
-         @Valid @RequestBody UpdateUserStatusRequest r
+         @Valid @RequestBody UpdateUserStatusRequest r,
+         @AuthenticationPrincipal User actor
  ) {
-  return service.updateStatus(id, r);
+  return service.updateStatus(id, r, actor);
  }
 }

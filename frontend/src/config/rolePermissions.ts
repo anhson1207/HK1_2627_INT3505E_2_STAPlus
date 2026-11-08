@@ -1,14 +1,14 @@
 import type { UserRole } from "../types/user";
 import { USER_ROLES } from "../types/auth";
 
-export type CRMResource = "dashboard" | "leads" | "customers" | "deals" | "tickets" | "analytics" | "chat" | "settings" | "profile" | "notifications" | "security" | "users" | "roles" | "general" | "reminders" | "audit-logs";
+export type CRMResource = "dashboard" | "leads" | "customers" | "deals" | "tickets" | "analytics" | "chat" | "settings" | "profile" | "notifications" | "security" | "appearance" | "users" | "roles" | "general" | "reminders" | "audit-logs";
 
 export const rolePermissions: Record<UserRole, readonly CRMResource[]> = {
-    ADMIN: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "chat", "settings", "profile", "notifications", "security", "users", "roles", "general", "reminders", "audit-logs"],
-    SALES: ["dashboard", "leads", "customers", "deals", "analytics", "chat", "profile", "notifications", "security", "reminders"],
-    SUPPORT: ["dashboard", "customers", "tickets", "chat", "profile", "notifications", "security"],
-    MANAGER: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "chat", "profile", "notifications", "security", "reminders"],
-    UNASSIGNED: ["profile"],
+    ADMIN: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "chat", "settings", "profile", "notifications", "security", "appearance", "users", "roles", "general", "reminders", "audit-logs"],
+    SALES: ["dashboard", "leads", "customers", "deals", "analytics", "chat", "settings", "profile", "notifications", "security", "appearance", "reminders"],
+    SUPPORT: ["dashboard", "customers", "tickets", "chat", "settings", "profile", "notifications", "security", "appearance"],
+    MANAGER: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "chat", "settings", "profile", "notifications", "security", "appearance", "reminders"],
+    UNASSIGNED: ["profile", "security", "appearance"],
 };
 
 export function canAccess(role: UserRole | undefined, resource: CRMResource): boolean {
