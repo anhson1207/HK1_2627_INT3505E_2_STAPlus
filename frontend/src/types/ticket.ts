@@ -10,6 +10,7 @@ export interface Ticket {
     priority: TicketPriority;
     status: TicketStatus;
     assignedTo?: string;
+    slaDeadline?: string | null;
     createdAt: string;
     updatedAt?: string;
 }

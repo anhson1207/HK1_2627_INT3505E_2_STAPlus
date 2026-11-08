@@ -13,20 +13,33 @@ export function getTicketSla(
     createdAt: string,
     priority: TicketPriority,
     status: TicketStatus,
+    slaDeadline?: string | null,
     now = Date.now(),
 ) {
-    const createdTime = new Date(createdAt).getTime();
+    let deadline: number | null = null;
 
-    if (Number.isNaN(createdTime)) {
-        return {
-            state: "ON_TRACK" as SlaState,
-            deadline: null,
-            remainingMs: null,
-            label: "Không xác định",
-        };
+    if (slaDeadline) {
+        const parsedDeadline = new Date(slaDeadline).getTime();
+        if (!Number.isNaN(parsedDeadline)) {
+            deadline = parsedDeadline;
+        }
     }
 
-    const deadline = createdTime + SLA_HOURS[priority] * 60 * 60 * 1000;
+    if (deadline === null) {
+        const createdTime = new Date(createdAt).getTime();
+
+        if (Number.isNaN(createdTime)) {
+            return {
+                state: "ON_TRACK" as SlaState,
+                deadline: null,
+                remainingMs: null,
+                label: "Không xác định",
+            };
+        }
+
+        deadline = createdTime + (SLA_HOURS[priority] ?? 24) * 60 * 60 * 1000;
+    }
+
     const remainingMs = deadline - now;
 
     if (status === "RESOLVED" || status === "CLOSED") {

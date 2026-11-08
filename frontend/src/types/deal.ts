@@ -21,3 +21,16 @@ export interface Deal {
 }
 
 export type DealPayload = Omit<Deal, "id" | "customerName" | "createdAt">;
+
+export interface PipelineStageSummary {
+    stage: DealStage | string;
+    count: number;
+    totalValue: number;
+}
+
+export interface DealForecastResponse {
+    totalPipelineValue: number;
+    weightedForecastValue: number;
+    totalDeals: number;
+    stages: PipelineStageSummary[];
+}
