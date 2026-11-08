@@ -1,11 +1,14 @@
-import { ListItemIcon, Menu, MenuItem } from "@mui/material";
-import { Bell, CalendarDays, ChevronDown, CircleHelp, LogOut, Menu as MenuIcon, Search, UserRound } from "lucide-react";
+import { Divider, ListItemIcon, Menu, MenuItem } from "@mui/material";
+import { Bell, ChevronDown, LockKeyhole, LogOut, Menu as MenuIcon, Moon, Search, Settings, Sun, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import RoleGuard from "../auth/RoleGuard";
+import NotificationDropdown from "../notifications/NotificationDropdown";
 import { rolesWithPermission } from "../../config/rolePermissions";
+import { NOTIFICATIONS_CHANGED_EVENT, notificationService } from "../../services/notificationService";
 import { useAuthStore } from "../../stores/authStore";
+import { useThemeStore } from "../../stores/themeStore";
 import type { UserRole } from "../../types/auth";
 
 interface HeaderProps {
@@ -15,6 +18,7 @@ interface HeaderProps {
 
 function getPageName(pathname: string) {
     if (pathname === "/dashboard") return "Tổng quan";
+    if (pathname.startsWith("/notifications")) return "Thông báo";
 
     // Lead Routes
     if (pathname === "/leads/new") return "Lead / Thêm mới";
@@ -53,9 +57,50 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
     const navigate = useNavigate();
     const location = useLocation();
     const searchRef = useRef<HTMLInputElement>(null);
+    const notifRef = useRef<HTMLDivElement>(null);
     const [search, setSearch] = useState("");
     const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(null);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const { user, logout } = useAuthStore();
+    const { mode, toggleTheme } = useThemeStore();
+    const isDark = mode === "dark";
+
+    useEffect(() => {
+        let active = true;
+        const updateUnread = async () => {
+            try {
+                const count = await notificationService.getUnreadCount();
+                if (active) setUnreadCount(count);
+            } catch {
+                // Ignore count errors
+            }
+        };
+        void updateUnread();
+        window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, updateUnread);
+        return () => {
+            active = false;
+            window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, updateUnread);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!notificationsOpen) return;
+        const handleClickOutside = (event: globalThis.MouseEvent) => {
+            if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+                setNotificationsOpen(false);
+            }
+        };
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") setNotificationsOpen(false);
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [notificationsOpen]);
 
     const roleLabels: Record<UserRole, string> = {
         ADMIN: "Quản trị viên",
@@ -64,7 +109,8 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
         MANAGER: "Quản lý",
         UNASSIGNED: "Chưa phân quyền",
     };
-    const avatarLabel = user?.username.charAt(0).toLocaleUpperCase("vi") ?? "U";
+    const displayName = user?.fullName?.trim() || user?.username || "Người dùng";
+    const avatarLabel = (user?.fullName?.trim() || user?.username || "U").charAt(0).toLocaleUpperCase("vi");
 
     const isSupportPage = location.pathname.startsWith("/support");
     const isCustomerPage = location.pathname.startsWith("/customers");
@@ -129,16 +175,40 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                 </RoleGuard>
 
                 <div className="crm-header__right">
-                    <button type="button" title="Lịch" aria-label="Lịch" className="crm-icon-btn crm-header__optional">
-                        <CalendarDays size={18} />
+                    <button
+                        type="button"
+                        onClick={toggleTheme}
+                        title={isDark ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
+                        aria-label={isDark ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
+                        className="crm-icon-btn text-(--crm-text-secondary) hover:text-(--crm-heading) transition-colors"
+                    >
+                        {isDark ? (
+                            <Sun size={18} className="text-amber-400" />
+                        ) : (
+                            <Moon size={18} className="text-slate-600" />
+                        )}
                     </button>
-                    <button type="button" title="Trợ giúp" aria-label="Trợ giúp" className="crm-icon-btn crm-header__optional">
-                        <CircleHelp size={18} />
-                    </button>
-                    <button type="button" title="Thông báo" aria-label="Thông báo" className="crm-icon-btn relative">
-                        <Bell size={18} />
-                        <span className="crm-unread-dot" />
-                    </button>
+
+                    <div ref={notifRef} className="relative">
+                        <button
+                            type="button"
+                            title="Thông báo"
+                            aria-label={unreadCount > 0 ? `Thông báo (${unreadCount} chưa đọc)` : "Thông báo"}
+                            aria-expanded={notificationsOpen}
+                            onClick={() => setNotificationsOpen((prev) => !prev)}
+                            className={`crm-icon-btn relative transition-colors ${notificationsOpen ? "bg-(--crm-surface-hover) text-(--crm-primary)" : ""}`}
+                        >
+                            <Bell size={18} />
+                            {unreadCount > 0 && (
+                                <span className="crm-unread-dot" />
+                            )}
+                        </button>
+
+                        <NotificationDropdown
+                            open={notificationsOpen}
+                            onClose={() => setNotificationsOpen(false)}
+                        />
+                    </div>
 
                     <button type="button" onClick={handleOpenUserMenu} aria-label="Mở menu người dùng" className="crm-header__user">
                         <div className="crm-avatar">
@@ -146,7 +216,7 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                             <span className="crm-online-dot" />
                         </div>
                         <div className="crm-header__user-info">
-                            <p className="crm-header__user-name">{user?.username ?? "Người dùng"}</p>
+                            <p className="crm-header__user-name">{displayName}</p>
                             <p className="crm-caption">{user ? roleLabels[user.role] : ""}</p>
                         </div>
                         <ChevronDown size={14} className="crm-header__user-chevron" />
@@ -156,29 +226,36 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
 
             <Menu anchorEl={userMenuAnchor} open={Boolean(userMenuAnchor)} onClose={() => setUserMenuAnchor(null)} anchorOrigin={{ vertical: "bottom", horizontal: "right" }} transformOrigin={{ vertical: "top", horizontal: "right" }}>
                 <MenuItem 
-                onClick={() => {
+                    onClick={() => {
                         setUserMenuAnchor(null);
-                        navigate("/profile");
+                        navigate("/settings/profile");
                     }}
                 >
                     <ListItemIcon><UserRound size={17} /></ListItemIcon>
-                    {user?.username}
-                    
+                    Hồ sơ cá nhân
                 </MenuItem>
 
-
-                {/* <MenuItem
+                <MenuItem 
                     onClick={() => {
                         setUserMenuAnchor(null);
-                        navigate("/profile");
+                        navigate("/settings/security");
                     }}
                 >
-                    <ListItemIcon>
-                        <UserRound size={17} />
-                    </ListItemIcon>
-                    Thông tin cá nhân
-                </MenuItem> */}
+                    <ListItemIcon><LockKeyhole size={17} /></ListItemIcon>
+                    Bảo mật & Mật khẩu
+                </MenuItem>
 
+                <MenuItem 
+                    onClick={() => {
+                        setUserMenuAnchor(null);
+                        navigate("/settings");
+                    }}
+                >
+                    <ListItemIcon><Settings size={17} /></ListItemIcon>
+                    Cài đặt & Phân quyền
+                </MenuItem>
+
+                <Divider sx={{ my: 0.5 }} />
 
                 <MenuItem onClick={() => void handleLogout()}>
                     <ListItemIcon><LogOut size={17} /></ListItemIcon>

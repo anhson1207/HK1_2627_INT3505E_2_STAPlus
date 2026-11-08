@@ -2,6 +2,7 @@ package auth_service.service;
 
 import auth_service.dto.request.*;
 import auth_service.dto.response.UserResponse;
+import auth_service.entity.User;
 
 import java.util.List;
 
@@ -11,7 +12,7 @@ public interface UserService {
 
     UserResponse findById(Long id);
 
-    UserResponse updateRole(Long id, UpdateRoleRequest r);
+    UserResponse updateRole(Long id, UpdateRoleRequest r, User actor);
 
-    UserResponse updateStatus(Long id, UpdateUserStatusRequest r);
+    UserResponse updateStatus(Long id, UpdateUserStatusRequest r, User actor);
 }

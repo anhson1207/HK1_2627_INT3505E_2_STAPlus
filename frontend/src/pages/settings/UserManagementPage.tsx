@@ -1,7 +1,5 @@
-
 import {
     Alert,
-    Button,
     CircularProgress,
     Dialog,
     DialogContent,
@@ -10,15 +8,19 @@ import {
 } from "@mui/material";
 import {
     Check,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
     Pencil,
     Search,
+    UserPlus,
     UserRoundCheck,
     UserRoundX,
+    Users,
 } from "lucide-react";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import UserForm from "../../components/settings/UserForm";
-import AdminSettingsNav from "../../components/settings/AdminSettingsNav";
 import { userService } from "../../services/userService";
 import { useAuthStore } from "../../stores/authStore";
 import type { CRMUser, UserRole, UserStatus } from "../../types/user";
@@ -32,17 +34,24 @@ const dateFormat = new Intl.DateTimeFormat("vi-VN", {
     year: "numeric",
 });
 
-function getStatusLabel(status: UserStatus) {
-    if (status === "ACTIVE") return "Hoạt động";
-    if (status === "PENDING") return "Chờ duyệt";
-    return "Ngừng hoạt động";
-}
-
 function getRoleLabel(role: UserRole) {
     if (role === "ADMIN") return "Admin";
     if (role === "SALES") return "Sales";
     if (role === "SUPPORT") return "Support";
     return "Chưa phân quyền";
+}
+
+function getRoleBadgeStyle(role: UserRole) {
+    switch (role) {
+        case "ADMIN":
+            return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20";
+        case "SALES":
+            return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
+        case "SUPPORT":
+            return "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20";
+        default:
+            return "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20";
+    }
 }
 
 export default function UserManagementPage() {
@@ -126,6 +135,12 @@ export default function UserManagementPage() {
         (user) => user.status === "PENDING"
     ).length;
 
+    const openCreate = () => {
+        setEditing(null);
+        setFormError("");
+        setFormOpen(true);
+    };
+
     const openEdit = (user: CRMUser) => {
         setEditing(user);
         setFormError("");
@@ -152,58 +167,41 @@ export default function UserManagementPage() {
                     );
                 }
 
-                if (
-                    data.status === "ACTIVE" &&
-                    data.role === "UNASSIGNED"
-                ) {
-                    throw new Error(
-                        "Hãy phân vai trò SALES hoặc SUPPORT trước khi kích hoạt."
-                    );
-                }
-
                 const updated = await userService.updateUser(
                     editing.id,
                     data
                 );
-
                 setUsers((current) =>
                     current.map((item) =>
                         item.id === updated.id ? updated : item
                     )
                 );
-
-                setMessage(
-                    updated.status === "ACTIVE" &&
-                        editing.status !== "ACTIVE"
-                        ? "Đã duyệt và kích hoạt tài khoản."
-                        : "Cập nhật người dùng thành công."
-                );
+                setMessage("Cập nhật thông tin tài khoản thành công.");
             } else {
                 const created = await userService.createUser(data);
-
-                setUsers((current) => [...current, created]);
-                setPage(0);
-                setMessage("Tạo người dùng thành công.");
+                setUsers((current) => [created, ...current]);
+                setMessage("Tạo tài khoản người dùng mới thành công.");
             }
 
             setFormOpen(false);
+            setEditing(null);
         } catch (saveError) {
             setFormError(
                 saveError instanceof Error
                     ? saveError.message
-                    : "Không thể lưu người dùng."
+                    : "Không thể lưu thông tin người dùng."
             );
         }
     };
 
     const toggleStatus = async (user: CRMUser) => {
         if (!isAdmin) {
-            setError("Chỉ ADMIN mới được thay đổi trạng thái tài khoản.");
+            setError("Chỉ ADMIN mới có quyền thay đổi trạng thái người dùng.");
             return;
         }
 
         if (user.id === currentUserId) {
-            setError("Bạn không thể thay đổi trạng thái tài khoản của chính mình.");
+            setError("Bạn không thể tự khóa tài khoản của chính mình.");
             return;
         }
 
@@ -239,39 +237,53 @@ export default function UserManagementPage() {
     };
 
     return (
-        <div>
-            <div className="crm-page-header">
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 className="text-lg font-semibold text-(--crm-heading)">
-                        Quản trị hệ thống
+                    <h2 className="text-xl font-bold tracking-tight text-(--crm-heading)">
+                        Quản lý người dùng & Phân quyền
                     </h2>
-                    <p className="crm-page-description">
-                        Quản lý tài khoản người dùng và nhật ký hoạt động hệ thống.
+                    <p className="mt-1 text-sm text-(--crm-text-secondary)">
+                        Danh sách tài khoản nhân viên, phân quyền vai trò ADMIN / SALES / SUPPORT và kiểm soát trạng thái hoạt động.
                     </p>
                 </div>
+
+                {isAdmin && (
+                    <button
+                        type="button"
+                        onClick={openCreate}
+                        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-(--crm-primary) px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition-all hover:opacity-90 active:scale-[0.99]"
+                    >
+                        <UserPlus size={16} />
+                        <span>Thêm tài khoản</span>
+                    </button>
+                )}
             </div>
 
-            <AdminSettingsNav />
-
             {pendingCount > 0 && (
-                <Alert severity="info" className="mb-4">
-                    Có {pendingCount} tài khoản đang chờ ADMIN duyệt.
-                </Alert>
+                <div>
+                    <Alert severity="info">
+                        Có <strong>{pendingCount} tài khoản</strong> đang chờ Quản trị viên duyệt phân quyền.
+                    </Alert>
+                </div>
             )}
 
             {error && (
-                <Alert severity="error" className="mb-4">
-                    {error}
-                </Alert>
+                <div>
+                    <Alert severity="error">{error}</Alert>
+                </div>
             )}
 
-            <div className="crm-board">
-                <div className="crm-toolbar crm-toolbar--board">
-                    <label className="crm-search">
-                        <Search
-                            size={16}
-                            className="mr-2 shrink-0 text-(--crm-text-muted)"
-                        />
+            {/* Unified Card Table Container */}
+            <div className="overflow-hidden rounded-2xl border border-(--crm-border) bg-(--crm-surface) shadow-xs">
+                {/* Search & Filter Toolbar */}
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-(--crm-border) bg-(--crm-surface) p-4 sm:px-6">
+                    {/* Search Input */}
+                    <div className="relative flex-1 min-w-[200px] max-w-sm">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-(--crm-text-muted)">
+                            <Search size={16} />
+                        </div>
                         <input
                             type="search"
                             value={search}
@@ -280,113 +292,152 @@ export default function UserManagementPage() {
                                 setPage(0);
                             }}
                             placeholder="Tìm tên, email, phòng ban..."
-                            className="w-full text-sm outline-none placeholder:text-(--crm-text-muted)"
+                            className="w-full rounded-xl border border-(--crm-border) bg-(--crm-surface-subtle) py-2 pl-9 pr-3 text-xs text-(--crm-heading) outline-none transition-all placeholder:text-(--crm-text-muted) focus:border-(--crm-primary) focus:bg-(--crm-surface) focus:ring-2 focus:ring-(--crm-primary)/15"
                             aria-label="Tìm kiếm người dùng"
                         />
-                    </label>
+                    </div>
 
-                    <select
-                        aria-label="Lọc vai trò"
-                        value={role}
-                        onChange={(event) => {
-                            setRole(event.target.value as UserRole | "");
-                            setPage(0);
-                        }}
-                        className="crm-filter-chip"
-                    >
-                        <option value="">Tất cả vai trò</option>
-                        <option value="UNASSIGNED">Chưa phân quyền</option>
-                        <option value="ADMIN">Admin</option>
-                        <option value="SALES">Sales</option>
-                        <option value="SUPPORT">Support</option>
-                    </select>
+                    {/* Filter Dropdowns */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Role Filter */}
+                        <div className="relative">
+                            <select
+                                aria-label="Lọc vai trò"
+                                value={role}
+                                onChange={(event) => {
+                                    setRole(event.target.value as UserRole | "");
+                                    setPage(0);
+                                }}
+                                className="appearance-none rounded-xl border border-(--crm-border) bg-(--crm-surface-subtle) py-2 pl-3.5 pr-8 text-xs font-medium text-(--crm-heading) outline-none cursor-pointer transition-all hover:bg-(--crm-surface-hover) focus:border-(--crm-primary) focus:ring-2 focus:ring-(--crm-primary)/15"
+                            >
+                                <option value="" className="bg-(--crm-surface) text-(--crm-heading)">
+                                    Tất cả vai trò
+                                </option>
+                                <option value="UNASSIGNED" className="bg-(--crm-surface) text-(--crm-heading)">
+                                    Chưa phân quyền
+                                </option>
+                                <option value="ADMIN" className="bg-(--crm-surface) text-(--crm-heading)">
+                                    Quản trị viên (Admin)
+                                </option>
+                                <option value="SALES" className="bg-(--crm-surface) text-(--crm-heading)">
+                                    Kinh doanh (Sales)
+                                </option>
+                                <option value="SUPPORT" className="bg-(--crm-surface) text-(--crm-heading)">
+                                    Hỗ trợ (Support)
+                                </option>
+                            </select>
+                            <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-(--crm-text-muted)">
+                                <ChevronDown size={14} />
+                            </div>
+                        </div>
 
-                    <select
-                        aria-label="Lọc trạng thái"
-                        value={status}
-                        onChange={(event) => {
-                            setStatus(event.target.value as UserStatus | "");
-                            setPage(0);
-                        }}
-                        className="crm-filter-chip"
-                    >
-                        <option value="">Tất cả trạng thái</option>
-                        <option value="PENDING">Chờ duyệt</option>
-                        <option value="ACTIVE">Hoạt động</option>
-                        <option value="INACTIVE">Ngừng hoạt động</option>
-                    </select>
+                        {/* Status Filter */}
+                        <div className="relative">
+                            <select
+                                aria-label="Lọc trạng thái"
+                                value={status}
+                                onChange={(event) => {
+                                    setStatus(event.target.value as UserStatus | "");
+                                    setPage(0);
+                                }}
+                                className="appearance-none rounded-xl border border-(--crm-border) bg-(--crm-surface-subtle) py-2 pl-3.5 pr-8 text-xs font-medium text-(--crm-heading) outline-none cursor-pointer transition-all hover:bg-(--crm-surface-hover) focus:border-(--crm-primary) focus:ring-2 focus:ring-(--crm-primary)/15"
+                            >
+                                <option value="" className="bg-(--crm-surface) text-(--crm-heading)">
+                                    Tất cả trạng thái
+                                </option>
+                                <option value="PENDING" className="bg-(--crm-surface) text-(--crm-heading)">
+                                    Chờ duyệt
+                                </option>
+                                <option value="ACTIVE" className="bg-(--crm-surface) text-(--crm-heading)">
+                                    Đang hoạt động
+                                </option>
+                                <option value="INACTIVE" className="bg-(--crm-surface) text-(--crm-heading)">
+                                    Ngừng hoạt động
+                                </option>
+                            </select>
+                            <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-(--crm-text-muted)">
+                                <ChevronDown size={14} />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
+                {/* Table Data */}
                 {loading ? (
-                    <div className="flex min-h-64 items-center justify-center">
-                        <CircularProgress />
+                    <div className="flex min-h-64 items-center justify-center p-12">
+                        <CircularProgress size={32} />
                     </div>
                 ) : visible.length === 0 ? (
-                    <div className="flex min-h-64 items-center justify-center text-sm text-(--crm-text-secondary)">
-                        Không tìm thấy người dùng.
+                    <div className="flex min-h-64 flex-col items-center justify-center p-8 text-(--crm-text-muted)">
+                        <Users size={36} className="text-(--crm-text-disabled)" />
+                        <p className="mt-3 text-sm font-medium">Không tìm thấy tài khoản phù hợp bộ lọc.</p>
                     </div>
                 ) : (
-                    <div className="crm-table-wrap">
-                        <table className="crm-table">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle) text-center text-xs font-semibold text-(--crm-text-secondary)">
-                                    <th style={{ width: "20%" }} className="px-5 py-3.5 text-center">Tên</th>
-                                    <th style={{ width: "24%" }} className="px-5 py-3.5 text-center">Email</th>
-                                    <th style={{ width: "12%" }} className="px-5 py-3.5 text-center">Vai trò</th>
-                                    <th style={{ width: "14%" }} className="px-5 py-3.5 text-center">Phòng ban</th>
-                                    <th style={{ width: "12%" }} className="px-5 py-3.5 text-center">Trạng thái</th>
-                                    <th style={{ width: "10%" }} className="px-5 py-3.5 text-center">Ngày tạo</th>
-                                    <th style={{ width: "8%" }} className="px-5 py-3.5 text-center">Thao tác</th>
+                                <tr className="border-b border-(--crm-border) bg-(--crm-surface-subtle)/50 text-[11px] font-bold uppercase tracking-wider text-(--crm-text-secondary)">
+                                    <th className="px-5 py-3.5">Thành viên</th>
+                                    <th className="px-5 py-3.5">Email</th>
+                                    <th className="px-5 py-3.5 text-center">Vai trò</th>
+                                    <th className="px-5 py-3.5">Phòng ban</th>
+                                    <th className="px-5 py-3.5 text-center">Trạng thái</th>
+                                    <th className="px-5 py-3.5 text-center">Ngày tạo</th>
+                                    <th className="px-5 py-3.5 text-right">Thao tác</th>
                                 </tr>
                             </thead>
 
-                            <tbody>
+                            <tbody className="divide-y divide-(--crm-border-subtle)">
                                 {visible.map((user) => {
-                                    const isPending =
-                                        user.status === "PENDING";
+                                    const isPending = user.status === "PENDING";
                                     const isBusy = busyId === user.id;
-
-                                    const statusVariant =
-                                        user.status === "ACTIVE"
-                                            ? "crm-status--active"
-                                            : user.status === "PENDING"
-                                              ? "crm-status--contacted"
-                                              : "crm-status--inactive";
+                                    const initial = (user.fullName || user.email).charAt(0).toUpperCase();
 
                                     return (
                                         <tr
                                             key={user.id}
-                                            className="border-b border-(--crm-border-subtle) last:border-b-0 hover:bg-(--crm-surface-subtle)"
+                                            className="transition-colors hover:bg-(--crm-surface-subtle)/40"
                                         >
-                                            <td className="px-5 py-4 text-center text-sm font-semibold text-(--crm-heading)">
-                                                <span className="block truncate text-center" title={user.fullName}>
-                                                    {user.fullName}
-                                                </span>
+                                            {/* Name & Avatar */}
+                                            <td className="px-5 py-3.5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500/20 to-purple-500/20 font-bold text-xs text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                                                        {initial}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="truncate text-sm font-semibold text-(--crm-heading)" title={user.fullName}>
+                                                            {user.fullName}
+                                                        </p>
+                                                        {user.username && (
+                                                            <p className="text-[11px] text-(--crm-text-muted)">
+                                                                @{user.username}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </td>
 
-                                            <td className="px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
-                                                <span className="block truncate text-center" title={user.email}>
+                                            {/* Email */}
+                                            <td className="px-5 py-3.5 text-xs text-(--crm-text-secondary)">
+                                                <span className="truncate block max-w-xs" title={user.email}>
                                                     {user.email}
                                                 </span>
                                             </td>
 
-                                            <td className="whitespace-nowrap px-5 py-4 text-center">
-                                                <span className="crm-pill">
+                                            {/* Role */}
+                                            <td className="whitespace-nowrap px-5 py-3.5 text-center">
+                                                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getRoleBadgeStyle(user.role)}`}>
                                                     {getRoleLabel(user.role)}
                                                 </span>
                                             </td>
 
-                                            <td className="px-5 py-4 text-center text-sm">
+                                            {/* Department */}
+                                            <td className="px-5 py-3.5 text-xs text-(--crm-text-secondary)">
                                                 <span
-                                                    className={`block truncate text-center ${
+                                                    className={
                                                         !user.department || user.department === "—" || user.department === "Chờ phân bổ" || user.department === "Chưa phân bổ"
                                                             ? "text-(--crm-text-muted) italic"
-                                                            : "text-(--crm-text-secondary)"
-                                                    }`}
-                                                    title={
-                                                        user.department && user.department !== "—" && user.department !== "Chờ phân bổ"
-                                                            ? user.department
-                                                            : "Chưa phân bổ"
+                                                            : "font-medium text-(--crm-heading)"
                                                     }
                                                 >
                                                     {user.department && user.department !== "—" && user.department !== "Chờ phân bổ"
@@ -395,22 +446,34 @@ export default function UserManagementPage() {
                                                 </span>
                                             </td>
 
-                                            <td className="whitespace-nowrap px-5 py-4 text-center">
-                                                <span
-                                                    className={`crm-status ${statusVariant}`}
-                                                >
-                                                    {getStatusLabel(user.status)}
-                                                </span>
-                                            </td>
-
-                                            <td className="whitespace-nowrap px-5 py-4 text-center text-sm text-(--crm-text-secondary)">
-                                                {dateFormat.format(
-                                                    new Date(user.createdAt)
+                                            {/* Status Badge */}
+                                            <td className="whitespace-nowrap px-5 py-3.5 text-center">
+                                                {user.status === "ACTIVE" ? (
+                                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                                        Hoạt động
+                                                    </span>
+                                                ) : user.status === "PENDING" ? (
+                                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                                                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                                        Chờ duyệt
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-500/20 bg-slate-500/10 px-2.5 py-0.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                                        <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                                                        Ngừng hoạt động
+                                                    </span>
                                                 )}
                                             </td>
 
-                                            <td className="px-5 py-4 text-center">
-                                                <div className="flex justify-center gap-1">
+                                            {/* Created At */}
+                                            <td className="whitespace-nowrap px-5 py-3.5 text-center text-xs text-(--crm-text-secondary)">
+                                                {dateFormat.format(new Date(user.createdAt))}
+                                            </td>
+
+                                            {/* Actions */}
+                                            <td className="whitespace-nowrap px-5 py-3.5 text-right">
+                                                <div className="flex items-center justify-end gap-1">
                                                     {isAdmin && (
                                                         <button
                                                             type="button"
@@ -418,15 +481,13 @@ export default function UserManagementPage() {
                                                             title={
                                                                 isPending
                                                                     ? "Phân quyền / duyệt tài khoản"
-                                                                    : "Sửa"
+                                                                    : "Sửa thông tin tài khoản"
                                                             }
-                                                            onClick={() =>
-                                                                openEdit(user)
-                                                            }
-                                                            className="rounded-lg p-2 text-(--crm-primary) hover:bg-(--crm-info-soft)"
+                                                            onClick={() => openEdit(user)}
+                                                            className="rounded-lg p-1.5 text-(--crm-text-secondary) hover:bg-(--crm-primary)/10 hover:text-(--crm-primary) transition-colors"
                                                         >
                                                             {isPending ? (
-                                                                <Check size={16} />
+                                                                <Check size={16} className="text-emerald-600" />
                                                             ) : (
                                                                 <Pencil size={16} />
                                                             )}
@@ -439,10 +500,10 @@ export default function UserManagementPage() {
                                                             aria-label={`${user.status === "ACTIVE" ? "Ngừng hoạt động" : "Kích hoạt"} ${user.fullName}`}
                                                             title={
                                                                 user.status === "ACTIVE"
-                                                                    ? "Ngừng hoạt động"
+                                                                    ? "Ngừng hoạt động tài khoản"
                                                                     : user.role === "UNASSIGNED"
                                                                       ? "Cần phân quyền trước"
-                                                                      : "Kích hoạt"
+                                                                      : "Kích hoạt tài khoản"
                                                             }
                                                             disabled={
                                                                 user.id === currentUserId ||
@@ -450,17 +511,15 @@ export default function UserManagementPage() {
                                                                 (user.status !== "ACTIVE" &&
                                                                     user.role === "UNASSIGNED")
                                                             }
-                                                            onClick={() =>
-                                                                void toggleStatus(user)
-                                                            }
-                                                            className="rounded-lg p-2 text-(--crm-text-secondary) hover:bg-(--crm-surface-hover) disabled:opacity-30"
+                                                            onClick={() => void toggleStatus(user)}
+                                                            className="rounded-lg p-1.5 text-(--crm-text-secondary) hover:bg-(--crm-surface-hover) hover:text-(--crm-heading) transition-colors disabled:cursor-not-allowed disabled:opacity-30"
                                                         >
                                                             {isBusy ? (
-                                                                <CircularProgress size={16} />
+                                                                <CircularProgress size={14} color="inherit" />
                                                             ) : user.status === "ACTIVE" ? (
-                                                                <UserRoundX size={16} />
+                                                                <UserRoundX size={16} className="text-rose-500" />
                                                             ) : (
-                                                                <UserRoundCheck size={16} />
+                                                                <UserRoundCheck size={16} className="text-emerald-600" />
                                                             )}
                                                         </button>
                                                     )}
@@ -474,34 +533,37 @@ export default function UserManagementPage() {
                     </div>
                 )}
 
-                {!loading && (
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-(--crm-border) px-4 py-3 text-xs text-(--crm-text-secondary)">
-                        <span>{filtered.length} người dùng</span>
+                {/* Pagination Footer */}
+                {!loading && filtered.length > 0 && (
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-(--crm-border) bg-(--crm-surface-subtle)/30 px-5 py-3 text-xs text-(--crm-text-secondary)">
+                        <span>
+                            Hiển thị <strong>{visible.length}</strong> / <strong>{filtered.length}</strong> tài khoản
+                        </span>
 
                         <div className="flex items-center gap-2">
-                            <Button
-                                size="small"
+                            <button
+                                type="button"
                                 disabled={page === 0}
-                                onClick={() =>
-                                    setPage((value) => value - 1)
-                                }
+                                onClick={() => setPage((v) => v - 1)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-(--crm-border) bg-(--crm-surface) px-2.5 py-1 text-xs font-semibold text-(--crm-heading) shadow-2xs hover:bg-(--crm-surface-hover) disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                                Trước
-                            </Button>
+                                <ChevronLeft size={14} />
+                                <span>Trước</span>
+                            </button>
 
-                            <span>
-                                {page + 1}/{totalPages}
+                            <span className="px-2 text-xs font-medium text-(--crm-heading)">
+                                {page + 1} / {totalPages}
                             </span>
 
-                            <Button
-                                size="small"
+                            <button
+                                type="button"
                                 disabled={page + 1 >= totalPages}
-                                onClick={() =>
-                                    setPage((value) => value + 1)
-                                }
+                                onClick={() => setPage((v) => v + 1)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-(--crm-border) bg-(--crm-surface) px-2.5 py-1 text-xs font-semibold text-(--crm-heading) shadow-2xs hover:bg-(--crm-surface-hover) disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                                Sau
-                            </Button>
+                                <span>Sau</span>
+                                <ChevronRight size={14} />
+                            </button>
                         </div>
                     </div>
                 )}
@@ -514,22 +576,26 @@ export default function UserManagementPage() {
                 maxWidth="md"
             >
                 <DialogTitle>
-                    {editing?.status === "PENDING"
-                        ? "Duyệt tài khoản"
-                        : "Chỉnh sửa người dùng"}
+                    {editing
+                        ? editing.status === "PENDING"
+                            ? "Duyệt & phân quyền tài khoản"
+                            : "Chỉnh sửa thông tin người dùng"
+                        : "Thêm tài khoản người dùng mới"}
                 </DialogTitle>
 
                 <DialogContent>
                     <div className="pt-2">
                         <UserForm
-                            key={editing?.id ?? "edit"}
+                            key={editing?.id ?? "create"}
                             initialData={editing ?? undefined}
                             onSubmit={save}
                             onCancel={() => setFormOpen(false)}
                             submitLabel={
-                                editing?.status === "PENDING"
-                                    ? "Lưu phân quyền"
-                                    : "Lưu thay đổi"
+                                editing
+                                    ? editing.status === "PENDING"
+                                        ? "Lưu phân quyền"
+                                        : "Lưu thay đổi"
+                                    : "Tạo tài khoản"
                             }
                             error={formError}
                         />

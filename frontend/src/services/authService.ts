@@ -13,6 +13,11 @@ import {
     type ResetPasswordResponse,
     type UserRole,
     type UserStatus,
+    type UserProfileResponse,
+    type UpdateProfileRequest,
+    type ChangePasswordData,
+    type UserPreferencesData,
+    type EmployeeRegisterData,
 } from "../types/auth";
 
 const responseFields = {
@@ -20,7 +25,6 @@ const responseFields = {
     role: z.enum(USER_ROLES),
     message: z.string().optional().default(""),
 };
-const loginResponseSchema = z.object({ ...responseFields, token: z.string().trim().min(1) });
 const registerResponseSchema = z.object({ ...responseFields, token: z.null() });
 
 const AUTH_USERS_STORAGE_KEY = "crm-soa.mock-auth-users";
@@ -177,18 +181,28 @@ export const authService = {
             });
 
             const raw = response.data;
-            const normalized = {
+            const role = (raw.role as UserRole) || "UNASSIGNED";
+            const token = (raw.accessToken as string) || (raw.token as string);
+
+            return {
+                userId: typeof raw.userId === "number" ? raw.userId : undefined,
                 username: (raw.username as string) || data.username,
-                role: raw.role,
-                token: (raw.accessToken as string) || (raw.token as string),
+                fullName: (raw.fullName as string) || undefined,
+                email: (raw.email as string) || email,
+                role,
+                status: (raw.status as UserStatus) || "ACTIVE",
+                isOwner: Boolean(raw.isOwner),
+                companyName: (raw.companyName as string) || "STAPlus CRM",
+                token,
                 message: (raw.message as string) || "Đăng nhập thành công",
             };
+        } catch (apiErr: unknown) {
+            // Nếu backend đang chạy và trả về lỗi thật (400, 401, 403, 404, 500)
+            if (apiErr instanceof ApiError && apiErr.status > 0) {
+                throw new Error(apiErr.message);
+            }
 
-            const result = loginResponseSchema.safeParse(normalized);
-            if (result.success) return result.data;
-        } catch {
             // 2. Backend offline: Xác thực với tài khoản nội bộ
-
             // 2a. Kiểm tra tài khoản đã đăng ký (hoặc đã lưu)
             const localUser = findUserInStorage(data.username);
             if (localUser) {
@@ -366,6 +380,34 @@ export const authService = {
         };
     },
 
+    async registerEmployee(data: EmployeeRegisterData): Promise<RegisterResponse> {
+        try {
+            const response = await authApi.post<Record<string, unknown>>("/api/v1/auth/register/employee", {
+                fullName: data.fullName,
+                email: data.email,
+                password: data.password,
+                confirmPassword: data.confirmPassword || data.password,
+                invitationCode: data.invitationCode,
+            });
+            const raw = response.data;
+            return {
+                username: (raw.username as string) || data.email.split("@")[0],
+                role: "UNASSIGNED",
+                status: "PENDING",
+                token: null,
+                message: (raw.message as string) || "Đăng ký tham gia thành công, đang chờ Quản trị viên duyệt",
+            };
+        } catch (apiErr: unknown) {
+            if (apiErr instanceof ApiError && apiErr.status > 0) {
+                throw new Error(apiErr.message);
+            }
+            if (apiErr instanceof Error) {
+                throw apiErr;
+            }
+            throw new Error("Không thể kết nối đến máy chủ để gửi yêu cầu đăng ký.");
+        }
+    },
+
     async forgotPassword(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
         const trimmedEmail = data.email.trim();
 
@@ -473,6 +515,69 @@ export const authService = {
             return {
                 message: "Đặt lại mật khẩu thành công.",
             };
+        }
+    },
+
+    async getMe(): Promise<UserProfileResponse> {
+        try {
+            const { data } = await authApi.get<UserProfileResponse>("/api/v1/auth/me");
+            return data;
+        } catch (error) {
+            if (error instanceof ApiError) throw error;
+            throw new Error("Không thể tải thông tin tài khoản.");
+        }
+    },
+
+    async updateProfile(payload: UpdateProfileRequest): Promise<UserProfileResponse> {
+        try {
+            const { data } = await authApi.put<UserProfileResponse>("/api/v1/auth/profile", payload);
+            return data;
+        } catch (error) {
+            if (error instanceof ApiError) throw error;
+            throw new Error("Không thể cập nhật hồ sơ cá nhân.");
+        }
+    },
+
+    async changePassword(payload: ChangePasswordData): Promise<void> {
+        try {
+            await authApi.patch("/api/v1/auth/password", payload);
+        } catch (error) {
+            if (error instanceof ApiError) throw error;
+            throw new Error("Không thể đổi mật khẩu.");
+        }
+    },
+
+    async getPreferences(): Promise<UserPreferencesData> {
+        try {
+            const { data } = await authApi.get<UserPreferencesData>("/api/v1/auth/preferences");
+            return data;
+        } catch (error) {
+            if (error instanceof ApiError) throw error;
+            return {
+                chatToast: true,
+                chatSound: true,
+                chatBrowser: false,
+                chatGroupEvents: true,
+                notifyLeadAssigned: true,
+                notifyDealStage: true,
+                notifyTicket: true,
+                notifySystem: true,
+                reminderBefore: "15m",
+                themeMode: "dark",
+                tableDensity: "comfortable",
+                sidebarCollapsed: false,
+                dateFormat: "dd/MM/yyyy",
+            };
+        }
+    },
+
+    async updatePreferences(payload: Partial<UserPreferencesData>): Promise<UserPreferencesData> {
+        try {
+            const { data } = await authApi.put<UserPreferencesData>("/api/v1/auth/preferences", payload);
+            return data;
+        } catch (error) {
+            if (error instanceof ApiError) throw error;
+            throw new Error("Không thể lưu cấu hình.");
         }
     },
 };

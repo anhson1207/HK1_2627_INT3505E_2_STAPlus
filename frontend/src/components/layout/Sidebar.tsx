@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
+import BrandLogo from "../common/BrandLogo";
 
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
@@ -65,8 +66,8 @@ const navigationGroups: NavigationGroup[] = [
 const settingsNavigation: NavigationItem = {
     label: "Cài đặt & Phân quyền",
     icon: Settings,
-    path: "/settings/users",
-    roles: ["ADMIN"],
+    path: "/settings",
+    roles: ["ADMIN", "SALES", "SUPPORT", "MANAGER"],
 };
 
 export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = false }: SidebarProps) {
@@ -87,15 +88,15 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
         if (path === "/deals" && location.pathname.startsWith("/deals")) return true;
         if (path === "/leads" && location.pathname.startsWith("/leads")) return true;
         if (path === "/customers" && location.pathname.startsWith("/customers")) return true;
-        if (path === "/settings/users" && location.pathname.startsWith("/settings")) return true;
+        if ((path === "/settings" || path === "/settings/users") && location.pathname.startsWith("/settings")) return true;
         return false;
     };
 
-    const isHome = location.pathname === "/dashboard" || location.pathname === "/" || location.pathname === "/dashboard/";
+    const isDashboard = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
 
     const handleHomeClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
         onNavigate?.();
-        if (isHome) {
+        if (isDashboard) {
             e.preventDefault();
             window.location.reload();
         }
@@ -103,7 +104,7 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
 
     const handleNavItemClick = (path: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
         onNavigate?.();
-        if ((path === "/dashboard" || path === "/") && isHome) {
+        if (path === location.pathname) {
             e.preventDefault();
             window.location.reload();
         }
@@ -114,14 +115,11 @@ export default function Sidebar({ collapsed, onToggle, onNavigate, mobile = fals
             <Link
                 to="/dashboard"
                 onClick={handleHomeClick}
-                className="crm-sidebar__brand"
-                title="Quay về trang chủ"
-                aria-label="CRM - Quay về trang chủ"
+                className={`crm-sidebar__brand ${collapsed ? "justify-center" : "px-4"}`}
+                title="Quay về Trang chủ"
+                aria-label="STAplus CRM - Quay về Trang chủ"
             >
-                <div className="crm-sidebar__brand-mark-wrap">
-                    <span className="crm-sidebar__brand-mark" aria-hidden="true"><LayoutDashboard size={18} /></span>
-                </div>
-                <span className="crm-sidebar__brand-text">CRM</span>
+                <BrandLogo size="sm" variant="light" collapsed={collapsed} />
             </Link>
             <nav className="crm-sidebar__navigation crm-scrollbar">
                 {visibleGroups.map((group) => (
