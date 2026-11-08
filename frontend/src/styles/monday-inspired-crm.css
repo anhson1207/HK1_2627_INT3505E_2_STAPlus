@@ -476,6 +476,7 @@ select.crm-filter-chip:focus{border-color:var(--crm-primary);box-shadow:0 0 0 3p
 .crm-dark{--crm-bg:#171820;--crm-surface:#20212b;--crm-surface-subtle:#252731;--crm-surface-hover:#2d2f3a;--crm-surface-selected:#183e46;--crm-text:#f1f2f5;--crm-text-secondary:#b7bac5;--crm-text-muted:#8f93a2;--crm-heading:#fff;--crm-border:#3a3d49;--crm-border-subtle:#30333e;--crm-border-strong:#505361;--crm-primary-soft:#004858;--crm-primary-soft-hover:#003844}.crm-dark .crm-header,.crm-dark .crm-card,.crm-dark .crm-board,.crm-dark .crm-table,.crm-dark .crm-table tbody td,.crm-dark .crm-kpi,.crm-dark .crm-widget,.crm-dark .crm-detail-card,.crm-dark .crm-modal,.crm-dark .crm-popover,.crm-dark .crm-menu,.crm-dark .crm-drawer{background:var(--crm-surface)}.crm-dark .crm-table thead th{background:#252731;color:var(--crm-text-secondary)}.crm-dark .crm-table tbody tr:hover td{background:#292b35}
 
 /* Dark mode inputs, selects, and textareas */
+.crm-dark select,
 .crm-dark .crm-input,
 .crm-dark .crm-select,
 .crm-dark .crm-textarea,
@@ -486,6 +487,11 @@ select.crm-filter-chip:focus{border-color:var(--crm-primary);box-shadow:0 0 0 3p
   background-color: var(--crm-surface-subtle);
   color: var(--crm-text);
   border-color: var(--crm-border);
+}
+
+.crm-dark select.bg-transparent,
+.crm-dark select[class*="bg-transparent"] {
+  background-color: transparent !important;
 }
 
 .crm-dark .crm-input:hover,

@@ -36,4 +36,16 @@ public class User {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "full_name")
+    private String fullName;
+
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "department")
+    private String department;
+
+    @Column(name = "avatar_url")
+    private String avatarUrl;
 }

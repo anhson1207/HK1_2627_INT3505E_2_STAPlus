@@ -210,7 +210,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     Chào mừng đến với Trò chuyện nội bộ
                 </h3>
                 <p className="text-sm text-(--crm-text-secondary) max-w-md mb-8 leading-relaxed">
-                    Kết nối và trao đổi nhanh chóng với các thành viên trong đội ngũ CRM STAPlus qua tin nhắn trực tiếp 1–1 hoặc các nhóm thảo luận công việc.
+                    Kết nối và trao đổi nhanh chóng với các thành viên trong đội ngũ STAPlus CRM qua tin nhắn trực tiếp 1–1 hoặc các nhóm thảo luận công việc.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-3">
                     <button

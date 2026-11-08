@@ -1,5 +1,5 @@
-import { ListItemIcon, Menu, MenuItem } from "@mui/material";
-import { Bell, ChevronDown, LogOut, Menu as MenuIcon, Moon, Search, Sun, UserRound } from "lucide-react";
+import { Divider, ListItemIcon, Menu, MenuItem } from "@mui/material";
+import { Bell, ChevronDown, LockKeyhole, LogOut, Menu as MenuIcon, Moon, Search, Settings, Sun, UserRound } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -109,7 +109,8 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
         MANAGER: "Quản lý",
         UNASSIGNED: "Chưa phân quyền",
     };
-    const avatarLabel = user?.username.charAt(0).toLocaleUpperCase("vi") ?? "U";
+    const displayName = user?.fullName?.trim() || user?.username || "Người dùng";
+    const avatarLabel = (user?.fullName?.trim() || user?.username || "U").charAt(0).toLocaleUpperCase("vi");
 
     const isSupportPage = location.pathname.startsWith("/support");
     const isCustomerPage = location.pathname.startsWith("/customers");
@@ -215,7 +216,7 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                             <span className="crm-online-dot" />
                         </div>
                         <div className="crm-header__user-info">
-                            <p className="crm-header__user-name">{user?.username ?? "Người dùng"}</p>
+                            <p className="crm-header__user-name">{displayName}</p>
                             <p className="crm-caption">{user ? roleLabels[user.role] : ""}</p>
                         </div>
                         <ChevronDown size={14} className="crm-header__user-chevron" />
@@ -225,14 +226,36 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
 
             <Menu anchorEl={userMenuAnchor} open={Boolean(userMenuAnchor)} onClose={() => setUserMenuAnchor(null)} anchorOrigin={{ vertical: "bottom", horizontal: "right" }} transformOrigin={{ vertical: "top", horizontal: "right" }}>
                 <MenuItem 
-                onClick={() => {
+                    onClick={() => {
                         setUserMenuAnchor(null);
-                        navigate("/profile");
+                        navigate("/settings/profile");
                     }}
                 >
                     <ListItemIcon><UserRound size={17} /></ListItemIcon>
-                    {user?.username}
+                    Hồ sơ cá nhân
                 </MenuItem>
+
+                <MenuItem 
+                    onClick={() => {
+                        setUserMenuAnchor(null);
+                        navigate("/settings/security");
+                    }}
+                >
+                    <ListItemIcon><LockKeyhole size={17} /></ListItemIcon>
+                    Bảo mật & Mật khẩu
+                </MenuItem>
+
+                <MenuItem 
+                    onClick={() => {
+                        setUserMenuAnchor(null);
+                        navigate("/settings");
+                    }}
+                >
+                    <ListItemIcon><Settings size={17} /></ListItemIcon>
+                    Cài đặt & Phân quyền
+                </MenuItem>
+
+                <Divider sx={{ my: 0.5 }} />
 
                 <MenuItem onClick={() => void handleLogout()}>
                     <ListItemIcon><LogOut size={17} /></ListItemIcon>

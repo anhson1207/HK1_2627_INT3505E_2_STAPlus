@@ -6,19 +6,27 @@ import auth_service.entity.User;
 
 public interface AuthService {
 
- UserResponse register(RegisterRequest r);
+    UserResponse register(RegisterRequest r);
 
- AuthResponse login(LoginRequest r);
+    UserResponse registerEmployee(EmployeeRegisterRequest r);
 
- AccessTokenResponse refresh(RefreshTokenRequest r);
+    AuthResponse login(LoginRequest r);
 
- void logout(LogoutRequest r);
+    AccessTokenResponse refresh(RefreshTokenRequest r);
 
- ForgotPasswordResponse forgotPassword(ForgotPasswordRequest r);
+    void logout(LogoutRequest r);
 
- void resetPassword(ResetPasswordRequest r);
+    ForgotPasswordResponse forgotPassword(ForgotPasswordRequest r);
 
- void changePassword(User user, ChangePasswordRequest r);
+    void resetPassword(ResetPasswordRequest r);
 
- UserResponse me(User user);
+    void changePassword(User user, ChangePasswordRequest r);
+
+    UserResponse me(User user);
+
+    UserResponse updateProfile(User user, UpdateProfileRequest r);
+
+    UserPreferenceResponse getPreferences(User user);
+
+    UserPreferenceResponse updatePreferences(User user, UserPreferenceRequest r);
 }

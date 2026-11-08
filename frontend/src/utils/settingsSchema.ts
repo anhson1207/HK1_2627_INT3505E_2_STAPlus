@@ -39,6 +39,8 @@ export const userSchema = z
             "ACTIVE",
             "INACTIVE",
             "PENDING",
+            "DISABLED",
+            "REJECTED",
         ]),
     })
     .refine(

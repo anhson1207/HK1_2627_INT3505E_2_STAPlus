@@ -73,6 +73,8 @@ export const authApi = axios.create({
 });
 authApi.interceptors.request.use((config) => {
     if (!config.baseURL) throw new ApiError("Chưa cấu hình VITE_AUTH_API_BASE_URL cho Auth Service.", 0);
+    const token = authHandlers?.getToken();
+    if (token) config.headers.set("Authorization", `Bearer ${token}`);
     return config;
 });
 configureErrors(authApi, false);

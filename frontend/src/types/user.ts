@@ -3,6 +3,7 @@ export type { UserRole, UserStatus } from "./auth";
 
 export interface CRMUser {
     id: number;
+    username?: string;
     fullName: string;
     email: string;
     phone?: string;

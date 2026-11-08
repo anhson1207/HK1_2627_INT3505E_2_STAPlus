@@ -18,6 +18,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
  boolean existsByUsername(String username);
 
+ long countByRoleAndStatus(auth_service.entity.Role role, auth_service.entity.UserStatus status);
+
  @Lock(LockModeType.PESSIMISTIC_WRITE)
  @Query("SELECT u FROM User u WHERE u.email = :email")
  Optional<User> findByEmailForUpdate(

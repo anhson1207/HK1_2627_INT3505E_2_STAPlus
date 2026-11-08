@@ -1,2 +1,8 @@
 package auth_service.entity;
-public enum UserStatus { ACTIVE, DISABLED }
+
+public enum UserStatus {
+    PENDING,
+    ACTIVE,
+    DISABLED,
+    REJECTED
+}

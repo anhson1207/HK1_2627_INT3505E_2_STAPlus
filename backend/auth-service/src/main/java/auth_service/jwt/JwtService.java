@@ -34,9 +34,13 @@ public class JwtService {
     }
 
     public String generateAccessToken(User user) {
+        String roleStr = user.getRole() != null ? user.getRole().name() : "UNASSIGNED";
+        String statusStr = user.getStatus() != null ? user.getStatus().name() : "PENDING";
+
         return Jwts.builder()
                 .subject(user.getEmail())
-                .claim("role", user.getRole().name())
+                .claim("role", roleStr)
+                .claim("status", statusStr)
                 .claim("userId", user.getId())
                 .claim("username", user.getUsername())
                 .issuedAt(new Date())

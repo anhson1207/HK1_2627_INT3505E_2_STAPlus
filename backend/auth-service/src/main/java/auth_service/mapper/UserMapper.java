@@ -14,6 +14,11 @@ public class UserMapper {
           .email(u.getEmail())
           .role(u.getRole())
           .status(u.getStatus())
+          .fullName(u.getFullName())
+          .phone(u.getPhone())
+          .department(u.getDepartment())
+          .avatarUrl(u.getAvatarUrl())
+          .createdAt(u.getCreatedAt())
           .build();
  }
 }

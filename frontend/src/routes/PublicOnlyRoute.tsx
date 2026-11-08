@@ -8,6 +8,7 @@ import { getAppTheme } from "../theme";
 
 export default function PublicOnlyRoute() {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const user = useAuthStore((state) => state.user);
     const savedMode = useThemeStore((state) => state.mode);
     const lightTheme = useMemo(() => getAppTheme("light"), []);
 
@@ -22,6 +23,9 @@ export default function PublicOnlyRoute() {
     }, [savedMode]);
 
     if (isAuthenticated) {
+        if (user?.status === "PENDING") {
+            return <Navigate to="/pending-approval" replace />;
+        }
         return <Navigate to="/dashboard" replace />;
     }
 
