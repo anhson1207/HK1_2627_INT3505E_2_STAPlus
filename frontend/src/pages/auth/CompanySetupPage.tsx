@@ -20,8 +20,13 @@ import {
 import { CircularProgress } from "@mui/material";
 
 import OnboardingLayout from "../../layouts/OnboardingLayout";
+import PasswordRequirements from "../../components/auth/PasswordRequirements";
 import { organizationService } from "../../services/organizationService";
 import type { InitializeSetupData } from "../../types/auth";
+import {
+    companySetupOwnerSchema,
+    PASSWORD_REQUIREMENT_RULES,
+} from "../../utils/passwordSchema";
 
 const INDUSTRY_OPTIONS = [
     "Công nghệ / Phần mềm",
@@ -84,14 +89,11 @@ export default function CompanySetupPage() {
     const passwordStrength = useMemo(() => {
         const p = formData.adminPassword;
         if (!p) return { score: 0, label: "Chưa nhập", color: "bg-slate-200" };
-        let score = 0;
-        if (p.length >= 8) score += 1;
-        if (/[A-Z]/.test(p) && /[a-z]/.test(p)) score += 1;
-        if (/[0-9]/.test(p) || /[^A-Za-z0-9]/.test(p)) score += 1;
+        const passedCount = PASSWORD_REQUIREMENT_RULES.filter((r) => r.test(p)).length;
 
-        if (score === 1) return { score: 1, label: "Yếu", color: "bg-rose-500" };
-        if (score === 2) return { score: 2, label: "Trung bình", color: "bg-amber-500" };
-        return { score: 3, label: "Mạnh", color: "bg-emerald-500" };
+        if (passedCount <= 2) return { score: 1, label: "Yếu", color: "bg-rose-500" };
+        if (passedCount <= 4) return { score: 2, label: "Trung bình", color: "bg-amber-500" };
+        return { score: 3, label: "Mạnh (Đạt chuẩn)", color: "bg-emerald-500" };
     }, [formData.adminPassword]);
 
     // Validation for Step 1
@@ -108,22 +110,16 @@ export default function CompanySetupPage() {
         setCurrentStep(2);
     };
 
-    // Validation for Step 2
+    // Validation for Step 2 using Zod schema
     const handleNextStep2 = () => {
-        if (!formData.adminFullName.trim()) {
-            setFormError("Vui lòng nhập họ và tên Quản trị viên.");
-            return;
-        }
-        if (!formData.adminEmail.trim() || !formData.adminEmail.includes("@")) {
-            setFormError("Vui lòng nhập địa chỉ email quản trị hợp lệ.");
-            return;
-        }
-        if (formData.adminPassword.length < 8) {
-            setFormError("Mật khẩu quản trị phải có ít nhất 8 ký tự.");
-            return;
-        }
-        if (formData.adminPassword !== formData.adminConfirmPassword) {
-            setFormError("Mật khẩu xác nhận không trùng khớp.");
+        const parsed = companySetupOwnerSchema.safeParse({
+            adminFullName: formData.adminFullName,
+            adminEmail: formData.adminEmail,
+            adminPassword: formData.adminPassword,
+            adminConfirmPassword: formData.adminConfirmPassword,
+        });
+        if (!parsed.success) {
+            setFormError(parsed.error.issues[0]?.message || "Thông tin tài khoản chưa hợp lệ.");
             return;
         }
         setFormError("");
@@ -517,6 +513,7 @@ export default function CompanySetupPage() {
                                     </p>
                                 </div>
                             )}
+                            <PasswordRequirements password={formData.adminPassword} />
                         </div>
 
                         {/* Confirm Password */}

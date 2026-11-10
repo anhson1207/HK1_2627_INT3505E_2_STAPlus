@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
+import BrandLogo from "../common/BrandLogo";
 
 interface AuthPageShellProps {
     title: string;
@@ -10,9 +12,10 @@ export default function AuthPageShell({ title, description, children }: AuthPage
     return (
         <main className="crm-auth-page">
             <div className="crm-auth-container">
-                <div className="mb-6 text-center">
-                    <div className="crm-sidebar__brand-mark mx-auto" aria-hidden="true">C</div>
-                    <p className="mt-3 text-lg font-bold text-(--crm-heading)">CRM</p>
+                <div className="mb-6 flex justify-center">
+                    <Link to="/" className="hover:opacity-90 transition-opacity">
+                        <BrandLogo size="md" variant="dark" />
+                    </Link>
                 </div>
                 <div className="crm-card crm-card__body shadow-sm sm:p-8">
                     <div className="mb-6 text-center">

@@ -6,6 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import AuthPageShell from "../../components/auth/AuthPageShell";
+import PasswordRequirements from "../../components/auth/PasswordRequirements";
 import { authService } from "../../services/authService";
 import {
     resetPasswordSchema,
@@ -98,7 +99,7 @@ export default function ResetPasswordPage() {
     return (
         <AuthPageShell
             title="Đặt lại mật khẩu"
-            description="Tạo mật khẩu mới để tiếp tục sử dụng tài khoản CRM của bạn."
+            description="Tạo mật khẩu mới để tiếp tục sử dụng tài khoản STAplus CRM của bạn."
         >
             {successMessage ? (
                 <div className="space-y-4">
@@ -165,35 +166,35 @@ export default function ResetPasswordPage() {
                         name="password"
                         control={control}
                         render={({ field }) => (
-                            <TextField
-                                {...field}
-                                label="Mật khẩu mới"
-                                type={showPassword ? "text" : "password"}
-                                fullWidth
-                                autoComplete="new-password"
-                                disabled={isSubmitting}
-                                error={!!errors.password}
-                                helperText={
-                                    errors.password?.message ||
-                                    "Mật khẩu cần có ít nhất 8 ký tự."
-                                }
-                                slotProps={{
-                                    input: {
-                                        endAdornment: (
-                                            <InputAdornment position="end">
-                                                <IconButton
-                                                    onClick={() => setShowPassword((prev) => !prev)}
-                                                    edge="end"
-                                                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                                                    disabled={isSubmitting}
-                                                >
-                                                    {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
-                                                </IconButton>
-                                            </InputAdornment>
-                                        ),
-                                    },
-                                }}
-                            />
+                            <div>
+                                <TextField
+                                    {...field}
+                                    label="Mật khẩu mới"
+                                    type={showPassword ? "text" : "password"}
+                                    fullWidth
+                                    autoComplete="new-password"
+                                    disabled={isSubmitting}
+                                    error={!!errors.password}
+                                    helperText={errors.password?.message}
+                                    slotProps={{
+                                        input: {
+                                            endAdornment: (
+                                                <InputAdornment position="end">
+                                                    <IconButton
+                                                        onClick={() => setShowPassword((prev) => !prev)}
+                                                        edge="end"
+                                                        aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                                                        disabled={isSubmitting}
+                                                    >
+                                                        {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                                                    </IconButton>
+                                                </InputAdornment>
+                                            ),
+                                        },
+                                    }}
+                                />
+                                <PasswordRequirements password={field.value || ""} />
+                            </div>
                         )}
                     />
 

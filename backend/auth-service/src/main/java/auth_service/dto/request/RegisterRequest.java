@@ -15,6 +15,6 @@ public class RegisterRequest {
  private String email;
 
  @NotBlank
- @Size(min = 8, max = 100)
+ @Pattern(regexp = PasswordValidationConstants.PASSWORD_PATTERN, message = PasswordValidationConstants.PASSWORD_MESSAGE)
  private String password;
 }

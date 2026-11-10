@@ -4,7 +4,6 @@ package auth_service.dto.request;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -22,6 +21,6 @@ public class ResetPasswordRequest {
     private String token;
 
     @NotBlank(message = "Vui lòng nhập mật khẩu mới")
-    @Size(min = 8, max = 100, message = "Mật khẩu mới phải có ít nhất 8 ký tự")
+    @Pattern(regexp = PasswordValidationConstants.PASSWORD_PATTERN, message = PasswordValidationConstants.PASSWORD_MESSAGE)
     private String newPassword;
 }

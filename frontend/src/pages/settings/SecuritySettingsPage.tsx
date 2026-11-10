@@ -11,8 +11,10 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import PasswordRequirements from "../../components/auth/PasswordRequirements";
 import { authService } from "../../services/authService";
 import { useAuthStore } from "../../stores/authStore";
+import { changePasswordSchema } from "../../utils/passwordSchema";
 
 export default function SecuritySettingsPage() {
     const { user, logout } = useAuthStore();
@@ -35,28 +37,14 @@ export default function SecuritySettingsPage() {
         setError("");
         setMessage("");
 
-        if (!currentPassword) {
-            setError("Vui lòng nhập mật khẩu hiện tại.");
-            return;
-        }
+        const parsed = changePasswordSchema.safeParse({
+            currentPassword,
+            newPassword,
+            confirmPassword,
+        });
 
-        if (!newPassword) {
-            setError("Vui lòng nhập mật khẩu mới.");
-            return;
-        }
-
-        if (newPassword.length < 8) {
-            setError("Mật khẩu mới phải có tối thiểu 8 ký tự.");
-            return;
-        }
-
-        if (currentPassword === newPassword) {
-            setError("Mật khẩu mới không được trùng với mật khẩu hiện tại.");
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            setError("Xác nhận mật khẩu mới không khớp.");
+        if (!parsed.success) {
+            setError(parsed.error.issues[0]?.message || "Thông tin mật khẩu chưa hợp lệ.");
             return;
         }
 
@@ -177,9 +165,7 @@ export default function SecuritySettingsPage() {
                                     {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>
-                            <p className="text-[11px] text-(--crm-text-muted)">
-                                Gợi ý: Dùng từ 8 ký tự trở lên, gồm chữ hoa, chữ thường, số và ký tự đặc biệt (@, #, $, %, ...).
-                            </p>
+                            <PasswordRequirements password={newPassword} />
                         </div>
 
                         {/* Confirm New Password */}

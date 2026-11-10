@@ -46,7 +46,7 @@ export default function RegisterPage() {
     };
 
     return (
-        <AuthPageShell title="Tạo tài khoản" description="Bắt đầu quản lý khách hàng cùng CRM.">
+        <AuthPageShell title="Tạo tài khoản" description="Bắt đầu quản lý khách hàng cùng STAplus CRM.">
             <form onSubmit={(event) => void handleSubmit(handleRegister)(event)} className="crm-form" noValidate>
                 {error && (
                     <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/95 p-3.5 text-left text-xs leading-relaxed shadow-xs">

@@ -10,6 +10,6 @@ public class ChangePasswordRequest {
     private String currentPassword;
 
     @NotBlank(message = "Mật khẩu mới không được để trống")
-    @Size(min = 8, max = 100, message = "Mật khẩu mới phải từ 8 đến 100 ký tự")
+    @Pattern(regexp = PasswordValidationConstants.PASSWORD_PATTERN, message = PasswordValidationConstants.PASSWORD_MESSAGE)
     private String newPassword;
 }

@@ -2,7 +2,7 @@ package auth_service.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
 @Data
@@ -19,7 +19,7 @@ public class EmployeeRegisterRequest {
     private String email;
 
     @NotBlank(message = "Mật khẩu không được để trống")
-    @Size(min = 8, message = "Mật khẩu tối thiểu 8 ký tự")
+    @Pattern(regexp = PasswordValidationConstants.PASSWORD_PATTERN, message = PasswordValidationConstants.PASSWORD_MESSAGE)
     private String password;
 
     @NotBlank(message = "Xác nhận mật khẩu không được để trống")

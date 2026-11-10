@@ -1,10 +1,9 @@
 import { z } from "zod";
+import { strongPasswordSchema } from "./passwordSchema";
 
 export const resetPasswordSchema = z
     .object({
-        password: z
-            .string()
-            .min(8, "Mật khẩu phải có ít nhất 8 ký tự."),
+        password: strongPasswordSchema,
         confirmPassword: z
             .string()
             .min(1, "Vui lòng xác nhận mật khẩu."),

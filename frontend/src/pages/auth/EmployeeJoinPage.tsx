@@ -16,10 +16,12 @@ import {
 } from "lucide-react";
 
 import JoinLayout from "../../layouts/JoinLayout";
+import PasswordRequirements from "../../components/auth/PasswordRequirements";
 import { invitationService } from "../../services/invitationService";
 import { authService } from "../../services/authService";
 import { useAuthStore } from "../../stores/authStore";
 import type { ValidateInvitationResponse } from "../../types/auth";
+import { employeeJoinSchema } from "../../utils/passwordSchema";
 
 export default function EmployeeJoinPage() {
     const navigate = useNavigate();
@@ -85,20 +87,14 @@ export default function EmployeeJoinPage() {
         e.preventDefault();
         setFormError("");
 
-        if (!fullName.trim()) {
-            setFormError("Vui lòng nhập họ và tên của bạn.");
-            return;
-        }
-        if (!email.trim() || !email.includes("@")) {
-            setFormError("Vui lòng nhập địa chỉ email hợp lệ.");
-            return;
-        }
-        if (password.length < 8) {
-            setFormError("Mật khẩu phải có ít nhất 8 ký tự.");
-            return;
-        }
-        if (password !== confirmPassword) {
-            setFormError("Mật khẩu xác nhận không khớp.");
+        const parsed = employeeJoinSchema.safeParse({
+            fullName,
+            email,
+            password,
+            confirmPassword,
+        });
+        if (!parsed.success) {
+            setFormError(parsed.error.issues[0]?.message || "Thông tin đăng ký chưa hợp lệ.");
             return;
         }
         if (!validatedInfo || !validatedInfo.valid) {
@@ -345,6 +341,7 @@ export default function EmployeeJoinPage() {
                             </div>
                         </div>
                     </div>
+                    <PasswordRequirements password={password} />
 
                     {/* Submit button */}
                     <div className="pt-3">
