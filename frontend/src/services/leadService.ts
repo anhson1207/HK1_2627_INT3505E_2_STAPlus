@@ -1,6 +1,8 @@
 import api, { ApiError, hasConfiguredApi } from "./api";
 import { mockLeads } from "../data/mockLeads";
-import type { AssignmentRule, AutoAssignResult, Lead, LeadPayload, LeadQuery, LeadSource, LeadStatus } from "../types/lead";
+import type { AssignmentRule, AutoAssignResult, ConvertLeadPayload, ConvertLeadResult, Lead, LeadPayload, LeadQuery, LeadSource, LeadStatus } from "../types/lead";
+import { customerService } from "./customerService";
+import { dealService } from "./dealService";
 
 export const SALES_REPRESENTATIVES: Record<number, { name: string; email: string; avatarColor: string }> = {
     1: { name: "Nguyễn Anh Sơn", email: "son@crm.com", avatarColor: "bg-blue-100 text-blue-700" },
@@ -86,6 +88,7 @@ function getLocalLeads(query: LeadQuery): LeadListResponse {
     const filtered = readLocalLeads()
         .filter((lead) => !query.status || lead.status === query.status)
         .filter((lead) => !query.source || lead.source === query.source)
+        .filter((lead) => !query.assignedUserId || lead.ownerId === query.assignedUserId)
         .filter((lead) => {
             if (!keyword) return true;
             return [lead.firstName, lead.lastName, lead.email, lead.phone, lead.company, lead.ownerName]
@@ -208,6 +211,7 @@ export const leadService = {
                     q: query.search?.trim() || undefined,
                     status: query.status || undefined,
                     source: mapFrontendSourceToBackend(query.source),
+                    assignedUserId: query.assignedUserId || undefined,
                 },
             });
             return {
@@ -423,5 +427,73 @@ export const leadService = {
 
         const response = await api.post<AutoAssignResult>("/leads/auto-assign");
         return response.data;
+    },
+
+    convertLead: async (id: number, payload: ConvertLeadPayload = {}): Promise<ConvertLeadResult> => {
+        if (!useLeadMockApi && hasConfiguredApi) {
+            try {
+                const response = await api.post<ConvertLeadResult>(`/leads/${id}/convert`, payload);
+                return response.data;
+            } catch (err) {
+                console.warn(`API convert failed for lead ${id}, falling back to local client execution:`, err);
+            }
+        }
+
+        // Local fallback execution
+        const leads = readLocalLeads();
+        const leadIndex = leads.findIndex((item) => item.id === id);
+        if (leadIndex === -1) {
+            throw new ApiError("Không tìm thấy Lead để chuyển đổi.", 404);
+        }
+
+        const lead = leads[leadIndex];
+        const customerName = `${lead.firstName} ${lead.lastName}`.trim();
+        const customer = await customerService.createCustomer({
+            name: customerName,
+            email: lead.email,
+            phone: lead.phone,
+            company: lead.company || "",
+            status: "ACTIVE",
+            address: payload.customerNotes || lead.company,
+            ownerName: lead.ownerName,
+        });
+
+        let dealId: number | null = null;
+        let dealName: string | null = null;
+
+        if (payload.dealName && payload.dealName.trim()) {
+            dealName = payload.dealName.trim();
+            try {
+                const deal = await dealService.createDeal({
+                    name: dealName,
+                    value: payload.dealAmount || 0,
+                    stage: (payload.dealStage as any) || "QUALIFIED",
+                    probability: 50,
+                    customerId: customer.id,
+                    ownerName: lead.ownerName || "Sales Rep",
+                    expectedCloseDate: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
+                });
+                dealId = deal.id;
+            } catch (dealErr) {
+                console.warn("Could not create deal during local conversion:", dealErr);
+            }
+        }
+
+        // Update local lead status
+        leads[leadIndex] = {
+            ...lead,
+            status: "CONVERTED",
+            updatedAt: new Date().toISOString(),
+        };
+        writeLocalLeads(leads);
+
+        return {
+            leadId: id,
+            customerId: customer.id,
+            customerName: customer.name,
+            dealId,
+            dealName,
+            message: "Chuyển đổi Lead thành Khách hàng thành công!",
+        };
     },
 };

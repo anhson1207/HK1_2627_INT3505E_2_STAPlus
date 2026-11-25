@@ -11,7 +11,7 @@ public interface RefreshTokenRepository
 
  Optional<RefreshToken> findByToken(String token);
 
- @Modifying
+ @Modifying(clearAutomatically = true, flushAutomatically = true)
  @Query("update RefreshToken r set r.revoked=true where r.user.id=:userId and r.revoked=false")
  int revokeAllByUserId(@Param("userId") Long userId);
 }

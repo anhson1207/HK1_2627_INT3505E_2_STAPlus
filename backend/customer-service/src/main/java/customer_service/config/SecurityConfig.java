@@ -40,6 +40,18 @@ public class SecurityConfig {
                         )
                         .hasAnyRole(
                                 "ADMIN",
+                                "MANAGER",
+                                "SALES",
+                                "SUPPORT"
+                        )
+
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                ApiPaths.CUSTOMERS + "/*/activities"
+                        )
+                        .hasAnyRole(
+                                "ADMIN",
+                                "MANAGER",
                                 "SALES",
                                 "SUPPORT"
                         )
@@ -51,6 +63,7 @@ public class SecurityConfig {
                         )
                         .hasAnyRole(
                                 "ADMIN",
+                                "MANAGER",
                                 "SALES"
                         )
 
@@ -61,6 +74,7 @@ public class SecurityConfig {
                         )
                         .hasAnyRole(
                                 "ADMIN",
+                                "MANAGER",
                                 "SALES"
                         )
 
@@ -71,6 +85,7 @@ public class SecurityConfig {
                         )
                         .hasAnyRole(
                                 "ADMIN",
+                                "MANAGER",
                                 "SALES"
                         )
 

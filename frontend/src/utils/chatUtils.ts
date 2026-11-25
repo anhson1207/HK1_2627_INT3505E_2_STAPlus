@@ -131,6 +131,96 @@ export function getConversationDisplayName(
     return other?.username || "Đồng nghiệp";
 }
 
+export function formatLastMessagePreview(conversation: ChatConversation): string {
+    const isGroup = conversation.type === "GROUP";
+    const lastMsg = conversation.lastMessage;
+    if (lastMsg) {
+        if (lastMsg.type === "SYSTEM") {
+            return lastMsg.content || "";
+        }
+        const trimmed = lastMsg.content?.trim() || "";
+        const body = trimmed
+            ? trimmed
+            : lastMsg.type === "IMAGE"
+                ? "[Hình ảnh]"
+                : lastMsg.type === "VIDEO"
+                    ? "[Video]"
+                    : lastMsg.type === "FILE"
+                        ? `[Tệp] ${lastMsg.attachmentName || "Tệp đính kèm"}`
+                        : "";
+        if (!body) return "Chưa có tin nhắn";
+        const senderPrefix = lastMsg.isMine
+            ? "Bạn: "
+            : isGroup && lastMsg.senderUsername
+                ? `${lastMsg.senderUsername}: `
+                : "";
+        return `${senderPrefix}${body}`;
+    }
+
+    const fallback = conversation.lastMessagePreview?.trim();
+    if (fallback) {
+        const senderPrefix =
+            isGroup && conversation.lastMessageSenderName
+                ? `${conversation.lastMessageSenderName}: `
+                : "";
+        return `${senderPrefix}${fallback}`;
+    }
+    return "Chưa có tin nhắn";
+}
+
+export function formatLastSeenStatus(
+    isOnline: boolean,
+    lastSeenIso?: string | null,
+    nowMs: number = Date.now()
+): { label: string; isOnline: boolean } {
+    if (isOnline) {
+        return { label: "Đang hoạt động", isOnline: true };
+    }
+    if (!lastSeenIso) {
+        return { label: "Ngoại tuyến", isOnline: false };
+    }
+    const ts = new Date(lastSeenIso).getTime();
+    if (Number.isNaN(ts)) {
+        return { label: "Ngoại tuyến", isOnline: false };
+    }
+    const diffSeconds = Math.max(0, Math.floor((nowMs - ts) / 1000));
+    if (diffSeconds < 60) {
+        return { label: "Hoạt động vừa xong", isOnline: false };
+    }
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    if (diffMinutes < 60) {
+        return { label: `Hoạt động ${diffMinutes} phút trước`, isOnline: false };
+    }
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) {
+        return { label: `Hoạt động ${diffHours} giờ trước`, isOnline: false };
+    }
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays <= 7) {
+        return { label: `Hoạt động ${diffDays} ngày trước`, isOnline: false };
+    }
+    return { label: "Ngoại tuyến", isOnline: false };
+}
+
+export function notifyChatOfflineWithToken(token?: string | null) {
+    if (!token || token.startsWith("demo-")) return;
+    const base =
+        import.meta.env.VITE_CHAT_API_BASE_URL ??
+        (import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1");
+    const url = `${base.replace(/\/$/, "")}/chat/presence/offline`;
+    try {
+        void fetch(url, {
+            method: "POST",
+            keepalive: true,
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }).catch(() => {});
+    } catch {
+        // Ignore network errors on logout
+    }
+}
+
 export function formatFileSize(bytes?: number | null): string {
     if (!bytes || bytes <= 0) return "0 B";
     if (bytes < 1024) return `${bytes} B`;
@@ -138,14 +228,54 @@ export function formatFileSize(bytes?: number | null): string {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function getFileIconType(filename?: string | null): "image" | "pdf" | "word" | "excel" | "file" {
+export function getFileIconType(filename?: string | null): "image" | "video" | "pdf" | "word" | "excel" | "file" {
     if (!filename) return "file";
     const ext = filename.split(".").pop()?.toLowerCase() || "";
     if (["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) return "image";
+    if (["mp4", "webm", "mov"].includes(ext)) return "video";
     if (["pdf"].includes(ext)) return "pdf";
     if (["doc", "docx"].includes(ext)) return "word";
     if (["xls", "xlsx", "csv"].includes(ext)) return "excel";
     return "file";
+}
+
+export interface MessageTextSegment {
+    type: "text" | "link";
+    value: string;
+    href?: string;
+}
+
+const URL_SEGMENT_REGEX = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi;
+
+export function splitMessageTextWithLinks(text: string): MessageTextSegment[] {
+    if (!text) return [];
+    const segments: MessageTextSegment[] = [];
+    let lastIndex = 0;
+
+    for (const match of text.matchAll(URL_SEGMENT_REGEX)) {
+        const raw = match[0];
+        const idx = match.index ?? 0;
+        if (idx > lastIndex) {
+            segments.push({ type: "text", value: text.slice(lastIndex, idx) });
+        }
+
+        const cleaned = raw.replace(/[.,;:!?)]+$/, "");
+        const trailing = raw.slice(cleaned.length);
+
+        if (cleaned) {
+            const href = /^www\./i.test(cleaned) ? `https://${cleaned}` : cleaned;
+            segments.push({ type: "link", value: cleaned, href });
+        }
+        if (trailing) {
+            segments.push({ type: "text", value: trailing });
+        }
+        lastIndex = idx + raw.length;
+    }
+
+    if (lastIndex < text.length) {
+        segments.push({ type: "text", value: text.slice(lastIndex) });
+    }
+    return segments;
 }
 
 export function getMessageReaders(

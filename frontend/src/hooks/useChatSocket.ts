@@ -8,17 +8,20 @@ export type SocketStatus = "connecting" | "connected" | "disconnected" | "reconn
 
 interface UseChatSocketOptions {
     onEvent?: (event: ChatEventEnvelope) => void;
+    onConnected?: () => void;
     enabled?: boolean;
 }
 
-export function useChatSocket({ onEvent, enabled = true }: UseChatSocketOptions = {}) {
+export function useChatSocket({ onEvent, onConnected, enabled = true }: UseChatSocketOptions = {}) {
     const token = useAuthStore((state) => state.token);
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
     const [status, setStatus] = useState<SocketStatus>("disconnected");
     const clientRef = useRef<Client | null>(null);
     const onEventRef = useRef(onEvent);
+    const onConnectedRef = useRef(onConnected);
     onEventRef.current = onEvent;
+    onConnectedRef.current = onConnected;
 
     const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const reconnectAttemptsRef = useRef(0);
@@ -81,6 +84,8 @@ export function useChatSocket({ onEvent, enabled = true }: UseChatSocketOptions 
                             console.error("[useChatSocket] Failed to parse event payload:", err);
                         }
                     });
+
+                    onConnectedRef.current?.();
                 },
                 onStompError: (frame) => {
                     console.warn("[useChatSocket] STOMP error:", frame.headers["message"]);
@@ -158,7 +163,19 @@ export function useChatSocket({ onEvent, enabled = true }: UseChatSocketOptions 
             setStatus("disconnected");
         }
 
+        const handleBeforeUnload = () => {
+            if (clientRef.current) {
+                try {
+                    void clientRef.current.deactivate();
+                } catch {
+                    // ignore
+                }
+            }
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+
         return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
             isDestroyedRef.current = true;
             if (reconnectTimeoutRef.current) {
                 clearTimeout(reconnectTimeoutRef.current);

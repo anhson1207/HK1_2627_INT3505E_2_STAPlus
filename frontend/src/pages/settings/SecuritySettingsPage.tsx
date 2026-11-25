@@ -11,7 +11,6 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import PasswordRequirements from "../../components/auth/PasswordRequirements";
 import { authService } from "../../services/authService";
 import { useAuthStore } from "../../stores/authStore";
 import { changePasswordSchema } from "../../utils/passwordSchema";
@@ -76,9 +75,6 @@ export default function SecuritySettingsPage() {
                 <h2 className="text-xl font-bold tracking-tight text-(--crm-heading)">
                     Bảo mật & Đổi mật khẩu
                 </h2>
-                <p className="mt-1 text-sm text-(--crm-text-secondary)">
-                    Quản lý mật khẩu truy cập và bảo vệ an toàn cho tài khoản CRM của bạn.
-                </p>
             </div>
 
             {/* Main Unified Security Card */}
@@ -93,9 +89,6 @@ export default function SecuritySettingsPage() {
                             <h3 className="text-base font-semibold text-(--crm-heading)">
                                 Thay đổi mật khẩu tài khoản
                             </h3>
-                            <p className="text-xs text-(--crm-text-secondary)">
-                                Sau khi đổi mật khẩu, toàn bộ phiên đăng nhập cũ trên thiết bị khác sẽ được tự động thu hồi.
-                            </p>
                         </div>
                     </div>
 
@@ -165,7 +158,6 @@ export default function SecuritySettingsPage() {
                                     {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>
-                            <PasswordRequirements password={newPassword} />
                         </div>
 
                         {/* Confirm New Password */}

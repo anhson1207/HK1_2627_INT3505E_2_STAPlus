@@ -230,6 +230,9 @@ export default function CompanySettingsPage() {
                         {INDUSTRY_OPTIONS.map((opt) => (
                             <MenuItem key={opt} value={opt}>{opt}</MenuItem>
                         ))}
+                        {formData.industry && !INDUSTRY_OPTIONS.includes(formData.industry) && (
+                            <MenuItem value={formData.industry}>{formData.industry}</MenuItem>
+                        )}
                     </TextField>
 
                     <TextField
@@ -243,6 +246,9 @@ export default function CompanySettingsPage() {
                         {COMPANY_SIZE_OPTIONS.map((opt) => (
                             <MenuItem key={opt} value={opt}>{opt}</MenuItem>
                         ))}
+                        {formData.companySize && !COMPANY_SIZE_OPTIONS.includes(formData.companySize) && (
+                            <MenuItem value={formData.companySize}>{formData.companySize}</MenuItem>
+                        )}
                     </TextField>
 
                     <TextField
@@ -296,6 +302,9 @@ export default function CompanySettingsPage() {
                         {TIMEZONE_OPTIONS.map((tz) => (
                             <MenuItem key={tz.value} value={tz.value}>{tz.label}</MenuItem>
                         ))}
+                        {formData.timezone && !TIMEZONE_OPTIONS.some((tz) => tz.value === formData.timezone) && (
+                            <MenuItem value={formData.timezone}>{formData.timezone}</MenuItem>
+                        )}
                     </TextField>
 
                     <div className="md:col-span-2">

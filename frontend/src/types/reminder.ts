@@ -10,6 +10,7 @@ export interface FollowUpReminder {
     entityType: ReminderEntityType;
     entityId: number;
     entityName: string;
+    userId?: number;
     ownerName?: string;
     createdAt: string;
 }

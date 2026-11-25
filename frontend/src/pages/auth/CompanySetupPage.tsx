@@ -173,7 +173,7 @@ export default function CompanySetupPage() {
                         <CheckCircle2 size={36} />
                     </div>
 
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-6 text-left space-y-3.5">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-left space-y-3.5">
                         <div className="flex items-start gap-3 pb-3 border-b border-slate-200">
                             <div className="p-2 rounded-lg bg-[#007f9b]/10 text-[#007f9b] shrink-0">
                                 <Building2 size={20} />

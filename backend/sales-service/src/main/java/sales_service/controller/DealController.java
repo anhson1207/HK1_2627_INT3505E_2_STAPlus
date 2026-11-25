@@ -1,18 +1,19 @@
 package sales_service.controller;
 
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import sales_service.dto.request.DealFilterRequest;
+import sales_service.dto.request.DealRequest;
 import sales_service.dto.request.DiscountApprovalRequestDTO;
 import sales_service.dto.response.DealForecastResponse;
 import sales_service.dto.response.PipelineStageSummary;
 import sales_service.model.Deal;
-import sales_service.dto.request.DealRequest;
 import sales_service.service.DealService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/deals")
@@ -29,7 +30,7 @@ public class DealController {
     }
 
     private boolean isManagerOrAdmin(String role) {
-        return "ADMIN".equalsIgnoreCase(role) || "MANAGER".equalsIgnoreCase(role);
+        return role == null || role.isBlank() || "ADMIN".equalsIgnoreCase(role) || "MANAGER".equalsIgnoreCase(role);
     }
 
     @GetMapping
@@ -44,6 +45,11 @@ public class DealController {
         return ResponseEntity.ok(dealService.getDealsBySalesId(filterRequest));
     }
 
+    @GetMapping("/customer/{customerId}")
+    public ResponseEntity<List<Deal>> getDealsByCustomer(@PathVariable Long customerId) {
+        return ResponseEntity.ok(dealService.getDealsByCustomerId(customerId));
+    }
+
     @GetMapping("/{dealId}")
     public ResponseEntity<Deal> getDeal(
             @PathVariable Long dealId,
@@ -51,7 +57,7 @@ public class DealController {
             @RequestHeader(value = "X-User-Role", required = false) String currentUserRole) {
 
         Long salesId = isManagerOrAdmin(currentUserRole) ? null : resolveSalesId(currentUserId);
-        return ResponseEntity.ok(dealService.getDealByIdAndSalesId(dealId, salesId != null ? salesId : 1L));
+        return ResponseEntity.ok(dealService.getDealByIdAndSalesId(dealId, salesId));
     }
 
     @GetMapping("/pipeline/summary")
@@ -77,8 +83,8 @@ public class DealController {
             @RequestBody DealRequest request,
             @RequestHeader(value = "X-User-Id", required = false) Long currentUserId) {
 
-        Long salesId = resolveSalesId(currentUserId);
-        Deal d = dealService.createDeal(request, salesId);
+        Long actorId = resolveSalesId(currentUserId);
+        Deal d = dealService.createDeal(request, actorId);
         return ResponseEntity.status(HttpStatus.CREATED).body(d);
     }
 
@@ -89,8 +95,7 @@ public class DealController {
             @RequestHeader(value = "X-User-Id", required = false) Long currentUserId) {
 
         Long salesId = resolveSalesId(currentUserId);
-        Long managerId = 1000L;
-        dealService.requestDiscount(dealId, salesId, managerId, request);
+        dealService.requestDiscount(dealId, salesId, 1L, request);
         return ResponseEntity.noContent().build();
     }
 
@@ -98,12 +103,54 @@ public class DealController {
     public ResponseEntity<Void> updateDiscountDecision(
             @PathVariable Long discountId,
             @RequestParam String status,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId) {
+
+        Long managerId = resolveSalesId(currentUserId);
+        dealService.approveDiscount(discountId, managerId, status);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{dealId}/discount-approval")
+    public ResponseEntity<Deal> requestDiscountApprovalAlias(
+            @PathVariable Long dealId,
+            @RequestBody(required = false) DiscountApprovalRequestDTO request,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId) {
+
+        Long salesId = resolveSalesId(currentUserId);
+        Deal updated = dealService.requestDiscount(dealId, salesId, 1L, request);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PatchMapping("/{dealId}/discount-approval")
+    public ResponseEntity<Deal> decideDiscountApprovalAlias(
+            @PathVariable Long dealId,
+            @RequestBody(required = false) Map<String, String> body,
+            @RequestParam(required = false) String status,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId,
+            @RequestHeader(value = "X-User-Email", required = false) String currentUserEmail) {
+
+        String decisionStatus = (body != null && body.containsKey("status")) ? body.get("status") : status;
+        if (decisionStatus == null) decisionStatus = "APPROVED";
+        String reason = body != null ? body.get("reason") : null;
+        Long managerId = resolveSalesId(currentUserId);
+        String approverName = (currentUserEmail != null && !currentUserEmail.isBlank()) ? currentUserEmail : "Quản trị viên";
+        Deal updated = dealService.decideDiscountByDealId(dealId, managerId, approverName, decisionStatus, reason);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PatchMapping("/{dealId}/stage")
+    public ResponseEntity<Deal> updateDealStageAlias(
+            @PathVariable Long dealId,
+            @RequestBody(required = false) Map<String, String> body,
+            @RequestParam(required = false) String stage,
             @RequestHeader(value = "X-User-Id", required = false) Long currentUserId,
             @RequestHeader(value = "X-User-Role", required = false) String currentUserRole) {
 
-        Long managerId = (currentUserId != null && currentUserId > 0) ? currentUserId : 1000L;
-        dealService.approveDiscount(discountId, managerId, status);
-        return ResponseEntity.noContent().build();
+        String newStage = (body != null && body.containsKey("stage")) ? body.get("stage") : stage;
+        DealRequest request = new DealRequest();
+        request.setStage(newStage);
+        Long salesId = isManagerOrAdmin(currentUserRole) ? null : resolveSalesId(currentUserId);
+        return ResponseEntity.ok(dealService.patchDeal(dealId, request, salesId));
     }
 
     @PutMapping("/{dealId}")
@@ -114,7 +161,7 @@ public class DealController {
             @RequestHeader(value = "X-User-Role", required = false) String currentUserRole) {
 
         Long salesId = isManagerOrAdmin(currentUserRole) ? null : resolveSalesId(currentUserId);
-        return ResponseEntity.ok(dealService.updateDeal(dealId, request, salesId != null ? salesId : 1L));
+        return ResponseEntity.ok(dealService.updateDeal(dealId, request, salesId));
     }
 
     @PatchMapping("/{dealId}")
@@ -125,7 +172,7 @@ public class DealController {
             @RequestHeader(value = "X-User-Role", required = false) String currentUserRole) {
 
         Long salesId = isManagerOrAdmin(currentUserRole) ? null : resolveSalesId(currentUserId);
-        return ResponseEntity.ok(dealService.patchDeal(dealId, request, salesId != null ? salesId : 1L));
+        return ResponseEntity.ok(dealService.patchDeal(dealId, request, salesId));
     }
 
     @DeleteMapping("/{dealId}")
@@ -135,7 +182,7 @@ public class DealController {
             @RequestHeader(value = "X-User-Role", required = false) String currentUserRole) {
 
         Long salesId = isManagerOrAdmin(currentUserRole) ? null : resolveSalesId(currentUserId);
-        dealService.deleteDeal(dealId, salesId != null ? salesId : 1L);
+        dealService.deleteDeal(dealId, salesId);
         return ResponseEntity.noContent().build();
     }
 }

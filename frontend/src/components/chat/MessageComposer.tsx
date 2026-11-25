@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { SendHorizontal, Smile, Paperclip, X, FileText, Loader2 } from "lucide-react";
+import { SendHorizontal, Smile, Paperclip, X, FileText, Film, Loader2 } from "lucide-react";
 import { chatService } from "../../services/chatService";
 import { formatFileSize, getFileIconType } from "../../utils/chatUtils";
 import type { MessageType } from "../../types/chat";
+import { EmojiPickerPopover } from "./EmojiPickerPopover";
 
 interface MessageComposerProps {
     conversationId: number;
@@ -16,9 +17,10 @@ interface MessageComposerProps {
     placeholder?: string;
 }
 
-const COMMON_EMOJIS = ["👍", "❤️", "😂", "🎉", "🔥", "👏", "🚀", "👀", "🙏", "✅", "💯"];
-const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "pdf", "docx", "xlsx", "txt"];
+const VIDEO_EXTENSIONS = ["mp4", "webm", "mov"];
+const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "mp4", "webm", "mov", "pdf", "docx", "xlsx", "txt"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_VIDEO_SIZE = 25 * 1024 * 1024; // 25MB
 
 export const MessageComposer: React.FC<MessageComposerProps> = ({
     conversationId,
@@ -38,6 +40,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const emojiPickerRef = useRef<HTMLDivElement>(null);
+    const emojiTriggerRef = useRef<HTMLButtonElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Đồng bộ nội dung khi chuyển đổi giữa các cuộc trò chuyện
@@ -90,17 +93,23 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Kiểm tra dung lượng
-        if (file.size > MAX_FILE_SIZE) {
-            setFileError("Kích thước tệp vượt quá 10MB.");
+        // Kiểm tra đuôi tệp
+        const ext = file.name.split(".").pop()?.toLowerCase() || "";
+        if (!ALLOWED_EXTENSIONS.includes(ext)) {
+            setFileError(`Định dạng .${ext} không được hỗ trợ. Hỗ trợ JPG, PNG, WEBP, MP4, WEBM, MOV, PDF, DOCX, XLSX, TXT.`);
             if (fileInputRef.current) fileInputRef.current.value = "";
             return;
         }
 
-        // Kiểm tra đuôi tệp
-        const ext = file.name.split(".").pop()?.toLowerCase() || "";
-        if (!ALLOWED_EXTENSIONS.includes(ext)) {
-            setFileError(`Định dạng .${ext} không được hỗ trợ. Chỉ chấp nhận JPG, PNG, WEBP, PDF, DOCX, XLSX, TXT.`);
+        // Kiểm tra dung lượng
+        const isVideo = VIDEO_EXTENSIONS.includes(ext);
+        const maxAllowed = isVideo ? MAX_VIDEO_SIZE : MAX_FILE_SIZE;
+        if (file.size > maxAllowed) {
+            setFileError(
+                isVideo
+                    ? "Kích thước video vượt quá 25MB."
+                    : "Kích thước tệp vượt quá 10MB."
+            );
             if (fileInputRef.current) fileInputRef.current.value = "";
             return;
         }
@@ -169,18 +178,28 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     };
 
     const handleAddEmoji = (emoji: string) => {
-        const next = content + emoji;
+        const textarea = textareaRef.current;
+        const start = textarea?.selectionStart ?? content.length;
+        const end = textarea?.selectionEnd ?? content.length;
+        const next = content.slice(0, start) + emoji + content.slice(end);
         setContent(next);
         onDraftChange(next);
-        setShowEmojiPicker(false);
-        textareaRef.current?.focus();
-        setTimeout(adjustHeight, 0);
+        requestAnimationFrame(() => {
+            if (!textareaRef.current) return;
+            const caretPos = start + emoji.length;
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(caretPos, caretPos);
+            adjustHeight();
+        });
     };
 
     // Đóng emoji picker khi click ra ngoài
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
-            if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
+            const target = e.target as Node;
+            const clickedInsidePicker = emojiPickerRef.current?.contains(target);
+            const clickedTrigger = emojiTriggerRef.current?.contains(target);
+            if (!clickedInsidePicker && !clickedTrigger) {
                 setShowEmojiPicker(false);
             }
         };
@@ -193,24 +212,17 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     const canSend = (content.trim().length > 0 || selectedFile !== null) && !isSending && !disabled;
 
     return (
-        <div className="relative border-t border-(--crm-border) bg-white p-3 sm:px-4 sm:py-3.5 shadow-xs">
-            {/* Quick Emoji Picker Menu */}
+        <div className="relative border-t border-(--crm-border) bg-(--crm-surface) p-3 sm:px-4 sm:py-3.5 shadow-xs">
+            {/* Messenger-style Emoji Picker Popover */}
             {showEmojiPicker && (
                 <div
                     ref={emojiPickerRef}
-                    className="absolute bottom-full left-4 mb-2 p-2 rounded-xl bg-white border border-(--crm-border) shadow-lg z-20 flex flex-wrap gap-1.5 max-w-72 select-none animate-in fade-in slide-in-from-bottom-2 duration-150"
+                    className="absolute bottom-full left-3 sm:left-4 mb-2 z-30"
                 >
-                    {COMMON_EMOJIS.map((emoji) => (
-                        <button
-                            key={emoji}
-                            type="button"
-                            onClick={() => handleAddEmoji(emoji)}
-                            className="w-8 h-8 rounded-lg hover:bg-(--crm-surface-hover) flex items-center justify-center text-lg transition-transform active:scale-95"
-                            title={emoji}
-                        >
-                            {emoji}
-                        </button>
-                    ))}
+                    <EmojiPickerPopover
+                        onSelectEmoji={handleAddEmoji}
+                        onClose={() => setShowEmojiPicker(false)}
+                    />
                 </div>
             )}
 
@@ -235,7 +247,9 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
                         />
                     ) : (
                         <div className="w-12 h-12 rounded-lg bg-(--crm-info-soft) text-(--crm-primary) flex items-center justify-center shrink-0">
-                            {getFileIconType(selectedFile.name) === "pdf" ? (
+                            {getFileIconType(selectedFile.name) === "video" ? (
+                                <Film size={22} className="text-(--crm-primary)" />
+                            ) : getFileIconType(selectedFile.name) === "pdf" ? (
                                 <FileText size={22} className="text-red-500" />
                             ) : getFileIconType(selectedFile.name) === "excel" ? (
                                 <FileText size={22} className="text-emerald-600" />
@@ -270,36 +284,39 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
                 </div>
             )}
 
-            <div className="flex items-end gap-1.5 sm:gap-2 rounded-xl border border-(--crm-border) bg-white p-1.5 focus-within:border-(--crm-primary) focus-within:ring-2 focus-within:ring-(--crm-primary)/20 transition-all">
+            <div className="flex items-end gap-1.5 sm:gap-2 rounded-xl border border-(--crm-border) bg-(--crm-surface) p-1.5 focus-within:border-(--crm-primary) focus-within:ring-2 focus-within:ring-(--crm-primary)/20 transition-all">
                 {/* Nút Đính kèm tệp */}
                 <input
                     ref={fileInputRef}
                     type="file"
                     className="hidden"
                     onChange={handleFileSelect}
-                    accept=".jpg,.jpeg,.png,.webp,.pdf,.docx,.xlsx,.txt"
+                    accept=".jpg,.jpeg,.png,.webp,.mp4,.webm,.mov,.pdf,.docx,.xlsx,.txt"
                 />
                 <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={disabled || isSending}
                     className="p-2 rounded-lg text-(--crm-text-muted) hover:text-(--crm-text) hover:bg-(--crm-surface-hover) transition-colors cursor-pointer"
-                    title="Đính kèm ảnh hoặc tài liệu (tối đa 10MB)"
+                    title="Đính kèm ảnh, video hoặc tài liệu"
                 >
                     <Paperclip size={19} />
                 </button>
 
                 {/* Nút Emoji */}
                 <button
+                    ref={emojiTriggerRef}
                     type="button"
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    onClick={() => setShowEmojiPicker((prev) => !prev)}
                     disabled={disabled || isSending}
-                    className={`p-2 rounded-lg transition-colors ${
+                    className={`p-2 rounded-lg transition-colors cursor-pointer ${
                         showEmojiPicker
                             ? "bg-(--crm-info-soft) text-(--crm-primary)"
                             : "text-(--crm-text-muted) hover:text-(--crm-text) hover:bg-(--crm-surface-hover)"
                     }`}
                     title="Chèn biểu tượng cảm xúc"
+                    aria-label="Chèn biểu tượng cảm xúc"
+                    aria-expanded={showEmojiPicker}
                 >
                     <Smile size={19} />
                 </button>

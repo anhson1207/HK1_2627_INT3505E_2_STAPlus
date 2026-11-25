@@ -3,7 +3,9 @@ package sales_service.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import sales_service.util.PaginationCheck;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import sales_service.dto.event.DealCreatedEvent;
 import sales_service.dto.event.DealStageChangedEvent;
 import sales_service.dto.event.DealWonEvent;
@@ -19,10 +21,8 @@ import sales_service.model.Deal;
 import sales_service.model.DiscountApproval;
 import sales_service.publisher.DealEventPublisher;
 import sales_service.repository.DealRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 import sales_service.repository.DiscountApprovalRepository;
+import sales_service.util.PaginationCheck;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -45,12 +45,18 @@ public class DealService {
         return dealRepository.findBySalesId(salesId);
     }
 
+    public List<Deal> getDealsByCustomerId(Long customerId) {
+        return dealRepository.findByCustomerIdOrLegacySalesId(customerId);
+    }
+
     public Deal getDealByIdAndSalesId(Long dealId, Long salesId) {
+        if (salesId == null) {
+            return dealRepository.findById(dealId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Deal not found"));
+        }
         return dealRepository.findByIdAndSalesId(dealId, salesId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Deal not found"
-                ));
+                .or(() -> dealRepository.findById(dealId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Deal not found"));
     }
 
     public Page<Deal> getDealsBySalesId(DealFilterRequest filterRequest) {
@@ -63,24 +69,38 @@ public class DealService {
                 : Sort.by(filterRequest.getSortedBy() != null ? filterRequest.getSortedBy() : "createdAt").descending();
 
         return dealRepository.findAll(Filter.filter(
-                filterRequest.getSalesId(),
-                filterRequest.getOwner(),
-                filterRequest.getMinAmount(),
-                filterRequest.getMaxAmount(),
-                filterRequest.getStage(),
-                filterRequest.getCreatedAfter(),
-                filterRequest.getCreatedBefore()),
+                        filterRequest.getSalesId(),
+                        filterRequest.getOwner(),
+                        filterRequest.getMinAmount(),
+                        filterRequest.getMaxAmount(),
+                        filterRequest.getStage(),
+                        filterRequest.getCreatedAfter(),
+                        filterRequest.getCreatedBefore()),
                 PageRequest.of(page, size, sort)
         );
     }
 
-    public Deal createDeal(DealRequest request, Long salesId) {
+    public Deal createDeal(DealRequest request, Long actorUserId) {
         Deal deal = new Deal();
+        Long resolvedCustomerId = request.getCustomerId() != null
+                ? request.getCustomerId()
+                : (request.getSalesId() != null ? request.getSalesId() : 1L);
+
         deal.setDealName(request.getDealName());
-        deal.setOwner(request.getOwner());
+        deal.setOwner(request.getOwner() != null ? request.getOwner() : "");
         deal.setAmount(request.getAmount() != null ? request.getAmount() : 0.0);
         deal.setStage(request.getStage() != null ? request.getStage() : "NEW");
-        deal.setSalesId(salesId != null ? salesId : 1L);
+        deal.setCustomerId(resolvedCustomerId);
+        deal.setSalesId(actorUserId != null ? actorUserId : 1L);
+        deal.setProbability(request.getProbability() != null ? request.getProbability() : defaultProbabilityForStage(deal.getStage()));
+        deal.setExpectedClosingDate(request.getExpectedClosingDate());
+        deal.setDescription(request.getDescription());
+
+        double discountPct = request.getDiscountPercent() != null ? request.getDiscountPercent() : 0.0;
+        deal.setDiscountPercent(discountPct);
+        deal.setDiscountReason(request.getDiscountReason());
+        deal.setApprovalStatus(request.getApprovalStatus() != null ? request.getApprovalStatus() : "NOT_REQUIRED");
+
         deal.setCreatedAt(LocalDateTime.now());
         deal.setUpdatedAt(LocalDateTime.now());
 
@@ -104,16 +124,12 @@ public class DealService {
     }
 
     public void deleteDeal(Long id, Long salesId) {
-        Deal d = (salesId != null)
-                ? dealRepository.findByIdAndSalesId(id, salesId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Deal not found"))
-                : dealRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Deal not found"));
+        Deal d = getDealByIdAndSalesId(id, salesId);
         dealRepository.delete(d);
     }
 
     public Deal updateDeal(Long id, DealRequest request, Long salesId) {
-        Deal deal = (salesId != null)
-                ? dealRepository.findByIdAndSalesId(id, salesId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Deal not found"))
-                : dealRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Deal not found"));
+        Deal deal = getDealByIdAndSalesId(id, salesId);
 
         if (request.getOwner() == null || request.getAmount() == null || request.getStage() == null) {
             throw new IllegalArgumentException("All deal fields are required");
@@ -122,27 +138,58 @@ public class DealService {
         String oldStage = deal.getStage();
         String newStage = request.getStage();
 
+        if (request.getDealName() != null) deal.setDealName(request.getDealName());
         deal.setOwner(request.getOwner());
         deal.setAmount(request.getAmount());
         deal.setStage(newStage);
+        if (request.getCustomerId() != null) {
+            deal.setCustomerId(request.getCustomerId());
+        } else if (request.getSalesId() != null) {
+            deal.setCustomerId(request.getSalesId());
+        }
+        if (request.getProbability() != null) deal.setProbability(request.getProbability());
+        if (request.getExpectedClosingDate() != null) deal.setExpectedClosingDate(request.getExpectedClosingDate());
+        if (request.getDescription() != null) deal.setDescription(request.getDescription());
+        if (request.getDiscountPercent() != null) {
+            double oldPct = deal.getDiscountPercent();
+            deal.setDiscountPercent(request.getDiscountPercent());
+            if (request.getDiscountPercent() <= 0) {
+                deal.setApprovalStatus("NOT_REQUIRED");
+            } else if (Double.compare(oldPct, request.getDiscountPercent()) != 0 && "APPROVED".equalsIgnoreCase(deal.getApprovalStatus())) {
+                deal.setApprovalStatus("NOT_REQUIRED");
+            }
+        }
+        if (request.getDiscountReason() != null) deal.setDiscountReason(request.getDiscountReason());
         deal.setUpdatedAt(LocalDateTime.now());
 
         Deal updated = dealRepository.save(deal);
-        handleStageChangeEvents(updated, oldStage, newStage);
+        if (!newStage.equalsIgnoreCase(oldStage)) {
+            handleStageChangeEvents(updated, oldStage, newStage);
+        }
 
         return updated;
     }
 
     public Deal patchDeal(Long id, DealRequest request, Long salesId) {
-        Deal deal = (salesId != null)
-                ? dealRepository.findByIdAndSalesId(id, salesId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Deal not found"))
-                : dealRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Deal not found"));
-
+        Deal deal = getDealByIdAndSalesId(id, salesId);
         String oldStage = deal.getStage();
 
+        if (request.getDealName() != null) deal.setDealName(request.getDealName());
         if (request.getOwner() != null) deal.setOwner(request.getOwner());
         if (request.getAmount() != null) deal.setAmount(request.getAmount());
-        if (request.getStage() != null) deal.setStage(request.getStage());
+        if (request.getStage() != null) {
+            deal.setStage(request.getStage());
+            if (request.getProbability() == null) {
+                if ("WON".equalsIgnoreCase(request.getStage())) deal.setProbability(100);
+                else if ("LOST".equalsIgnoreCase(request.getStage())) deal.setProbability(0);
+            }
+        }
+        if (request.getCustomerId() != null) deal.setCustomerId(request.getCustomerId());
+        if (request.getProbability() != null) deal.setProbability(request.getProbability());
+        if (request.getExpectedClosingDate() != null) deal.setExpectedClosingDate(request.getExpectedClosingDate());
+        if (request.getDescription() != null) deal.setDescription(request.getDescription());
+        if (request.getDiscountPercent() != null) deal.setDiscountPercent(request.getDiscountPercent());
+        if (request.getDiscountReason() != null) deal.setDiscountReason(request.getDiscountReason());
         deal.setUpdatedAt(LocalDateTime.now());
 
         Deal updated = dealRepository.save(deal);
@@ -152,6 +199,18 @@ public class DealService {
         }
 
         return updated;
+    }
+
+    private int defaultProbabilityForStage(String stage) {
+        if (stage == null) return 10;
+        return switch (stage.toUpperCase()) {
+            case "QUALIFIED" -> 30;
+            case "PROPOSAL" -> 50;
+            case "NEGOTIATION" -> 75;
+            case "WON" -> 100;
+            case "LOST" -> 0;
+            default -> 10;
+        };
     }
 
     private void handleStageChangeEvents(Deal deal, String oldStage, String newStage) {
@@ -174,7 +233,7 @@ public class DealService {
         wonEvent.setDealId(deal.getId());
         wonEvent.setDealName(deal.getDealName());
         wonEvent.setValue(deal.getAmount());
-        wonEvent.setCustomerId(deal.getId());
+        wonEvent.setCustomerId(deal.getCustomerId() != null ? deal.getCustomerId() : deal.getId());
         wonEvent.setSalesId(deal.getSalesId());
         dealEventPublisher.publishDealWon(wonEvent);
     }
@@ -223,19 +282,36 @@ public class DealService {
         return new DealForecastResponse(totalPipeline, Math.round(weightedForecast * 100.0) / 100.0, deals.size(), stages);
     }
 
-    public void requestDiscount(Long dealId, Long salesId, Long managerId, DiscountApprovalRequestDTO request) {
-        Deal deal = dealRepository.findByIdAndSalesId(dealId, salesId)
+    public Deal requestDiscount(Long dealId, Long salesId, Long managerId, DiscountApprovalRequestDTO request) {
+        Deal deal = dealRepository.findById(dealId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Deal not found"));
-        if (request.getDiscountPercent() <= 0 || request.getDiscountPercent() >= 100) {
-            throw new IllegalArgumentException("Discount percent must be above 0 and below 100");
+
+        double pct = (request != null && request.getDiscountPercent() > 0)
+                ? request.getDiscountPercent()
+                : (deal.getDiscountPercent() != null ? deal.getDiscountPercent() : 0.0);
+
+        if (pct <= 0 || pct >= 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phần trăm chiết khấu phải lớn hơn 0 và nhỏ hơn 100");
         }
+
+        String reason = (request != null && request.getReason() != null && !request.getReason().isBlank())
+                ? request.getReason().trim()
+                : deal.getDiscountReason();
+
+        deal.setDiscountPercent(pct);
+        if (reason != null) deal.setDiscountReason(reason);
+        deal.setApprovalStatus("PENDING");
+        deal.setDiscountApprovedBy(null);
+        deal.setDiscountApprovedAt(null);
+        deal.setUpdatedAt(LocalDateTime.now());
+        Deal savedDeal = dealRepository.save(deal);
 
         DiscountApproval discountApproval = new DiscountApproval();
         discountApproval.setDealId(dealId);
-        discountApproval.setRequestedByUserId(salesId);
-        discountApproval.setManagerId(managerId != null ? managerId : 1000L);
-        discountApproval.setDiscountPercent(request.getDiscountPercent());
-        discountApproval.setReason(request.getReason());
+        discountApproval.setRequestedByUserId(salesId != null ? salesId : 1L);
+        discountApproval.setManagerId(managerId != null ? managerId : 1L);
+        discountApproval.setDiscountPercent(pct);
+        discountApproval.setReason(reason);
         discountApproval.setStatus("PENDING");
         discountApproval.setCreatedAt(LocalDateTime.now());
         DiscountApproval savedDiscountApproval = discountApprovalRepository.save(discountApproval);
@@ -244,7 +320,7 @@ public class DealService {
         event.setEventId(UUID.randomUUID());
         event.setApprovalId(savedDiscountApproval.getId());
         event.setDealId(savedDiscountApproval.getDealId());
-        event.setDealName(deal.getDealName());
+        event.setDealName(savedDeal.getDealName());
         event.setRequestedByUserId(savedDiscountApproval.getRequestedByUserId());
         event.setManagerId(savedDiscountApproval.getManagerId());
         event.setDiscountPercent(savedDiscountApproval.getDiscountPercent());
@@ -252,21 +328,52 @@ public class DealService {
         event.setCreatedAt(savedDiscountApproval.getCreatedAt());
 
         dealEventPublisher.publishDiscountRequest(event);
+        return savedDeal;
+    }
+
+    public Deal decideDiscountByDealId(Long dealId, Long managerId, String approverName, String status, String reason) {
+        String decision = normalizeDecision(status);
+
+        Deal deal = dealRepository.findById(dealId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Deal not found"));
+
+        List<DiscountApproval> approvals = discountApprovalRepository.findByDealIdOrderByCreatedAtDesc(dealId);
+        DiscountApproval approval;
+        if (approvals.isEmpty()) {
+            approval = new DiscountApproval();
+            approval.setDealId(dealId);
+            approval.setRequestedByUserId(deal.getSalesId());
+            approval.setManagerId(managerId != null ? managerId : 1L);
+            approval.setDiscountPercent(deal.getDiscountPercent() > 0 ? deal.getDiscountPercent() : 10.0);
+            approval.setReason(deal.getDiscountReason());
+            approval.setCreatedAt(LocalDateTime.now());
+        } else {
+            approval = approvals.get(0);
+        }
+
+        approval.setStatus(decision);
+        approval.setManagerId(managerId != null ? managerId : 1L);
+        approval.setDecidedAt(LocalDateTime.now());
+        DiscountApproval savedApproval = discountApprovalRepository.save(approval);
+
+        deal.setApprovalStatus(decision);
+        deal.setDiscountApprovedBy(approverName != null && !approverName.isBlank() ? approverName : "Quản trị viên");
+        deal.setDiscountApprovedAt(LocalDateTime.now());
+        if ("REJECTED".equals(decision) && reason != null && !reason.isBlank()) {
+            deal.setDiscountReason(reason.trim());
+        }
+        deal.setUpdatedAt(LocalDateTime.now());
+        Deal savedDeal = dealRepository.save(deal);
+
+        publishDecisionEvent(savedApproval, savedDeal, decision);
+        return savedDeal;
     }
 
     public void approveDiscount(Long discountId, Long managerId, String status) {
-        String decision;
-        if ("APPROVED".equalsIgnoreCase(status)) {
-            decision = "APPROVED";
-        } else if ("REJECTED".equalsIgnoreCase(status)) {
-            decision = "REJECTED";
-        } else {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status must be APPROVED or REJECTED");
-        }
+        String decision = normalizeDecision(status);
 
-        DiscountApproval discountApproval = (managerId != null)
-                ? discountApprovalRepository.findByIdAndManagerId(discountId, managerId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Discount Request not found"))
-                : discountApprovalRepository.findById(discountId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Discount Request not found"));
+        DiscountApproval discountApproval = discountApprovalRepository.findById(discountId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Discount Request not found"));
 
         Deal deal = dealRepository.findById(discountApproval.getDealId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Deal not found"));
@@ -275,13 +382,22 @@ public class DealService {
         discountApproval.setDecidedAt(LocalDateTime.now());
         DiscountApproval savedApproval = discountApprovalRepository.save(discountApproval);
 
-        if ("APPROVED".equals(decision)) {
-            double discountedAmount = deal.getAmount() * (1 - savedApproval.getDiscountPercent() / 100.0);
-            deal.setAmount(discountedAmount);
-            deal.setUpdatedAt(LocalDateTime.now());
-            dealRepository.save(deal);
-        }
+        deal.setApprovalStatus(decision);
+        deal.setDiscountApprovedBy("Quản trị viên");
+        deal.setDiscountApprovedAt(LocalDateTime.now());
+        deal.setUpdatedAt(LocalDateTime.now());
+        dealRepository.save(deal);
 
+        publishDecisionEvent(savedApproval, deal, decision);
+    }
+
+    private String normalizeDecision(String status) {
+        if ("APPROVED".equalsIgnoreCase(status)) return "APPROVED";
+        if ("REJECTED".equalsIgnoreCase(status)) return "REJECTED";
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status must be APPROVED or REJECTED");
+    }
+
+    private void publishDecisionEvent(DiscountApproval savedApproval, Deal deal, String decision) {
         DiscountDecisionEvent event = new DiscountDecisionEvent();
         event.setEventId(UUID.randomUUID());
         event.setApprovalId(savedApproval.getId());

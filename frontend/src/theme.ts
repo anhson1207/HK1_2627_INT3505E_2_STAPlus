@@ -136,9 +136,73 @@ export function getAppTheme(mode: ThemeMode = "light"): Theme {
                     root: {
                         color: isDark ? "#b7bac5" : "#676879",
                         "&.Mui-focused": {
-                            color: "#007f9b",
+                            color: isDark ? "#22b8cf" : "#007f9b",
                         },
                     },
+                },
+            },
+
+            MuiMenu: {
+                styleOverrides: {
+                    paper: {
+                        backgroundColor: isDark ? "#20212b" : "#ffffff",
+                        border: `1px solid ${isDark ? "#3a3d49" : "#e6e9ef"}`,
+                    },
+                },
+            },
+
+            MuiPopover: {
+                styleOverrides: {
+                    paper: {
+                        backgroundColor: isDark ? "#20212b" : "#ffffff",
+                        border: `1px solid ${isDark ? "#3a3d49" : "#e6e9ef"}`,
+                    },
+                },
+            },
+
+            MuiDialog: {
+                styleOverrides: {
+                    paper: {
+                        backgroundColor: isDark ? "#20212b" : "#ffffff",
+                        border: `1px solid ${isDark ? "#3a3d49" : "#e6e9ef"}`,
+                    },
+                },
+            },
+
+            MuiDialogContent: {
+                styleOverrides: {
+                    dividers: {
+                        borderColor: isDark ? "#30333e" : "#e6e9ef",
+                    },
+                },
+            },
+
+            MuiAlert: {
+                styleOverrides: {
+                    root: isDark
+                        ? {
+                              "&.MuiAlert-standardInfo": {
+                                  backgroundColor: "rgba(0, 127, 155, 0.18)",
+                                  color: "#bae6fd",
+                                  border: "1px solid rgba(56, 189, 248, 0.25)",
+                              },
+                              "&.MuiAlert-standardSuccess": {
+                                  backgroundColor: "rgba(0, 200, 117, 0.15)",
+                                  color: "#a7f3d0",
+                                  border: "1px solid rgba(52, 211, 153, 0.25)",
+                              },
+                              "&.MuiAlert-standardWarning": {
+                                  backgroundColor: "rgba(253, 171, 61, 0.15)",
+                                  color: "#fde68a",
+                                  border: "1px solid rgba(251, 191, 36, 0.25)",
+                              },
+                              "&.MuiAlert-standardError": {
+                                  backgroundColor: "rgba(226, 68, 92, 0.18)",
+                                  color: "#fecdd3",
+                                  border: "1px solid rgba(251, 113, 133, 0.28)",
+                              },
+                          }
+                        : undefined,
                 },
             },
 

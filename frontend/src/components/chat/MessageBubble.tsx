@@ -9,6 +9,7 @@ import {
     FileText,
     Download,
     Users,
+    Maximize2,
 } from "lucide-react";
 import type { ChatMessage, ChatParticipant } from "../../types/chat";
 import {
@@ -17,6 +18,7 @@ import {
     getAvatarColor,
     getFileIconType,
     getInitials,
+    splitMessageTextWithLinks,
 } from "../../utils/chatUtils";
 import { chatService } from "../../services/chatService";
 
@@ -27,7 +29,7 @@ interface MessageBubbleProps {
     isRead?: boolean;
     readers?: ChatParticipant[];
     onRetry?: (message: ChatMessage) => void;
-    onPreviewImage?: (url: string, name: string) => void;
+    onPreviewImage?: (url: string, name: string, kind?: "image" | "video") => void;
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
@@ -47,15 +49,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
     const isMine = message.isMine;
     const timeFormatted = formatMessageTime(message.createdAt);
-    const isImage = message.type === "IMAGE" || (message.attachmentUrl && getFileIconType(message.attachmentName) === "image");
-    const isFile = message.type === "FILE" || (message.attachmentUrl && !isImage);
     const iconType = getFileIconType(message.attachmentName);
+    const isImage = message.type === "IMAGE" || (Boolean(message.attachmentUrl) && iconType === "image");
+    const isVideo = message.type === "VIDEO" || (Boolean(message.attachmentUrl) && iconType === "video");
+    const isFile = message.type === "FILE" || (Boolean(message.attachmentUrl) && !isImage && !isVideo);
 
     useEffect(() => {
         let active = true;
         let createdUrl: string | null = null;
 
-        if (isImage && message.attachmentUrl) {
+        if ((isImage || isVideo) && message.attachmentUrl) {
             setImageLoading(true);
             setImageError(false);
             chatService
@@ -82,7 +85,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 URL.revokeObjectURL(createdUrl);
             }
         };
-    }, [isImage, message.attachmentUrl]);
+    }, [isImage, isVideo, message.attachmentUrl]);
 
     const handleDownload = async () => {
         if (!message.attachmentUrl || downloading) return;
@@ -146,32 +149,64 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 {/* Bong bóng tin nhắn */}
                 <div
                     className={`relative text-sm leading-relaxed break-words whitespace-pre-wrap transition-shadow duration-150 ${
-                        isImage && !message.content
-                            ? "p-1 rounded-2xl overflow-hidden border border-(--crm-border-subtle) bg-white shadow-2xs"
+                        (isImage || isVideo) && !message.content
+                            ? "p-1 rounded-2xl overflow-hidden border border-(--crm-border-subtle) bg-(--crm-surface) shadow-2xs"
                             : isMine
                             ? "px-4 py-2.5 bg-(--crm-primary) text-white rounded-2xl rounded-br-xs shadow-xs"
                             : "px-4 py-2.5 bg-white text-(--crm-heading) border border-(--crm-border-subtle) rounded-2xl rounded-bl-xs shadow-2xs"
                     }`}
                 >
-                    {/* Hiển thị Hình ảnh */}
-                    {isImage && (
-                        <div className="mb-1.5 overflow-hidden rounded-xl">
+                    {/* Hiển thị Hình ảnh hoặc Video */}
+                    {(isImage || isVideo) && (
+                        <div className="mb-1.5 overflow-hidden rounded-xl relative">
                             {imageLoading && (
                                 <div className="w-56 h-40 bg-(--crm-surface-subtle) animate-pulse rounded-xl flex items-center justify-center text-xs text-(--crm-text-muted)">
-                                    Đang tải ảnh...
+                                    {isVideo ? "Đang tải video..." : "Đang tải ảnh..."}
                                 </div>
                             )}
                             {imageError && (
                                 <div className="w-56 h-28 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-center text-xs text-rose-500">
-                                    Không thể tải ảnh
+                                    {isVideo ? "Không thể tải video" : "Không thể tải ảnh"}
                                 </div>
                             )}
-                            {imageBlobUrl && (
+                            {imageBlobUrl && isVideo && (
+                                <div className="relative group/vid">
+                                    <video
+                                        src={imageBlobUrl}
+                                        controls
+                                        playsInline
+                                        preload="metadata"
+                                        className="max-h-72 w-auto max-w-full rounded-xl bg-black"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            onPreviewImage?.(
+                                                imageBlobUrl,
+                                                message.attachmentName || "Video",
+                                                "video"
+                                            )
+                                        }
+                                        className="absolute top-2 right-2 rounded-full bg-black/55 p-1.5 text-white opacity-0 group-hover/vid:opacity-100 transition-opacity hover:bg-black/75 cursor-pointer"
+                                        title="Phóng to video"
+                                        aria-label="Phóng to video"
+                                    >
+                                        <Maximize2 size={14} />
+                                    </button>
+                                </div>
+                            )}
+                            {imageBlobUrl && isImage && (
                                 <img
                                     src={imageBlobUrl}
                                     alt={message.attachmentName || "Hình ảnh"}
                                     className="max-h-72 w-auto max-w-full min-w-20 min-h-20 bg-slate-100 rounded-xl object-cover cursor-pointer hover:opacity-95 transition-opacity"
-                                    onClick={() => onPreviewImage?.(imageBlobUrl, message.attachmentName || "Hình ảnh")}
+                                    onClick={() =>
+                                        onPreviewImage?.(
+                                            imageBlobUrl,
+                                            message.attachmentName || "Hình ảnh",
+                                            "image"
+                                        )
+                                    }
                                 />
                             )}
                         </div>
@@ -230,9 +265,29 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                         </div>
                     )}
 
-                    {/* Nội dung tin nhắn văn bản */}
+                    {/* Nội dung tin nhắn văn bản (hỗ trợ link nhấn mở trực tiếp) */}
                     {message.content && message.content !== message.attachmentName && (
-                        <p className="m-0 select-text leading-relaxed">{message.content}</p>
+                        <p className="m-0 select-text leading-relaxed">
+                            {splitMessageTextWithLinks(message.content).map((seg, i) =>
+                                seg.type === "link" && seg.href ? (
+                                    <a
+                                        key={`${seg.value}-${i}`}
+                                        href={seg.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`underline underline-offset-2 break-all ${
+                                            isMine
+                                                ? "text-white hover:text-white/85"
+                                                : "text-(--crm-primary) hover:opacity-80"
+                                        }`}
+                                    >
+                                        {seg.value}
+                                    </a>
+                                ) : (
+                                    <React.Fragment key={i}>{seg.value}</React.Fragment>
+                                )
+                            )}
+                        </p>
                     )}
 
                     {/* Metadata: Giờ gửi & Trạng thái đã gửi / đã xem */}

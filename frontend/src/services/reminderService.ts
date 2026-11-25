@@ -1,39 +1,26 @@
 import api from "./api";
-import { mockReminders } from "../mocks/reminders";
 import { customerService } from "./customerService";
 import { dealService } from "./dealService";
 import { leadService } from "./leadService";
 import type { FollowUpReminder, ReminderEntityType, ReminderPayload } from "../types/reminder";
 
-const STORAGE_KEY = "crm-soa.reminders";
 export const REMINDERS_CHANGED_EVENT = "crm-soa:reminders-changed";
 
-interface BackendFollowUpResponse {
+interface BackendReminderResponse {
     id: number;
+    userId?: number | null;
     title: string;
-    message?: string;
-    targetUrl?: string;
-    type?: string;
-    createdAt?: string;
+    description?: string | null;
+    dueAt: string;
+    status: string;
+    entityType: ReminderEntityType | string;
+    entityId: number;
+    entityName: string;
+    ownerName?: string | null;
+    createdAt: string;
 }
 
-function read(): FollowUpReminder[] {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-            const parsed: unknown = JSON.parse(raw);
-            if (Array.isArray(parsed)) return parsed as FollowUpReminder[];
-        }
-    } catch {
-        /* Restore seed reminders. */
-    }
-    const seeded = mockReminders.map((item) => ({ ...item }));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-    return seeded;
-}
-
-function write(items: FollowUpReminder[]) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+function notifyChange() {
     if (typeof window !== "undefined") {
         window.dispatchEvent(new Event(REMINDERS_CHANGED_EVENT));
     }
@@ -47,8 +34,29 @@ export function getEffectiveReminderStatus(reminder: FollowUpReminder): FollowUp
           : "PENDING";
 }
 
-function withEffectiveStatus(item: FollowUpReminder): FollowUpReminder {
-    return { ...item, status: getEffectiveReminderStatus(item) };
+function normalizeEntityType(value: string): ReminderEntityType {
+    const upper = value?.toUpperCase();
+    if (upper === "LEAD" || upper === "CUSTOMER" || upper === "DEAL") {
+        return upper;
+    }
+    return "CUSTOMER";
+}
+
+function mapReminderFromApi(item: BackendReminderResponse): FollowUpReminder {
+    const mapped: FollowUpReminder = {
+        id: item.id,
+        userId: item.userId ?? undefined,
+        title: item.title,
+        description: item.description ?? undefined,
+        dueAt: item.dueAt,
+        status: item.status === "COMPLETED" ? "COMPLETED" : "PENDING",
+        entityType: normalizeEntityType(item.entityType),
+        entityId: item.entityId,
+        entityName: item.entityName,
+        ownerName: item.ownerName ?? undefined,
+        createdAt: item.createdAt,
+    };
+    return { ...mapped, status: getEffectiveReminderStatus(mapped) };
 }
 
 export function getReminderEntityUrl(type: ReminderEntityType, id: number): string {
@@ -74,57 +82,16 @@ async function getEntityName(type: ReminderEntityType, id: number): Promise<stri
 }
 
 export const reminderService = {
-    // GET reminders (with sync from backend /notifications if available)
-    getReminders: async (): Promise<FollowUpReminder[]> => {
-        try {
-            const response = await api.get<Array<{
-                id: number;
-                title: string;
-                message?: string;
-                targetUrl?: string;
-                type?: string;
-                createdAt?: string;
-                read?: boolean;
-                isRead?: boolean;
-            }>>("/notifications");
-
-            if (Array.isArray(response.data)) {
-                const followUps = response.data.filter((n) => n.type === "FOLLOW_UP");
-                const currentItems = read();
-                let hasNew = false;
-
-                followUps.forEach((n) => {
-                    if (!currentItems.some((item) => item.id === n.id)) {
-                        const parts = (n.targetUrl || "").split("/").filter(Boolean);
-                        const entityType: ReminderEntityType =
-                            parts[0] === "leads" ? "LEAD" : parts[0] === "deals" ? "DEAL" : "CUSTOMER";
-                        const entityId = Number(parts[1]) || 1;
-
-                        currentItems.push({
-                            id: n.id,
-                            title: n.title,
-                            description: n.message,
-                            dueAt: n.createdAt || new Date().toISOString(),
-                            status: (n.read ?? n.isRead) ? "COMPLETED" : "PENDING",
-                            entityType,
-                            entityId,
-                            entityName: n.title,
-                            createdAt: n.createdAt || new Date().toISOString(),
-                        });
-                        hasNew = true;
-                    }
-                });
-
-                if (hasNew) {
-                    write(currentItems);
-                }
-            }
-        } catch (error) {
-            console.warn("Backend GET /notifications sync unavailable, using local cache:", error);
-        }
-
-        return read()
-            .map(withEffectiveStatus)
+    getReminders: async (entityType?: ReminderEntityType, entityId?: number): Promise<FollowUpReminder[]> => {
+        const response = await api.get<BackendReminderResponse[]>("/reminders", {
+            params:
+                entityType && entityId
+                    ? { entityType, entityId }
+                    : undefined,
+        });
+        const list = Array.isArray(response.data) ? response.data : [];
+        return list
+            .map(mapReminderFromApi)
             .sort((a, b) => Date.parse(a.dueAt) - Date.parse(b.dueAt));
     },
 
@@ -139,106 +106,48 @@ export const reminderService = {
     },
 
     getReminderById: async (id: number): Promise<FollowUpReminder> => {
-        const item = read().find((candidate) => candidate.id === id);
-        if (!item) throw new Error("Không tìm thấy nhắc việc.");
-        return withEffectiveStatus(item);
+        const response = await api.get<BackendReminderResponse>(`/reminders/${id}`);
+        return mapReminderFromApi(response.data);
     },
 
-    // POST /api/v1/notifications/follow-up to persist to backend database
     createReminder: async (data: ReminderPayload): Promise<FollowUpReminder> => {
         const entityName = await getEntityName(data.entityType, data.entityId);
-        const targetUrl = getReminderEntityUrl(data.entityType, data.entityId);
-
-        const followUpPayload = {
+        const response = await api.post<BackendReminderResponse>("/reminders", {
             title: data.title.trim(),
-            message: data.description?.trim() || `Lịch hẹn/nhắc việc cho ${entityName} (Hạn: ${data.dueAt})`,
-            targetUrl,
+            description: data.description?.trim() || "",
             dueAt: data.dueAt,
             entityType: data.entityType,
-            entityId: String(data.entityId),
+            entityId: data.entityId,
             entityName,
-            ownerName: data.ownerName?.trim(),
-        };
-
-        let backendId: number | undefined;
-
-        try {
-            const response = await api.post<BackendFollowUpResponse>(
-                "/notifications/follow-up",
-                followUpPayload,
-            );
-            if (response.data && typeof response.data.id === "number") {
-                backendId = response.data.id;
-            }
-        } catch (error) {
-            console.warn("Backend POST /api/v1/notifications/follow-up unavailable, saving locally:", error);
-        }
-
-        const items = read();
-        const nextId = backendId ?? (items.reduce((max, candidate) => Math.max(max, candidate.id), 0) + 1);
-
-        const item: FollowUpReminder = {
-            ...data,
-            id: nextId,
-            title: data.title.trim(),
-            description: data.description?.trim(),
-            ownerName: data.ownerName?.trim(),
-            entityName,
-            status: "PENDING",
-            createdAt: new Date().toISOString(),
-        };
-
-        write([...items, item]);
-        return withEffectiveStatus(item);
+            ownerName: data.ownerName?.trim() || undefined,
+        });
+        notifyChange();
+        return mapReminderFromApi(response.data);
     },
 
     updateReminder: async (id: number, data: ReminderPayload): Promise<FollowUpReminder> => {
         const entityName = await getEntityName(data.entityType, data.entityId);
-        const items = read();
-        const index = items.findIndex((candidate) => candidate.id === id);
-        if (index < 0) throw new Error("Không tìm thấy nhắc việc.");
-
-        const item: FollowUpReminder = {
-            ...items[index],
-            ...data,
+        const response = await api.put<BackendReminderResponse>(`/reminders/${id}`, {
             title: data.title.trim(),
-            description: data.description?.trim(),
-            ownerName: data.ownerName?.trim(),
+            description: data.description?.trim() || "",
+            dueAt: data.dueAt,
+            entityType: data.entityType,
+            entityId: data.entityId,
             entityName,
-        };
-
-        items[index] = item;
-        write(items);
-        return withEffectiveStatus(item);
+            ownerName: data.ownerName?.trim() || undefined,
+        });
+        notifyChange();
+        return mapReminderFromApi(response.data);
     },
 
     deleteReminder: async (id: number): Promise<void> => {
-        try {
-            await api.delete(`/notifications/${id}`);
-        } catch {
-            // ignore if endpoint not present
-        }
-
-        const items = read();
-        if (!items.some((candidate) => candidate.id === id)) {
-            throw new Error("Không tìm thấy nhắc việc.");
-        }
-        write(items.filter((candidate) => candidate.id !== id));
+        await api.delete(`/reminders/${id}`);
+        notifyChange();
     },
 
     completeReminder: async (id: number): Promise<FollowUpReminder> => {
-        try {
-            await api.patch(`/notifications/${id}/read`);
-        } catch {
-            // ignore if endpoint not present
-        }
-
-        const items = read();
-        const index = items.findIndex((candidate) => candidate.id === id);
-        if (index < 0) throw new Error("Không tìm thấy nhắc việc.");
-
-        items[index] = { ...items[index], status: "COMPLETED" };
-        write(items);
-        return withEffectiveStatus(items[index]);
+        const response = await api.patch<BackendReminderResponse>(`/reminders/${id}/complete`);
+        notifyChange();
+        return mapReminderFromApi(response.data);
     },
 };

@@ -49,7 +49,7 @@ function ToggleSwitch({ checked, onChange, disabled = false, ariaLabel }: Toggle
 }
 
 export default function NotificationSettingsPage() {
-    const { notifications, saveNotifications } = useSettingsStore();
+    const { notifications, saveNotifications, saveChatNotifications } = useSettingsStore();
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -135,6 +135,12 @@ export default function NotificationSettingsPage() {
             const updated = await authService.updatePreferences(form);
 
             // Sync with local store
+            saveChatNotifications({
+                chatToast: updated.chatToast ?? true,
+                chatSound: updated.chatSound ?? true,
+                chatBrowser: updated.chatBrowser ?? false,
+                chatGroupEvents: updated.chatGroupEvents ?? true,
+            });
             saveNotifications({
                 followUp: updated.notifyLeadAssigned ?? true,
                 deal: updated.notifyDealStage ?? true,
@@ -159,9 +165,6 @@ export default function NotificationSettingsPage() {
                 <h2 className="text-xl font-bold tracking-tight text-(--crm-heading)">
                     Cài đặt thông báo
                 </h2>
-                <p className="mt-1 text-sm text-(--crm-text-secondary)">
-                    Tùy chỉnh nhận thông báo cho Trò chuyện nội bộ (Chat) và các sự kiện CRM quan trọng.
-                </p>
             </div>
 
             {error && (
@@ -456,10 +459,7 @@ export default function NotificationSettingsPage() {
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="flex flex-col gap-3 border-t border-(--crm-border) bg-(--crm-surface-subtle)/40 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-                        <p className="text-xs text-(--crm-text-secondary)">
-                            Tùy chọn thông báo được lưu riêng cho tài khoản của bạn.
-                        </p>
+                    <div className="flex flex-col gap-3 border-t border-(--crm-border) bg-(--crm-surface-subtle)/40 p-4 sm:flex-row sm:items-center sm:justify-end sm:px-7">
                         <button
                             type="button"
                             disabled={saving}

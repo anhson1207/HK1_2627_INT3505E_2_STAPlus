@@ -44,7 +44,7 @@ export default function ResetPasswordPage() {
         setErrorMessage("");
         setSuccessMessage("");
 
-        const targetEmail = (emailFromUrl || email).trim();
+        const targetEmail = (emailFromUrl || email).trim().toLowerCase();
         if (!targetEmail) {
             setErrorMessage("Vui lòng nhập địa chỉ email tài khoản của bạn.");
             return;
@@ -71,7 +71,7 @@ export default function ResetPasswordPage() {
             );
 
             setTimeout(() => {
-                navigate("/login");
+                navigate("/login", { state: { username: targetEmail } });
             }, 2500);
         } catch (err) {
             let msg =
@@ -118,7 +118,11 @@ export default function ResetPasswordPage() {
                         variant="contained"
                         fullWidth
                         size="large"
-                        onClick={() => navigate("/login")}
+                        onClick={() =>
+                            navigate("/login", {
+                                state: { username: (emailFromUrl || email).trim().toLowerCase() },
+                            })
+                        }
                     >
                         Đăng nhập ngay
                     </Button>

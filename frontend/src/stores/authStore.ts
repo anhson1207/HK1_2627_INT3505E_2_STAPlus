@@ -4,6 +4,7 @@ import { configureApiAuth } from "../services/api";
 import { authService } from "../services/authService";
 import type { AuthUser, LoginRequest } from "../types/auth";
 import { readAuthSession, removeAuthSession, saveAuthSession } from "../utils/authSession";
+import { notifyChatOfflineWithToken } from "../utils/chatUtils";
 
 interface AuthState {
     user: AuthUser | null;
@@ -101,9 +102,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     logout: () => {
+        const currentToken = get().token;
+        notifyChatOfflineWithToken(currentToken);
         sessionRevision += 1;
         removeAuthSession();
-        // Client-side logout only: backend has no logout/revoke endpoint.
+        // Also clear client-side chat socket session via store reset & unsubscribe
         set({ ...EMPTY_SESSION, isLoading: false });
     },
 

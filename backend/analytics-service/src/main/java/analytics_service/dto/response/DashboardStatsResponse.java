@@ -7,6 +7,11 @@ public class DashboardStatsResponse {
     private double totalRevenue;
     private long openTickets;
     private long wonDeals;
+    private String leadsTrend;
+    private String customersTrend;
+    private String dealsTrend;
+    private String revenueTrend;
+    private String wonDealsTrend;
 
     public DashboardStatsResponse() {}
 
@@ -36,4 +41,19 @@ public class DashboardStatsResponse {
 
     public long getWonDeals() { return wonDeals; }
     public void setWonDeals(long wonDeals) { this.wonDeals = wonDeals; }
+
+    public String getLeadsTrend() { return leadsTrend; }
+    public void setLeadsTrend(String leadsTrend) { this.leadsTrend = leadsTrend; }
+
+    public String getCustomersTrend() { return customersTrend; }
+    public void setCustomersTrend(String customersTrend) { this.customersTrend = customersTrend; }
+
+    public String getDealsTrend() { return dealsTrend; }
+    public void setDealsTrend(String dealsTrend) { this.dealsTrend = dealsTrend; }
+
+    public String getRevenueTrend() { return revenueTrend; }
+    public void setRevenueTrend(String revenueTrend) { this.revenueTrend = revenueTrend; }
+
+    public String getWonDealsTrend() { return wonDealsTrend; }
+    public void setWonDealsTrend(String wonDealsTrend) { this.wonDealsTrend = wonDealsTrend; }
 }

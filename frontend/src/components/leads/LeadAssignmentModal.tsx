@@ -152,7 +152,8 @@ export default function LeadAssignmentModal({ open, onClose, onSuccess }: LeadAs
                     sx: {
                         borderRadius: "20px",
                         overflow: "hidden",
-                        border: "1px solid #e2e8f0",
+                        backgroundColor: "var(--crm-surface)",
+                        border: "1px solid var(--crm-border)",
                         boxShadow: "0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04)",
                     },
                 },

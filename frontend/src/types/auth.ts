@@ -129,6 +129,10 @@ export interface Organization {
     website?: string | null;
     address?: string | null;
     timezone?: string | null;
+    crmName?: string | null;
+    currency?: string | null;
+    language?: string | null;
+    dateFormat?: string | null;
     ownerUserId: number;
     ownerName?: string | null;
     ownerEmail?: string | null;
@@ -173,6 +177,10 @@ export interface UpdateOrganizationData {
     website?: string;
     address?: string;
     timezone?: string;
+    crmName?: string;
+    currency?: string;
+    language?: string;
+    dateFormat?: string;
 }
 
 export type InvitationStatus = 'ACTIVE' | 'REVOKED' | 'EXPIRED';

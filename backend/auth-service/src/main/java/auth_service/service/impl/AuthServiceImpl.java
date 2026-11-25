@@ -20,6 +20,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
@@ -27,6 +29,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
 
     private static final int OTP_COOLDOWN_SECONDS = 60;
     private static final java.util.regex.Pattern PASSWORD_PATTERN =
-            java.util.regex.Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@#$%^&+=!_~.-]).{8,100}$");
+            java.util.regex.Pattern.compile(PasswordValidationConstants.PASSWORD_PATTERN);
 
     private final java.util.concurrent.ConcurrentHashMap<Long, int[]> passwordAttempts =
             new java.util.concurrent.ConcurrentHashMap<>();
@@ -64,22 +67,24 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserResponse register(RegisterRequest r) {
+        String normalizedEmail = r.getEmail().trim().toLowerCase();
+        String normalizedUsername = r.getUsername().trim();
 
-        if (users.existsByEmail(r.getEmail())) {
+        if (users.existsByEmailIgnoreCase(normalizedEmail)) {
             throw new EmailAlreadyExistsException(
                     "Email already exists"
             );
         }
 
-        if (users.existsByUsername(r.getUsername())) {
+        if (users.existsByUsername(normalizedUsername)) {
             throw new UsernameAlreadyExistsException(
                     "Username already exists"
             );
         }
 
         User u = User.builder()
-                .username(r.getUsername())
-                .email(r.getEmail())
+                .username(normalizedUsername)
+                .email(normalizedEmail)
                 .password(encoder.encode(r.getPassword()))
                 .role(null)
                 .status(UserStatus.ACTIVE)
@@ -108,7 +113,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserResponse registerEmployee(EmployeeRegisterRequest r) {
-        if (users.existsByEmail(r.getEmail())) {
+        String normalizedEmail = r.getEmail().trim().toLowerCase();
+        if (users.existsByEmailIgnoreCase(normalizedEmail)) {
             throw new EmailAlreadyExistsException("Email này đã được sử dụng trên hệ thống.");
         }
 
@@ -125,7 +131,7 @@ public class AuthServiceImpl implements AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
         }
 
-        String baseUsername = r.getEmail().split("@")[0].replaceAll("[^a-zA-Z0-9._-]", "");
+        String baseUsername = normalizedEmail.split("@")[0].replaceAll("[^a-zA-Z0-9._-]", "");
         if (baseUsername.isBlank()) {
             baseUsername = "user";
         }
@@ -137,9 +143,9 @@ public class AuthServiceImpl implements AuthService {
 
         User u = User.builder()
                 .username(username)
-                .email(r.getEmail())
+                .email(normalizedEmail)
                 .password(encoder.encode(r.getPassword()))
-                .fullName(r.getFullName())
+                .fullName(r.getFullName().trim())
                 .role(null)
                 .status(UserStatus.PENDING)
                 .createdAt(LocalDateTime.now())
@@ -181,8 +187,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest r) {
+        String identifier = r.getEmail() != null ? r.getEmail().trim() : "";
 
-        User u = users.findByEmail(r.getEmail())
+        User u = users.findByEmailIgnoreCase(identifier)
+                .or(() -> identifier.contains("@")
+                        ? java.util.Optional.empty()
+                        : users.findByUsernameIgnoreCase(identifier)
+                                .or(() -> users.findByEmailIgnoreCase(identifier + "@crm.local")))
                 .orElseThrow(() ->
                         new UserNotFoundException("User not found"));
 
@@ -339,7 +350,9 @@ public class AuthServiceImpl implements AuthService {
         String message =
                 "Mã OTP đặt lại mật khẩu đã được gửi về email của bạn.";
 
-        User u = users.findByEmailForUpdate(r.getEmail())
+        String normalizedEmail = r.getEmail() != null ? r.getEmail().trim().toLowerCase() : "";
+
+        User u = users.findByEmailForUpdate(normalizedEmail)
                 .orElse(null);
 
         if (u == null) {
@@ -391,11 +404,19 @@ public class AuthServiceImpl implements AuthService {
                         .build()
         );
 
-        // Send OTP via email
-        emailService.sendPasswordResetEmail(
-                u.getEmail(),
-                otp
-        );
+        // Send OTP asynchronously after transaction commits so SMTP latency never times out client requests
+        final String targetEmail = u.getEmail();
+        final String generatedOtp = otp;
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    CompletableFuture.runAsync(() -> emailService.sendPasswordResetEmail(targetEmail, generatedOtp));
+                }
+            });
+        } else {
+            CompletableFuture.runAsync(() -> emailService.sendPasswordResetEmail(targetEmail, generatedOtp));
+        }
 
         return ForgotPasswordResponse.builder()
                 .message(message)

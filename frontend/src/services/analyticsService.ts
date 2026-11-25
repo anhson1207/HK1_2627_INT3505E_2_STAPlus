@@ -18,25 +18,9 @@ import type {
 } from "../types/analytics";
 import type { Deal } from "../types/deal";
 
-const ANALYTICS_DELAY_MS = 100;
-const rangeMonths: Record<AnalyticsRange, number> = { "7d": 1, "30d": 2, "3m": 3, "6m": 6, "1y": 12 };
-const monthlyRevenueFallback: MonthlyRevenue[] = [
-    { month: "T10/25", revenue: 95_000_000 }, { month: "T11/25", revenue: 120_000_000 },
-    { month: "T12/25", revenue: 165_000_000 }, { month: "T1", revenue: 120_000_000 },
-    { month: "T2", revenue: 150_000_000 }, { month: "T3", revenue: 138_000_000 },
-    { month: "T4", revenue: 190_000_000 }, { month: "T5", revenue: 210_000_000 },
-    { month: "T6", revenue: 205_000_000 }, { month: "T7", revenue: 245_000_000 },
-    { month: "T8", revenue: 270_000_000 }, { month: "T9", revenue: 335_000_000 },
-];
-const customerGrowthFallback: CustomerGrowthStat[] = [
-    { month: "T10/25", customers: 18 }, { month: "T11/25", customers: 22 }, { month: "T12/25", customers: 27 },
-    { month: "T1", customers: 31 }, { month: "T2", customers: 35 }, { month: "T3", customers: 42 },
-    { month: "T4", customers: 49 }, { month: "T5", customers: 56 }, { month: "T6", customers: 63 },
-    { month: "T7", customers: 72 }, { month: "T8", customers: 84 }, { month: "T9", customers: 96 },
-];
+const ANALYTICS_DELAY_MS = 50;
 
 function wait() { return new Promise<void>((resolve) => window.setTimeout(resolve, ANALYTICS_DELAY_MS)); }
-function sliceForRange<T>(items: T[], range: AnalyticsRange) { return items.slice(-rangeMonths[range]); }
 function filterDealsByRange(deals: Deal[], range: AnalyticsRange) {
     const days: Record<AnalyticsRange, number> = { "7d": 7, "30d": 30, "3m": 90, "6m": 180, "1y": 365 };
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days[range]);
@@ -49,14 +33,14 @@ export const analyticsService = {
             const res = await api.get<DashboardStats>(`/analytics/dashboard-stats?range=${range}`);
             if (res.data) return res.data;
         } catch {
-            // fallback to client-side aggregation
+            // fallback to live client-side aggregation across domain services
         }
         const [, leads, customers, deals, tickets] = await Promise.all([
             wait(),
-            leadService.getLeads({ page: 0, size: 1000 }),
-            customerService.getCustomers(0, 1000),
-            dealService.getDeals(0, 1000),
-            ticketService.getTickets(0, 1000)
+            leadService.getLeads({ page: 0, size: 100 }),
+            customerService.getCustomers(0, 100),
+            dealService.getDeals(0, 100),
+            ticketService.getTickets(0, 100)
         ]);
         const rangedDeals = filterDealsByRange(deals.content, range);
         const wonDeals = rangedDeals.filter((deal) => deal.stage === "WON");
@@ -73,22 +57,30 @@ export const analyticsService = {
     getRevenueByMonth: async (range: AnalyticsRange): Promise<MonthlyRevenue[]> => {
         try {
             const res = await api.get<MonthlyRevenue[]>(`/analytics/revenue?range=${range}`);
-            if (res.data && res.data.length > 0) return res.data;
+            if (Array.isArray(res.data)) return res.data;
         } catch {
             // fallback
         }
-        await wait();
-        return sliceForRange(monthlyRevenueFallback, range);
+        const deals = await dealService.getDeals(0, 1000);
+        const monthTotals = new Map<string, number>();
+        deals.content
+            .filter((d) => d.stage === "WON")
+            .forEach((d) => {
+                const dt = new Date(d.createdAt);
+                const label = Number.isNaN(dt.getTime()) ? "Hiện tại" : `T${dt.getMonth() + 1}`;
+                monthTotals.set(label, (monthTotals.get(label) ?? 0) + d.value);
+            });
+        return Array.from(monthTotals, ([month, revenue]) => ({ month, revenue }));
     },
 
     getLeadSourceStats: async (): Promise<LeadSourceStat[]> => {
         try {
             const res = await api.get<LeadSourceStat[]>("/analytics/lead-sources");
-            if (res.data && res.data.length > 0) return res.data;
+            if (Array.isArray(res.data)) return res.data;
         } catch {
             // fallback
         }
-        const [, response] = await Promise.all([wait(), leadService.getLeads({ page: 0, size: 1000 })]);
+        const [, response] = await Promise.all([wait(), leadService.getLeads({ page: 0, size: 100 })]);
         const counts = new Map<string, number>();
         response.content.forEach((lead) => counts.set(lead.source, (counts.get(lead.source) ?? 0) + 1));
         return Array.from(counts, ([source, count]) => ({ source, count }));
@@ -97,7 +89,7 @@ export const analyticsService = {
     getDealStageStats: async (range: AnalyticsRange): Promise<DealStageStat[]> => {
         try {
             const res = await api.get<DealStageStat[]>(`/analytics/deal-stages?range=${range}`);
-            if (res.data && res.data.length > 0) return res.data;
+            if (Array.isArray(res.data)) return res.data;
         } catch {
             // fallback
         }
@@ -113,7 +105,7 @@ export const analyticsService = {
     getTicketStatusStats: async (): Promise<TicketOverviewData> => {
         try {
             const res = await api.get<TicketOverviewData>("/analytics/ticket-status");
-            if (res.data && res.data.statuses) return res.data;
+            if (res.data && Array.isArray(res.data.statuses)) return res.data;
         } catch {
             // fallback
         }
@@ -128,7 +120,7 @@ export const analyticsService = {
     getTopCustomers: async (range: AnalyticsRange): Promise<TopCustomer[]> => {
         try {
             const res = await api.get<TopCustomer[]>(`/analytics/top-customers?range=${range}`);
-            if (res.data && res.data.length > 0) return res.data;
+            if (Array.isArray(res.data)) return res.data;
         } catch {
             // fallback
         }
@@ -149,35 +141,31 @@ export const analyticsService = {
     getRecentActivities: async (range: AnalyticsRange): Promise<RecentActivity[]> => {
         try {
             const res = await api.get<RecentActivity[]>(`/analytics/recent-activities?range=${range}`);
-            if (res.data && res.data.length > 0) return res.data;
+            if (Array.isArray(res.data)) return res.data;
         } catch {
             // fallback
         }
-        await wait();
-        const activities: RecentActivity[] = [
-            { id: 1, type: "DEAL", description: "Deal “CRM Implementation” chuyển sang WON", timeAgo: "5 phút trước" },
-            { id: 2, type: "TICKET", description: "Ticket #101 được giải quyết", timeAgo: "20 phút trước" },
-            { id: 3, type: "CUSTOMER", description: "Khách hàng Nguyễn Minh Anh được cập nhật", timeAgo: "1 giờ trước" },
-            { id: 4, type: "LEAD", description: "Lead mới được tạo từ Website", timeAgo: "2 giờ trước" },
-            { id: 5, type: "DEAL", description: "Deal Website Upgrade chuyển sang Proposal", timeAgo: "1 ngày trước" },
-        ];
-        return range === "7d" ? activities.slice(0, 4) : activities;
+        return [];
     },
 
     getSalesPerformance: async (range: AnalyticsRange): Promise<SalesPerformanceStat[]> => {
         try {
             const res = await api.get<SalesPerformanceStat[]>(`/analytics/sales-performance?range=${range}`);
-            if (res.data && res.data.length > 0) return res.data;
+            if (Array.isArray(res.data)) return res.data;
         } catch {
             // fallback
         }
         const [, response] = await Promise.all([wait(), dealService.getDeals(0, 1000)]);
         const deals = filterDealsByRange(response.content, range);
-        return [{ sourceName: "Sơn", displayName: "Sơn" }, { sourceName: "Trúc", displayName: "Trúc" }, { sourceName: "Hải", displayName: "Hải Anh" }].map(({ sourceName, displayName }) => {
-            const owned = deals.filter((deal) => deal.ownerName === sourceName);
+        const byOwner = new Map<string, Deal[]>();
+        deals.forEach((deal) => {
+            const key = deal.ownerName?.trim() || "Chưa phân công";
+            byOwner.set(key, [...(byOwner.get(key) ?? []), deal]);
+        });
+        return Array.from(byOwner, ([owner, owned]) => {
             const won = owned.filter((deal) => deal.stage === "WON");
             return {
-                owner: displayName,
+                owner,
                 deals: owned.length,
                 wonDeals: won.length,
                 revenue: won.reduce((total, deal) => total + deal.value, 0),
@@ -189,37 +177,43 @@ export const analyticsService = {
     getCustomerGrowth: async (range: AnalyticsRange): Promise<CustomerGrowthStat[]> => {
         try {
             const res = await api.get<CustomerGrowthStat[]>(`/analytics/customer-growth?range=${range}`);
-            if (res.data && res.data.length > 0) return res.data;
+            if (Array.isArray(res.data)) return res.data;
         } catch {
             // fallback
         }
-        await wait();
-        return sliceForRange(customerGrowthFallback, range);
+        const customers = await customerService.getCustomers(0, 1000);
+        const byMonth = new Map<string, number>();
+        customers.content.forEach((c) => {
+            const dt = new Date(c.createdAt);
+            const label = Number.isNaN(dt.getTime()) ? "Hiện tại" : `T${dt.getMonth() + 1}`;
+            byMonth.set(label, (byMonth.get(label) ?? 0) + 1);
+        });
+        return Array.from(byMonth, ([month, count]) => ({ month, customers: count }));
     },
 
     getConversionFunnel: async (): Promise<ConversionFunnelItem[]> => {
         try {
             const res = await api.get<ConversionFunnelItem[]>("/analytics/conversion-funnel");
-            if (res.data && res.data.length > 0) return res.data;
+            if (Array.isArray(res.data)) return res.data;
         } catch {
             // fallback
         }
         const [, leads, customers, deals] = await Promise.all([
             wait(),
-            leadService.getLeads({ page: 0, size: 1000 }),
-            customerService.getCustomers(0, 1000),
-            dealService.getDeals(0, 1000)
+            leadService.getLeads({ page: 0, size: 100 }),
+            customerService.getCustomers(0, 100),
+            dealService.getDeals(0, 100)
         ]);
-        const wonDeals = deals.content.filter((deal) => deal.stage === "WON").length;
-        const leadCount = Math.max(leads.totalElements, customers.totalElements + 18, 30);
-        const qualifiedCount = Math.min(leadCount, Math.max(leads.content.filter((lead) => lead.status === "QUALIFIED" || lead.status === "CONVERTED").length, customers.totalElements + 8));
-        const customerCount = Math.min(qualifiedCount, customers.totalElements);
-        const dealCount = Math.min(customerCount, deals.totalElements);
-        const values = [leadCount, qualifiedCount, customerCount, dealCount, Math.min(dealCount, wonDeals)];
+        const totalLeads = leads.totalElements;
+        const qualifiedLeads = leads.content.filter((l) => l.status === "QUALIFIED" || l.status === "CONVERTED").length;
+        const totalCustomers = customers.totalElements;
+        const totalDeals = deals.totalElements;
+        const wonDeals = deals.content.filter((d) => d.stage === "WON").length;
+        const values = [totalLeads, qualifiedLeads, totalCustomers, totalDeals, wonDeals];
         return ["Leads", "Qualified Leads", "Customers", "Deals", "Won Deals"].map((label, index) => ({
             label,
             value: values[index],
-            conversionRate: index === 0 || values[index - 1] === 0 ? 100 : Math.round(values[index] / values[index - 1] * 100)
+            conversionRate: index === 0 ? (totalLeads > 0 ? 100 : 0) : values[index - 1] === 0 ? 0 : Math.round((values[index] / values[index - 1]) * 100)
         }));
     },
 };

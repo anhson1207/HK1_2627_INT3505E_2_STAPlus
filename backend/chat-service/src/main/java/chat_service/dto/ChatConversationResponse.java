@@ -22,6 +22,7 @@ public class ChatConversationResponse {
     private String lastMessagePreview;
     private LocalDateTime lastMessageAt;
     private String lastMessageSenderName;
+    private ChatMessageResponse lastMessage;
     private long unreadCount;
     private ParticipantRole myRole;
     private List<ChatParticipantResponse> participants;

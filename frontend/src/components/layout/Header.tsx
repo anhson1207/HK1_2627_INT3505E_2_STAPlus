@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import RoleGuard from "../auth/RoleGuard";
 import NotificationDropdown from "../notifications/NotificationDropdown";
 import { rolesWithPermission } from "../../config/rolePermissions";
+import { authService } from "../../services/authService";
 import { NOTIFICATIONS_CHANGED_EVENT, notificationService } from "../../services/notificationService";
 import { useAuthStore } from "../../stores/authStore";
 import { useThemeStore } from "../../stores/themeStore";
@@ -175,7 +176,11 @@ export default function Header({ onOpenSidebar, mobileOpen }: HeaderProps) {
                 <div className="crm-header__right">
                     <button
                         type="button"
-                        onClick={toggleTheme}
+                        onClick={() => {
+                            const nextMode = isDark ? "light" : "dark";
+                            toggleTheme();
+                            void authService.updatePreferences({ themeMode: nextMode }).catch(() => {});
+                        }}
                         title={isDark ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
                         aria-label={isDark ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
                         className="crm-icon-btn text-(--crm-text-secondary) hover:text-(--crm-heading) transition-colors"

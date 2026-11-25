@@ -40,7 +40,8 @@ export default function LoginPage() {
         error.toLowerCase().includes("chờ admin") ||
         error.toLowerCase().includes("duyệt") ||
         error.toLowerCase().includes("kích hoạt") ||
-        error.toLowerCase().includes("phân quyền");
+        error.toLowerCase().includes("phân quyền") ||
+        error.toLowerCase().includes("role has not been assigned");
 
     const handleLogin = async (data: LoginFormData) => {
         if (submitting.current) return;
@@ -258,7 +259,7 @@ export default function LoginPage() {
                         <button
                             type="button"
                             disabled={busy}
-                            onClick={() => void handleQuickLogin("sales", "123456")}
+                            onClick={() => void handleQuickLogin("sales", "Sales@123456")}
                             className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 font-medium text-slate-700 text-xs transition-colors"
                         >
                             Sales
@@ -266,7 +267,7 @@ export default function LoginPage() {
                         <button
                             type="button"
                             disabled={busy}
-                            onClick={() => void handleQuickLogin("support", "123456")}
+                            onClick={() => void handleQuickLogin("support", "Support@123456")}
                             className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 font-medium text-slate-700 text-xs transition-colors"
                         >
                             Support

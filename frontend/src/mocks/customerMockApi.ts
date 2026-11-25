@@ -51,7 +51,7 @@ function writeCustomers(customers: Customer[]) {
 }
 
 export const customerMockApi = {
-    getCustomers: async (page = 0, size = 10, search?: string, status?: CustomerStatus) => {
+    getCustomers: async (page = 0, size = 10, search?: string, status?: CustomerStatus, assignedUserId?: number) => {
         await wait();
         const safePage = Math.max(0, page);
         const safeSize = Math.max(1, size);
@@ -60,6 +60,9 @@ export const customerMockApi = {
         );
         if (status) {
             customers = customers.filter((customer) => customer.status === status);
+        }
+        if (assignedUserId) {
+            customers = customers.filter((customer) => customer.ownerId === assignedUserId);
         }
         if (search?.trim()) {
             const query = search.trim().toLowerCase();

@@ -13,7 +13,6 @@ import {
     ChevronRight,
     Pencil,
     Search,
-    UserPlus,
     UserRoundCheck,
     UserRoundX,
     Users,
@@ -38,6 +37,7 @@ function getRoleLabel(role: UserRole) {
     if (role === "ADMIN") return "Admin";
     if (role === "SALES") return "Sales";
     if (role === "SUPPORT") return "Support";
+    if (role === "MANAGER") return "Manager";
     return "Chưa phân quyền";
 }
 
@@ -49,6 +49,8 @@ function getRoleBadgeStyle(role: UserRole) {
             return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
         case "SUPPORT":
             return "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20";
+        case "MANAGER":
+            return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
         default:
             return "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20";
     }
@@ -78,7 +80,12 @@ export default function UserManagementPage() {
         userService.getUsers()
             .then((data) => {
                 if (isMounted) {
-                    setUsers(data);
+                    const sorted = [...data].sort(
+                        (a, b) =>
+                            (a.status === "PENDING" ? 0 : 1) - (b.status === "PENDING" ? 0 : 1) ||
+                            b.id - a.id
+                    );
+                    setUsers(sorted);
                     setLoading(false);
                 }
             })
@@ -135,12 +142,6 @@ export default function UserManagementPage() {
         (user) => user.status === "PENDING"
     ).length;
 
-    const openCreate = () => {
-        setEditing(null);
-        setFormError("");
-        setFormOpen(true);
-    };
-
     const openEdit = (user: CRMUser) => {
         setEditing(user);
         setFormError("");
@@ -155,33 +156,31 @@ export default function UserManagementPage() {
             return;
         }
 
-        try {
-            if (editing) {
-                if (
-                    editing.id === currentUserId &&
-                    (data.role !== editing.role ||
-                        data.status !== editing.status)
-                ) {
-                    throw new Error(
-                        "Bạn không thể đổi vai trò hoặc trạng thái tài khoản của chính mình."
-                    );
-                }
+        if (!editing) {
+            return;
+        }
 
-                const updated = await userService.updateUser(
-                    editing.id,
-                    data
+        try {
+            if (
+                editing.id === currentUserId &&
+                (data.role !== editing.role ||
+                    data.status !== editing.status)
+            ) {
+                throw new Error(
+                    "Bạn không thể đổi vai trò hoặc trạng thái tài khoản của chính mình."
                 );
-                setUsers((current) =>
-                    current.map((item) =>
-                        item.id === updated.id ? updated : item
-                    )
-                );
-                setMessage("Cập nhật thông tin tài khoản thành công.");
-            } else {
-                const created = await userService.createUser(data);
-                setUsers((current) => [created, ...current]);
-                setMessage("Tạo tài khoản người dùng mới thành công.");
             }
+
+            const updated = await userService.updateUser(
+                editing.id,
+                data
+            );
+            setUsers((current) =>
+                current.map((item) =>
+                    item.id === updated.id ? updated : item
+                )
+            );
+            setMessage("Cập nhật thông tin tài khoản thành công.");
 
             setFormOpen(false);
             setEditing(null);
@@ -239,26 +238,13 @@ export default function UserManagementPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h2 className="text-xl font-bold tracking-tight text-(--crm-heading)">
-                        Quản lý người dùng & Phân quyền
-                    </h2>
-                    <p className="mt-1 text-sm text-(--crm-text-secondary)">
-                        Danh sách tài khoản nhân viên, phân quyền vai trò ADMIN / SALES / SUPPORT và kiểm soát trạng thái hoạt động.
-                    </p>
-                </div>
-
-                {isAdmin && (
-                    <button
-                        type="button"
-                        onClick={openCreate}
-                        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-(--crm-primary) px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition-all hover:opacity-90 active:scale-[0.99]"
-                    >
-                        <UserPlus size={16} />
-                        <span>Thêm tài khoản</span>
-                    </button>
-                )}
+            <div>
+                <h2 className="text-xl font-bold tracking-tight text-(--crm-heading)">
+                    Quản lý người dùng & Phân quyền
+                </h2>
+                <p className="mt-1 text-sm text-(--crm-text-secondary)">
+                    Danh sách tài khoản nhân viên, duyệt yêu cầu tham gia, phân quyền vai trò và kiểm soát trạng thái hoạt động.
+                </p>
             </div>
 
             {pendingCount > 0 && (
@@ -325,6 +311,9 @@ export default function UserManagementPage() {
                                 <option value="SUPPORT" className="bg-(--crm-surface) text-(--crm-heading)">
                                     Hỗ trợ (Support)
                                 </option>
+                                <option value="MANAGER" className="bg-(--crm-surface) text-(--crm-heading)">
+                                    Quản lý (Manager)
+                                </option>
                             </select>
                             <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-(--crm-text-muted)">
                                 <ChevronDown size={14} />
@@ -353,6 +342,9 @@ export default function UserManagementPage() {
                                 </option>
                                 <option value="INACTIVE" className="bg-(--crm-surface) text-(--crm-heading)">
                                     Ngừng hoạt động
+                                </option>
+                                <option value="REJECTED" className="bg-(--crm-surface) text-(--crm-heading)">
+                                    Đã từ chối
                                 </option>
                             </select>
                             <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-(--crm-text-muted)">
@@ -408,11 +400,6 @@ export default function UserManagementPage() {
                                                         <p className="truncate text-sm font-semibold text-(--crm-heading)" title={user.fullName}>
                                                             {user.fullName}
                                                         </p>
-                                                        {user.username && (
-                                                            <p className="text-[11px] text-(--crm-text-muted)">
-                                                                @{user.username}
-                                                            </p>
-                                                        )}
                                                     </div>
                                                 </div>
                                             </td>
@@ -457,6 +444,11 @@ export default function UserManagementPage() {
                                                     <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
                                                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
                                                         Chờ duyệt
+                                                    </span>
+                                                ) : user.status === "REJECTED" ? (
+                                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-0.5 text-xs font-semibold text-rose-600 dark:text-rose-400">
+                                                        <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                                                        Đã từ chối
                                                     </span>
                                                 ) : (
                                                     <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-500/20 bg-slate-500/10 px-2.5 py-0.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -576,26 +568,22 @@ export default function UserManagementPage() {
                 maxWidth="md"
             >
                 <DialogTitle>
-                    {editing
-                        ? editing.status === "PENDING"
-                            ? "Duyệt & phân quyền tài khoản"
-                            : "Chỉnh sửa thông tin người dùng"
-                        : "Thêm tài khoản người dùng mới"}
+                    {editing?.status === "PENDING"
+                        ? "Duyệt & phân quyền tài khoản"
+                        : "Chỉnh sửa thông tin người dùng"}
                 </DialogTitle>
 
                 <DialogContent>
                     <div className="pt-2">
                         <UserForm
-                            key={editing?.id ?? "create"}
+                            key={editing?.id ?? "edit"}
                             initialData={editing ?? undefined}
                             onSubmit={save}
                             onCancel={() => setFormOpen(false)}
                             submitLabel={
-                                editing
-                                    ? editing.status === "PENDING"
-                                        ? "Lưu phân quyền"
-                                        : "Lưu thay đổi"
-                                    : "Tạo tài khoản"
+                                editing?.status === "PENDING"
+                                    ? "Lưu phân quyền"
+                                    : "Lưu thay đổi"
                             }
                             error={formError}
                         />

@@ -17,7 +17,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long>
 
 
     //write findUnassignedTickets here
-    List<Ticket>findBySupportIdIsNull();
-
-    //Page<Ticket> findAll(Pageable pageable);
+    List<Ticket> findBySupportIdIsNull();
+    List<Ticket> findBySalesIdOrderByCreatedAtDesc(Long salesId);
 }

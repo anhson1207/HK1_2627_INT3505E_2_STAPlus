@@ -6,6 +6,7 @@ import chat_service.security.ChatPrincipal;
 import chat_service.service.ChatAttachmentService;
 import chat_service.service.ChatService;
 import chat_service.ws.dto.WsTicketResponse;
+import chat_service.ws.service.ChatPresenceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -27,6 +28,7 @@ public class ChatController {
 
     private final ChatService chatService;
     private final ChatAttachmentService attachmentService;
+    private final ChatPresenceService presenceService;
 
     private ChatPrincipal requireUser(ChatPrincipal currentUser) {
         if (currentUser == null) {
@@ -161,6 +163,7 @@ public class ChatController {
             @AuthenticationPrincipal ChatPrincipal currentUser
     ) {
         ChatPrincipal user = requireUser(currentUser);
+        presenceService.touchLastSeen(user.getUserId());
         return ResponseEntity.ok(chatService.getUserConversations(user));
     }
 
@@ -205,6 +208,18 @@ public class ChatController {
     }
 
     /**
+     * Lưu trữ ảnh, video, tệp và liên kết đã gửi trong cuộc trò chuyện
+     */
+    @GetMapping("/conversations/{id}/archive")
+    public ResponseEntity<ChatConversationArchiveResponse> getConversationArchive(
+            @AuthenticationPrincipal ChatPrincipal currentUser,
+            @PathVariable("id") Long conversationId
+    ) {
+        ChatPrincipal user = requireUser(currentUser);
+        return ResponseEntity.ok(chatService.getConversationArchive(user, conversationId));
+    }
+
+    /**
      * Gửi tin nhắn mới trong cuộc trò chuyện (Hỗ trợ idempotency bằng clientMessageId)
      */
     @PostMapping("/conversations/{id}/messages")
@@ -214,6 +229,7 @@ public class ChatController {
             @Valid @RequestBody SendMessageRequest request
     ) {
         ChatPrincipal user = requireUser(currentUser);
+        presenceService.touchLastSeen(user.getUserId());
         ChatMessageResponse response = chatService.sendMessage(user, conversationId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -228,7 +244,31 @@ public class ChatController {
             @Valid @RequestBody MarkReadRequest request
     ) {
         ChatPrincipal user = requireUser(currentUser);
+        presenceService.touchLastSeen(user.getUserId());
         chatService.markAsRead(user, conversationId, request.getMessageId());
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Lấy trạng thái trực tuyến và lần hoạt động cuối của các thành viên chat
+     */
+    @GetMapping("/presence")
+    public ResponseEntity<ChatPresenceSnapshotResponse> getPresenceSnapshot(
+            @AuthenticationPrincipal ChatPrincipal currentUser
+    ) {
+        requireUser(currentUser);
+        return ResponseEntity.ok(presenceService.getSnapshot());
+    }
+
+    /**
+     * Đánh dấu người dùng hiện tại ngoại tuyến ngay khi đăng xuất
+     */
+    @PostMapping("/presence/offline")
+    public ResponseEntity<Void> markOffline(
+            @AuthenticationPrincipal ChatPrincipal currentUser
+    ) {
+        ChatPrincipal user = requireUser(currentUser);
+        presenceService.forceOffline(user.getUserId(), user.getUsername());
         return ResponseEntity.noContent().build();
     }
 
@@ -280,7 +320,10 @@ public class ChatController {
         var attachment = attachmentService.getAttachment(attachmentId, user);
         Resource resource = attachmentService.loadAttachmentResource(attachmentId, user);
 
-        String dispositionType = attachment.getContentType().startsWith("image/") ? "inline" : "attachment";
+        String contentType = attachment.getContentType();
+        String dispositionType = (contentType.startsWith("image/") || contentType.startsWith("video/"))
+                ? "inline"
+                : "attachment";
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(attachment.getContentType()))

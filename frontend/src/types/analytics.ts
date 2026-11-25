@@ -7,6 +7,11 @@ export interface DashboardStats {
     totalRevenue: number;
     openTickets: number;
     wonDeals: number;
+    leadsTrend?: string | null;
+    customersTrend?: string | null;
+    dealsTrend?: string | null;
+    revenueTrend?: string | null;
+    wonDealsTrend?: string | null;
 }
 
 export interface MonthlyRevenue { month: string; revenue: number; }

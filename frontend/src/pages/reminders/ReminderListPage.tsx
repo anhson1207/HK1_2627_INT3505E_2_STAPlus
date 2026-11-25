@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import ReminderStatusBadge from "../../components/reminders/ReminderStatusBadge";
 import { getReminderEntityUrl, reminderService } from "../../services/reminderService";
+import { useAuthStore } from "../../stores/authStore";
 import type { FollowUpReminder } from "../../types/reminder";
 
 type Filter = "ALL" | "TODAY" | "PENDING" | "OVERDUE" | "COMPLETED";
@@ -29,11 +30,32 @@ export default function ReminderListPage() {
     const [error, setError] = useState("");
     const [message, setMessage] = useState(routeMessage);
 
+    const user = useAuthStore((state) => state.user);
+    const isSales = user?.role === "SALES";
+
     const load = useCallback(async () => {
-        try { setItems(await reminderService.getReminders()); setError(""); }
+        try {
+            const allReminders = await reminderService.getReminders();
+            const filtered = isSales && user
+                ? allReminders.filter((r) => {
+                    if (r.userId && r.userId === user.id) return true;
+                    if (r.ownerName) {
+                        const name = r.ownerName.toLowerCase();
+                        return (
+                            (user.username && name.includes(user.username.toLowerCase())) ||
+                            (user.fullName && name.includes(user.fullName.toLowerCase())) ||
+                            name.includes("sales")
+                        );
+                    }
+                    return false;
+                })
+                : allReminders;
+            setItems(filtered);
+            setError("");
+        }
         catch (loadError) { setError(loadError instanceof Error ? loadError.message : "Không thể tải nhắc việc."); }
         finally { setLoading(false); }
-    }, []);
+    }, [isSales, user]);
     useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
 
     const complete = async (id: number) => {

@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import CustomerTable from "../../components/customers/CustomerTable";
 import { customerService, getCustomerErrorMessage, type CustomerListResponse } from "../../services/customerService";
+import { useAuthStore } from "../../stores/authStore";
 import type { CustomerStatus } from "../../types/customer";
 import { CUSTOMER_STATUS_OPTIONS } from "../../utils/constants";
 
@@ -30,6 +31,9 @@ export default function CustomerListPage() {
     const [error, setError] = useState("");
     const [refreshKey, setRefreshKey] = useState(0);
 
+    const user = useAuthStore((state) => state.user);
+    const isSales = user?.role === "SALES";
+
     useEffect(() => {
         let active = true;
 
@@ -37,7 +41,13 @@ export default function CustomerListPage() {
             setLoading(true);
             setError("");
             try {
-                const data = await customerService.getCustomers(page, pageSize, deferredSearch, status || undefined);
+                const data = await customerService.getCustomers(
+                    page,
+                    pageSize,
+                    deferredSearch,
+                    status || undefined,
+                    isSales ? user?.id : undefined
+                );
                 if (active) setResult(data);
             } catch (loadError) {
                 if (active) setError(getCustomerErrorMessage(loadError));
@@ -48,7 +58,7 @@ export default function CustomerListPage() {
 
         void loadCustomers();
         return () => { active = false; };
-    }, [deferredSearch, page, pageSize, refreshKey, status]);
+    }, [deferredSearch, page, pageSize, refreshKey, status, isSales, user?.id]);
 
     const pageNumbers = useMemo(() => {
         if (result.totalPages <= 1) return result.totalPages === 1 ? [0] : [];

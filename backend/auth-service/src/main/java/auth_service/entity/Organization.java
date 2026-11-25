@@ -46,6 +46,22 @@ public class Organization {
     @Builder.Default
     private String timezone = "Asia/Ho_Chi_Minh";
 
+    @Column(name = "crm_name")
+    @Builder.Default
+    private String crmName = "STAplus CRM";
+
+    @Column(name = "currency", length = 10)
+    @Builder.Default
+    private String currency = "VND";
+
+    @Column(name = "language", length = 10)
+    @Builder.Default
+    private String language = "vi";
+
+    @Column(name = "date_format", length = 20)
+    @Builder.Default
+    private String dateFormat = "dd/MM/yyyy";
+
     @Column(name = "owner_user_id", nullable = false)
     private Long ownerUserId;
 
@@ -69,6 +85,18 @@ public class Organization {
         }
         if (timezone == null || timezone.isBlank()) {
             timezone = "Asia/Ho_Chi_Minh";
+        }
+        if (crmName == null || crmName.isBlank()) {
+            crmName = "STAplus CRM";
+        }
+        if (currency == null || currency.isBlank()) {
+            currency = "VND";
+        }
+        if (language == null || language.isBlank()) {
+            language = "vi";
+        }
+        if (dateFormat == null || dateFormat.isBlank()) {
+            dateFormat = "dd/MM/yyyy";
         }
     }
 

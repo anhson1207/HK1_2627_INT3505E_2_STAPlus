@@ -38,6 +38,7 @@ export interface LeadQuery {
     search?: string;
     status?: LeadStatus | "";
     source?: LeadSource | "";
+    assignedUserId?: number;
 }
 
 export type AssignmentStrategy = "ROUND_ROBIN" | "LOAD_BALANCED" | "MANUAL";
@@ -54,4 +55,21 @@ export interface AutoAssignResult {
     totalUnassignedBefore: number;
     strategyUsed: string;
     assignmentSummary: Record<number, number>;
+}
+
+export interface ConvertLeadPayload {
+    dealName?: string;
+    dealAmount?: number;
+    dealStage?: string;
+    customerNotes?: string;
+    assignedUserId?: number;
+}
+
+export interface ConvertLeadResult {
+    leadId: number;
+    customerId: number;
+    customerName: string;
+    dealId?: number | null;
+    dealName?: string | null;
+    message: string;
 }

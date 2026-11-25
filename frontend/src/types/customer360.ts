@@ -26,7 +26,7 @@ export interface CustomerActivity {
     createdAt: string;
 }
 
-export type CustomerTicketPriority = "LOW" | "MEDIUM" | "HIGH";
+export type CustomerTicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 export type CustomerTicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
 
 export interface CustomerTicket {

@@ -44,7 +44,7 @@ export default function AuthSplitLayout({
                         <h1 className="text-3xl xl:text-4xl font-extrabold tracking-tight text-white leading-tight">
                             Quản lý khách hàng.<br />
                             Kết nối đội ngũ.<br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-sky-400">
+                            <span className="text-cyan-400">
                                 Tăng trưởng hiệu quả.
                             </span>
                         </h1>
@@ -151,7 +151,7 @@ export default function AuthSplitLayout({
             </div>
 
             {/* RIGHT COLUMN: FOCUSED FORM AREA (Desktop 56–58%, Mobile 100%) */}
-            <div className="flex-1 flex flex-col justify-between p-6 sm:p-10 lg:p-12 overflow-y-auto bg-white lg:bg-slate-50/60">
+            <div className="flex-1 flex flex-col justify-between p-6 sm:p-10 lg:p-12 overflow-y-auto bg-white lg:bg-slate-50">
                 {/* Mobile Header (Hidden on lg+) */}
                 <div className="lg:hidden flex items-center justify-between pb-6 border-b border-slate-200/80 mb-6">
                     <Link to="/" className="hover:opacity-90 transition-opacity">

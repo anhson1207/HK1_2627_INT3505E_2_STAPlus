@@ -1,5 +1,5 @@
 import { Alert, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
-import { Check, ChevronDown, ChevronUp, Copy, Globe, Megaphone, MessageCircle, MessageSquare, Radio, Send, X } from "lucide-react";
+import { Check, Copy, Globe, Megaphone, MessageCircle, MessageSquare, Radio, Send, X } from "lucide-react";
 import { useState } from "react";
 import { leadService } from "../../services/leadService";
 
@@ -90,7 +90,6 @@ export default function LeadChannelsModal({ open, onClose, onSuccess }: LeadChan
     const [copiedKey, setCopiedKey] = useState<string | null>(null);
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [showSnippet, setShowSnippet] = useState(false);
 
     const activeChannel = CHANNELS.find((c) => c.id === selectedChannelId) || CHANNELS[0];
 
@@ -114,17 +113,6 @@ export default function LeadChannelsModal({ open, onClose, onSuccess }: LeadChan
         }
     };
 
-    const snippetCode = `fetch('${activeChannel.url}', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    fullName: 'Nguyễn Văn An',
-    email: 'an.nguyen@test.vn',
-    phone: '0988776655',
-    company: 'Công ty ABC'
-  })
-});`;
-
     return (
         <Dialog
             open={open}
@@ -136,7 +124,8 @@ export default function LeadChannelsModal({ open, onClose, onSuccess }: LeadChan
                     sx: {
                         borderRadius: "20px",
                         overflow: "hidden",
-                        border: "1px solid #e2e8f0",
+                        backgroundColor: "var(--crm-surface)",
+                        border: "1px solid var(--crm-border)",
                         boxShadow: "0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04)",
                     },
                 },
@@ -180,10 +169,7 @@ export default function LeadChannelsModal({ open, onClose, onSuccess }: LeadChan
                             <button
                                 key={ch.id}
                                 type="button"
-                                onClick={() => {
-                                    setSelectedChannelId(ch.id);
-                                    setShowSnippet(false);
-                                }}
+                                onClick={() => setSelectedChannelId(ch.id)}
                                 className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition text-center select-none ${
                                     isSelected
                                         ? "bg-white border-blue-600 ring-2 ring-blue-500/20 shadow-xs"
@@ -263,34 +249,6 @@ export default function LeadChannelsModal({ open, onClose, onSuccess }: LeadChan
                             </div>
                         </div>
                     )}
-
-                    {/* Code snippet collapse (Clean & compact) */}
-                    <div className="pt-1">
-                        <button
-                            type="button"
-                            onClick={() => setShowSnippet(!showSnippet)}
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 transition"
-                        >
-                            <span>{showSnippet ? "Thu gọn mẫu code" : "Xem code mẫu nhúng Webhook"}</span>
-                            {showSnippet ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                        </button>
-
-                        {showSnippet && (
-                            <div className="mt-2 relative">
-                                <pre className="rounded-xl bg-slate-800 p-3 text-[11px] font-mono text-slate-200 overflow-x-auto leading-relaxed">
-                                    {snippetCode}
-                                </pre>
-                                <button
-                                    type="button"
-                                    onClick={() => copyToClipboard(snippetCode, "snippet")}
-                                    className="absolute top-2 right-2 rounded-lg bg-slate-700/80 px-2 py-1 text-[11px] font-semibold text-white hover:bg-slate-700 transition flex items-center gap-1"
-                                >
-                                    {copiedKey === "snippet" ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-                                    <span>{copiedKey === "snippet" ? "Đã chép" : "Chép code"}</span>
-                                </button>
-                            </div>
-                        )}
-                    </div>
                 </div>
 
                 {/* 3. Fast Test Simulation Banner */}

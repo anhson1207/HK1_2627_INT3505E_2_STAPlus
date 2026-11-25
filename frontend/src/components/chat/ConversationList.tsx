@@ -13,6 +13,7 @@ import { useAuthStore } from "../../stores/authStore";
 import { parseJwt } from "../../utils/jwt";
 import {
     formatConversationTime,
+    formatLastMessagePreview,
     getConversationDisplayName,
     getOtherParticipant,
 } from "../../utils/chatUtils";
@@ -57,7 +58,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase().trim();
             const name = getConversationDisplayName(conv, currentUserId).toLowerCase();
-            const lastMsg = conv.lastMessage?.content?.toLowerCase() || "";
+            const lastMsg = formatLastMessagePreview(conv).toLowerCase();
             return name.includes(q) || lastMsg.includes(q);
         }
 
@@ -240,21 +241,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                             : false;
                         const displayName = getConversationDisplayName(conv, currentUserId);
                         const timeStr = formatConversationTime(conv.lastMessageAt || conv.updatedAt);
-
-                        const lastMsg = conv.lastMessage;
-                        let previewText = "Chưa có tin nhắn";
-                        if (lastMsg) {
-                            if (lastMsg.type === "SYSTEM") {
-                                previewText = lastMsg.content;
-                            } else {
-                                const senderPrefix = lastMsg.isMine
-                                    ? "Bạn: "
-                                    : isGroup
-                                    ? `${lastMsg.senderUsername}: `
-                                    : "";
-                                previewText = `${senderPrefix}${lastMsg.content}`;
-                            }
-                        }
+                        const previewText = formatLastMessagePreview(conv);
 
                         return (
                             <div

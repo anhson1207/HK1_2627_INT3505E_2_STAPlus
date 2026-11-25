@@ -19,58 +19,68 @@ public class AnalyticsController {
 
     @GetMapping("/dashboard-stats")
     public ResponseEntity<DashboardStatsResponse> getDashboardStats(
-            @RequestParam(defaultValue = "30d") String range) {
-        return ResponseEntity.ok(analyticsService.getDashboardStats(range));
+            @RequestParam(defaultValue = "30d") String range,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        return ResponseEntity.ok(analyticsService.getDashboardStats(range, authHeader));
     }
 
     @GetMapping("/revenue")
     public ResponseEntity<List<MonthlyRevenueResponse>> getRevenue(
-            @RequestParam(defaultValue = "1y") String range) {
-        return ResponseEntity.ok(analyticsService.getRevenueByMonth(range));
+            @RequestParam(defaultValue = "1y") String range,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        return ResponseEntity.ok(analyticsService.getRevenueByMonth(range, authHeader));
     }
 
     @GetMapping("/lead-sources")
-    public ResponseEntity<List<LeadSourceStatResponse>> getLeadSources() {
-        return ResponseEntity.ok(analyticsService.getLeadSourceStats());
+    public ResponseEntity<List<LeadSourceStatResponse>> getLeadSources(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        return ResponseEntity.ok(analyticsService.getLeadSourceStats(authHeader));
     }
 
     @GetMapping("/deal-stages")
     public ResponseEntity<List<DealStageStatResponse>> getDealStages(
-            @RequestParam(defaultValue = "30d") String range) {
-        return ResponseEntity.ok(analyticsService.getDealStageStats(range));
+            @RequestParam(defaultValue = "30d") String range,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        return ResponseEntity.ok(analyticsService.getDealStageStats(range, authHeader));
     }
 
     @GetMapping("/ticket-status")
-    public ResponseEntity<TicketStatusOverviewResponse> getTicketStatus() {
-        return ResponseEntity.ok(analyticsService.getTicketStatusStats());
+    public ResponseEntity<TicketStatusOverviewResponse> getTicketStatus(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        return ResponseEntity.ok(analyticsService.getTicketStatusStats(authHeader));
     }
 
     @GetMapping("/top-customers")
     public ResponseEntity<List<TopCustomerResponse>> getTopCustomers(
-            @RequestParam(defaultValue = "30d") String range) {
-        return ResponseEntity.ok(analyticsService.getTopCustomers(range));
+            @RequestParam(defaultValue = "30d") String range,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        return ResponseEntity.ok(analyticsService.getTopCustomers(range, authHeader));
     }
 
     @GetMapping("/recent-activities")
     public ResponseEntity<List<RecentActivityResponse>> getRecentActivities(
-            @RequestParam(defaultValue = "30d") String range) {
-        return ResponseEntity.ok(analyticsService.getRecentActivities(range));
+            @RequestParam(defaultValue = "30d") String range,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        return ResponseEntity.ok(analyticsService.getRecentActivities(range, authHeader));
     }
 
     @GetMapping("/sales-performance")
     public ResponseEntity<List<SalesPerformanceResponse>> getSalesPerformance(
-            @RequestParam(defaultValue = "30d") String range) {
-        return ResponseEntity.ok(analyticsService.getSalesPerformance(range));
+            @RequestParam(defaultValue = "30d") String range,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        return ResponseEntity.ok(analyticsService.getSalesPerformance(range, authHeader));
     }
 
     @GetMapping("/customer-growth")
     public ResponseEntity<List<CustomerGrowthResponse>> getCustomerGrowth(
-            @RequestParam(defaultValue = "1y") String range) {
-        return ResponseEntity.ok(analyticsService.getCustomerGrowth(range));
+            @RequestParam(defaultValue = "1y") String range,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        return ResponseEntity.ok(analyticsService.getCustomerGrowth(range, authHeader));
     }
 
     @GetMapping("/conversion-funnel")
-    public ResponseEntity<List<ConversionFunnelResponse>> getConversionFunnel() {
-        return ResponseEntity.ok(analyticsService.getConversionFunnel());
+    public ResponseEntity<List<ConversionFunnelResponse>> getConversionFunnel(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        return ResponseEntity.ok(analyticsService.getConversionFunnel(authHeader));
     }
 }

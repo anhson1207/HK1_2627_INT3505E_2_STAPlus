@@ -4,6 +4,7 @@ import { notificationService } from "../services/notificationService";
 import { playChatChime } from "../utils/chatUtils";
 import { parseJwt } from "../utils/jwt";
 import { useAuthStore } from "./authStore";
+import { useSettingsStore } from "./settingsStore";
 import type {
     ChatConversation,
     ChatEventEnvelope,
@@ -26,6 +27,13 @@ export interface ActiveChatToast {
     conversationId: number;
 }
 
+export interface ChatMediaPreview {
+    url?: string;
+    attachmentUrl?: string | null;
+    name: string;
+    kind: "image" | "video";
+}
+
 interface ChatState {
     conversations: ChatConversation[];
     activeConversationId: number | null;
@@ -36,11 +44,13 @@ interface ChatState {
     loadingMoreMessages: boolean;
     unreadSummary: UnreadSummary;
     onlineUserIds: Set<number>;
+    lastSeenByUserId: Record<number, string>;
     drafts: Record<number, string>;
     tabFilter: "ALL" | "DIRECT" | "GROUP";
     searchQuery: string;
     drawerOpen: boolean;
     activeToast: ActiveChatToast | null;
+    previewMedia: ChatMediaPreview | null;
     socketConnected: boolean;
     socketReconnecting: boolean;
     manualReconnect: () => void;
@@ -53,8 +63,10 @@ interface ChatState {
     setDraft: (conversationId: number, content: string) => void;
     clearDraft: (conversationId: number) => void;
     dismissToast: () => void;
+    setPreviewMedia: (media: ChatMediaPreview | null) => void;
 
     fetchConversations: () => Promise<void>;
+    fetchPresence: () => Promise<void>;
     fetchMessages: (conversationId: number) => Promise<void>;
     loadMoreMessages: (conversationId: number) => Promise<void>;
     sendMessage: (
@@ -113,11 +125,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
     loadingMoreMessages: false,
     unreadSummary: initialSummary,
     onlineUserIds: new Set<number>(),
+    lastSeenByUserId: {},
     drafts: {},
     tabFilter: "ALL",
     searchQuery: "",
     drawerOpen: false,
     activeToast: null,
+    previewMedia: null,
     socketConnected: false,
     socketReconnecting: false,
     manualReconnect: () => {},
@@ -149,13 +163,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     },
 
     dismissToast: () => set({ activeToast: null }),
+    setPreviewMedia: (previewMedia) => set({ previewMedia }),
 
     fetchConversations: async () => {
         set({ loadingConversations: true });
         try {
-            const [conversations, unread] = await Promise.all([
+            const [conversations, unread, presence] = await Promise.all([
                 chatService.getConversations(),
                 chatService.getUnreadSummary(),
+                chatService.getPresence().catch(() => null),
             ]);
 
             // Sắp xếp hội thoại theo tin nhắn mới nhất
@@ -165,14 +181,51 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 return timeB - timeA;
             });
 
+            const nextLastSeen: Record<number, string> = { ...get().lastSeenByUserId };
+            if (presence?.lastSeenByUserId) {
+                for (const [k, v] of Object.entries(presence.lastSeenByUserId)) {
+                    const uid = Number(k);
+                    if (!Number.isNaN(uid) && typeof v === "string") {
+                        nextLastSeen[uid] = v;
+                    }
+                }
+            }
+
             set({
                 conversations: sorted,
                 unreadSummary: unread,
+                ...(presence
+                    ? {
+                          onlineUserIds: new Set(presence.onlineUserIds || []),
+                          lastSeenByUserId: nextLastSeen,
+                      }
+                    : {}),
             });
         } catch (error) {
             console.error("[useChatStore] fetchConversations error:", error);
         } finally {
             set({ loadingConversations: false });
+        }
+    },
+
+    fetchPresence: async () => {
+        try {
+            const presence = await chatService.getPresence();
+            set((state) => {
+                const nextLastSeen: Record<number, string> = { ...state.lastSeenByUserId };
+                for (const [k, v] of Object.entries(presence.lastSeenByUserId || {})) {
+                    const uid = Number(k);
+                    if (!Number.isNaN(uid) && typeof v === "string") {
+                        nextLastSeen[uid] = v;
+                    }
+                }
+                return {
+                    onlineUserIds: new Set(presence.onlineUserIds || []),
+                    lastSeenByUserId: nextLastSeen,
+                };
+            });
+        } catch {
+            // Ignore transient presence fetch failure
         }
     },
 
@@ -182,12 +235,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
             const page = await chatService.getMessageHistory(conversationId, undefined, 35);
             // Tin nhắn trả về theo thứ tự desc -> reverse để hiển thị asc
             const itemsAsc = [...page.items].reverse();
+            const latestMsg = itemsAsc.length > 0 ? itemsAsc[itemsAsc.length - 1] : null;
 
             set((state) => ({
                 messagesByConversation: {
                     ...state.messagesByConversation,
                     [conversationId]: itemsAsc,
                 },
+                conversations: latestMsg
+                    ? state.conversations.map((c) =>
+                          c.id === conversationId && !c.lastMessage
+                              ? {
+                                    ...c,
+                                    lastMessage: latestMsg,
+                                    lastMessageId: latestMsg.id,
+                                    lastMessageAt: latestMsg.createdAt,
+                                }
+                              : c
+                      )
+                    : state.conversations,
                 cursorByConversation: {
                     ...state.cursorByConversation,
                     [conversationId]: {
@@ -456,13 +522,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
                         // Đang mở đúng hội thoại này -> tự động đánh dấu đã đọc
                         get().markAsRead(convId, newMsg.id);
                     } else {
-                        // Không mở đúng hội thoại này -> Phát chuông & thông báo
-                        playChatChime();
+                        const chatPrefs = useSettingsStore.getState().chatNotifications;
+
+                        // Phát âm thanh khi có tin nhắn mới nếu người dùng bật chatSound
+                        if (chatPrefs.chatSound) {
+                            playChatChime();
+                        }
 
                         const displayTitle = newMsg.senderUsername || "Tin nhắn mới";
                         const displaySnippet =
                             newMsg.type === "IMAGE"
                                 ? "[Hình ảnh]"
+                                : newMsg.type === "VIDEO"
+                                ? "[Video]"
                                 : newMsg.type === "FILE"
                                 ? `[Tệp: ${newMsg.attachmentName || "Tài liệu"}]`
                                 : newMsg.content;
@@ -475,8 +547,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
                             targetUrl: "/chat",
                         });
 
-                        // 2. Web Notification API trình duyệt
+                        // 2. Web Notification API trình duyệt (chỉ bắn khi người dùng bật chatBrowser)
                         if (
+                            chatPrefs.chatBrowser &&
                             typeof window !== "undefined" &&
                             "Notification" in window &&
                             Notification.permission === "granted"
@@ -491,15 +564,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
                             }
                         }
 
-                        // 3. Popup Toast thông báo nổi trên góc giao diện
-                        set({
-                            activeToast: {
-                                id: Date.now(),
-                                title: displayTitle,
-                                message: displaySnippet,
-                                conversationId: convId,
-                            },
-                        });
+                        // 3. Popup Toast thông báo nổi trên góc giao diện (chỉ bật khi chatToast = true)
+                        if (chatPrefs.chatToast) {
+                            set({
+                                activeToast: {
+                                    id: Date.now(),
+                                    title: displayTitle,
+                                    message: displaySnippet,
+                                    conversationId: convId,
+                                },
+                            });
+                        }
                     }
                 }
                 break;
@@ -566,12 +641,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
             case "chat:member:joined": {
                 const payload = data as ChatMemberJoinedPayload;
-                notificationService.addNotification({
-                    type: "CHAT",
-                    title: "Nhóm trò chuyện",
-                    message: `${payload.inviterUsername} đã thêm ${payload.memberUsernames.join(", ")} vào nhóm.`,
-                    targetUrl: "/chat",
-                });
+                if (useSettingsStore.getState().chatNotifications.chatGroupEvents) {
+                    notificationService.addNotification({
+                        type: "CHAT",
+                        title: "Nhóm trò chuyện",
+                        message: `${payload.inviterUsername} đã thêm ${payload.memberUsernames.join(", ")} vào nhóm.`,
+                        targetUrl: "/chat",
+                    });
+                }
                 chatService.getConversationDetail(payload.conversationId).then((fresh) => {
                     set((state) => ({
                         conversations: state.conversations.map((c) => (c.id === fresh.id ? fresh : c)),
@@ -582,7 +659,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
             case "chat:member:left": {
                 const payload = data as ChatMemberLeftPayload;
-                if (payload.userId === currentUserId && payload.reason === "REMOVED") {
+                if (
+                    payload.userId === currentUserId &&
+                    payload.reason === "REMOVED" &&
+                    useSettingsStore.getState().chatNotifications.chatGroupEvents
+                ) {
                     set({ drawerOpen: false });
                     notificationService.addNotification({
                         type: "CHAT",
@@ -590,6 +671,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
                         message: `Bạn đã bị ${payload.operatorUsername} xóa khỏi nhóm.`,
                         targetUrl: "/chat",
                     });
+                } else if (payload.userId === currentUserId && payload.reason === "REMOVED") {
+                    set({ drawerOpen: false });
                 }
                 chatService.getConversationDetail(payload.conversationId).then((fresh) => {
                     set((state) => ({
@@ -646,7 +729,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
                     } else {
                         next.delete(presence.userId);
                     }
-                    return { onlineUserIds: next };
+                    const nextLastSeen = presence.timestamp
+                        ? { ...state.lastSeenByUserId, [presence.userId]: presence.timestamp }
+                        : state.lastSeenByUserId;
+                    return { onlineUserIds: next, lastSeenByUserId: nextLastSeen };
                 });
                 break;
             }
@@ -664,11 +750,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
             cursorByConversation: {},
             unreadSummary: initialSummary,
             onlineUserIds: new Set<number>(),
+            lastSeenByUserId: {},
             drafts: {},
             tabFilter: "ALL",
             searchQuery: "",
             drawerOpen: false,
             activeToast: null,
+            previewMedia: null,
         });
     },
 }));

@@ -14,14 +14,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
  Optional<User> findByEmail(String email);
 
+ Optional<User> findByEmailIgnoreCase(String email);
+
+ Optional<User> findByUsernameIgnoreCase(String username);
+
  boolean existsByEmail(String email);
+
+ boolean existsByEmailIgnoreCase(String email);
 
  boolean existsByUsername(String username);
 
  long countByRoleAndStatus(auth_service.entity.Role role, auth_service.entity.UserStatus status);
 
  @Lock(LockModeType.PESSIMISTIC_WRITE)
- @Query("SELECT u FROM User u WHERE u.email = :email")
+ @Query("SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)")
  Optional<User> findByEmailForUpdate(
          @Param("email") String email
  );

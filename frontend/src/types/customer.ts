@@ -8,6 +8,7 @@ export interface Customer {
     company: string;
     address?: string;
     status: CustomerStatus;
+    ownerId?: number;
     ownerName?: string;
     createdAt: string;
 }

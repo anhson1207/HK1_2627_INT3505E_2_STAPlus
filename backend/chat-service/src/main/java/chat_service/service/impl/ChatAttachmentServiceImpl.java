@@ -50,11 +50,13 @@ public class ChatAttachmentServiceImpl implements ChatAttachmentService {
     private Path uploadPath;
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    private static final long MAX_VIDEO_SIZE = 25 * 1024 * 1024; // 25 MB
     private static final int MAX_ZIP_ENTRIES = 500;
     private static final long MAX_ZIP_UNCOMPRESSED_BYTES = 50 * 1024 * 1024; // 50 MB
     private static final double MAX_ZIP_COMPRESSION_RATIO = 10.0;
 
     private static final Set<String> ALLOWED_IMAGE_EXTS = Set.of("jpg", "jpeg", "png", "webp");
+    private static final Set<String> ALLOWED_VIDEO_EXTS = Set.of("mp4", "webm", "mov");
     private static final Set<String> ALLOWED_DOC_EXTS = Set.of("pdf", "docx", "xlsx", "txt");
 
     @PostConstruct
@@ -89,21 +91,26 @@ public class ChatAttachmentServiceImpl implements ChatAttachmentService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File không được để trống.");
         }
 
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dung lượng file vượt quá giới hạn 10MB.");
-        }
-
         String originalFilename = StringUtils.cleanPath(
                 file.getOriginalFilename() != null ? file.getOriginalFilename() : "file"
         );
 
         String extension = getExtension(originalFilename).toLowerCase(Locale.ROOT);
         boolean isImage = ALLOWED_IMAGE_EXTS.contains(extension);
+        boolean isVideo = ALLOWED_VIDEO_EXTS.contains(extension);
         boolean isDoc = ALLOWED_DOC_EXTS.contains(extension);
 
-        if (!isImage && !isDoc) {
+        if (!isImage && !isVideo && !isDoc) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Định dạng tệp không được hỗ trợ. Chỉ hỗ trợ ảnh (jpg, png, webp) và tài liệu (pdf, docx, xlsx, txt).");
+                    "Định dạng tệp không được hỗ trợ. Hỗ trợ ảnh (jpg, png, webp), video (mp4, webm, mov) và tài liệu (pdf, docx, xlsx, txt).");
+        }
+
+        long maxAllowedSize = isVideo ? MAX_VIDEO_SIZE : MAX_FILE_SIZE;
+        if (file.getSize() > maxAllowedSize) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    isVideo ? "Dung lượng video vượt quá giới hạn 25MB." : "Dung lượng file vượt quá giới hạn 10MB."
+            );
         }
 
         validateFileContent(file, extension);
@@ -143,7 +150,11 @@ public class ChatAttachmentServiceImpl implements ChatAttachmentService {
             throw ex;
         }
 
-        MessageType messageType = isImage ? MessageType.IMAGE : MessageType.FILE;
+        MessageType messageType = isImage
+                ? MessageType.IMAGE
+                : isVideo
+                    ? MessageType.VIDEO
+                    : MessageType.FILE;
         String downloadUrl = "/api/v1/chat/files/" + attachment.getId();
 
         return ChatAttachmentResponse.builder()
@@ -252,6 +263,17 @@ public class ChatAttachmentServiceImpl implements ChatAttachmentService {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nội dung file không phải định dạng WEBP hợp lệ.");
                 }
                 break;
+            case "mp4":
+            case "mov":
+                if (bytesRead < 8 || header[4] != 'f' || header[5] != 't' || header[6] != 'y' || header[7] != 'p') {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nội dung file không phải định dạng video " + extension.toUpperCase(Locale.ROOT) + " hợp lệ.");
+                }
+                break;
+            case "webm":
+                if (header[0] != (byte) 0x1A || header[1] != (byte) 0x45 || header[2] != (byte) 0xDF || header[3] != (byte) 0xA3) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nội dung file không phải định dạng video WEBM hợp lệ.");
+                }
+                break;
             case "pdf":
                 if (header[0] != '%' || header[1] != 'P' || header[2] != 'D' || header[3] != 'F') {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nội dung file không phải định dạng PDF hợp lệ.");
@@ -345,6 +367,9 @@ public class ChatAttachmentServiceImpl implements ChatAttachmentService {
             case "png" -> "image/png";
             case "jpg", "jpeg" -> "image/jpeg";
             case "webp" -> "image/webp";
+            case "mp4" -> "video/mp4";
+            case "webm" -> "video/webm";
+            case "mov" -> "video/quicktime";
             case "pdf" -> "application/pdf";
             case "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
             case "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";

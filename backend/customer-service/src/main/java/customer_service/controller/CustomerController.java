@@ -1,6 +1,8 @@
 package customer_service.controller;
 
 import customer_service.constant.ApiPaths;
+import customer_service.dto.CustomerActivityRequest;
+import customer_service.dto.CustomerActivityResponse;
 import customer_service.dto.CustomerPatch;
 import customer_service.dto.CustomerRequest;
 import customer_service.dto.CustomerResponse;
@@ -17,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -65,8 +68,14 @@ public class CustomerController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String direction
+            @RequestParam(defaultValue = "desc") String direction,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId,
+            @RequestHeader(value = "X-User-Role", required = false) String currentUserRole
     ) {
+        if ("SALES".equalsIgnoreCase(currentUserRole) && currentUserId != null) {
+            assignedUserId = currentUserId;
+        }
+
         if (page < 0) {
             throw new BadRequestException("page must be >= 0");
         }
@@ -129,5 +138,26 @@ public class CustomerController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         service.delete(id);
+    }
+
+    @GetMapping("/{id}/activities")
+    public List<CustomerActivityResponse> getActivities(@PathVariable Long id) {
+        return service.getActivities(id);
+    }
+
+    @PostMapping("/{id}/activities")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CustomerActivityResponse createActivity(
+            @PathVariable Long id,
+            @Valid @RequestBody CustomerActivityRequest request,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail
+    ) {
+        return service.createActivity(id, request, userEmail);
+    }
+
+    @DeleteMapping("/{id}/activities/{activityId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteActivity(@PathVariable Long id, @PathVariable Long activityId) {
+        service.deleteActivity(id, activityId);
     }
 }

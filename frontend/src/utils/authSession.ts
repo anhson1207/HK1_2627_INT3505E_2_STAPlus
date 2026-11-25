@@ -8,17 +8,33 @@ export interface AuthSession {
 }
 
 export function readAuthSession(): AuthSession | null {
-    // Temporary: restore auth state from localStorage.
-    // Backend currently does not provide GET /api/auth/me.
-    // This restores UI state only; the server must authorize protected requests.
+    // Restore authenticated user session metadata from localStorage; backend authorizes protected requests.
     try {
         const raw = localStorage.getItem(AUTH_STORAGE_KEY);
         if (!raw) return null;
         const value = JSON.parse(raw);
+        const u = value?.user;
         if (typeof value?.token !== "string" || !value.token.trim()
-            || typeof value?.user?.username !== "string" || !value.user.username.trim()
-            || !isUserRole(value?.user?.role)) return null;
-        return { token: value.token, user: { username: value.user.username, role: value.user.role } };
+            || typeof u?.username !== "string" || !u.username.trim()
+            || !isUserRole(u?.role)) return null;
+        return {
+            token: value.token,
+            user: {
+                ...(typeof u.id === "number" ? { id: u.id } : {}),
+                username: u.username,
+                ...(typeof u.fullName === "string" ? { fullName: u.fullName } : {}),
+                ...(typeof u.email === "string" ? { email: u.email } : {}),
+                ...(typeof u.phone === "string" ? { phone: u.phone } : {}),
+                ...(typeof u.department === "string" ? { department: u.department } : {}),
+                ...(typeof u.avatarUrl === "string" ? { avatarUrl: u.avatarUrl } : {}),
+                role: u.role,
+                ...(typeof u.status === "string" ? { status: u.status } : {}),
+                ...(typeof u.provider === "string" ? { provider: u.provider } : {}),
+                ...(typeof u.emailVerified === "boolean" ? { emailVerified: u.emailVerified } : {}),
+                ...(typeof u.isOwner === "boolean" ? { isOwner: u.isOwner } : {}),
+                ...(typeof u.companyName === "string" ? { companyName: u.companyName } : {}),
+            },
+        };
     } catch {
         return null;
     }
