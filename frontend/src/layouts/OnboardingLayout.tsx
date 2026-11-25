@@ -33,7 +33,7 @@ export default function OnboardingLayout({
     children,
 }: OnboardingLayoutProps) {
     return (
-        <div className="min-h-screen flex flex-col bg-slate-50/80 text-slate-800 font-sans antialiased">
+        <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans antialiased">
             {/* Top Navigation Bar */}
             <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3.5 shadow-2xs">
                 <div className="max-w-5xl mx-auto flex items-center justify-between">

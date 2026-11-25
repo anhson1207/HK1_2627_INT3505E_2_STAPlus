@@ -121,4 +121,22 @@ public class NotificationService {
 
         return notificationRepository.save(n);
     }
+
+    public void deleteNotification(Long id, Long userId) {
+        Notification notification = notificationRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
+        notificationRepository.delete(notification);
+    }
+
+    public Notification createFollowUpNotification(Long userId, String title, String message, String targetUrl) {
+        Notification n = new Notification();
+        n.setUserId(userId != null ? userId : 1L);
+        n.setType(NotificationType.FOLLOW_UP);
+        n.setTitle(title != null && !title.isBlank() ? title : "Nhắc nhở theo dõi khách hàng");
+        n.setMessage(message != null && !message.isBlank() ? message : "Đến hạn liên hệ theo dõi khách hàng.");
+        n.setTargetUrl(targetUrl != null && !targetUrl.isBlank() ? targetUrl : "/customers");
+        n.setRead(false);
+        n.setCreatedAt(LocalDateTime.now());
+        return notificationRepository.save(n);
+    }
 }

@@ -27,6 +27,11 @@ export const DEPARTMENTS_BY_ROLE: Record<string, string[]> = {
         "Hỗ trợ kỹ thuật",
         "Dịch vụ sau bán hàng",
     ],
+    MANAGER: [
+        "Quản lý kinh doanh",
+        "Quản lý vận hành",
+        "Ban Quản lý",
+    ],
 };
 
 interface UserFormProps {
@@ -159,6 +164,7 @@ export default function UserForm({
                             </MenuItem>
                             <MenuItem value="SALES">Sales</MenuItem>
                             <MenuItem value="SUPPORT">Support</MenuItem>
+                            <MenuItem value="MANAGER">Manager</MenuItem>
                             <MenuItem value="ADMIN">Admin</MenuItem>
                         </TextField>
                     )}
@@ -219,6 +225,7 @@ export default function UserForm({
                             <MenuItem value="INACTIVE">
                                 Ngừng hoạt động
                             </MenuItem>
+                            <MenuItem value="REJECTED">Đã từ chối</MenuItem>
                         </TextField>
                     )}
                 />

@@ -5,6 +5,7 @@ import { parseJwt } from "../../utils/jwt";
 import { getOtherParticipant } from "../../utils/chatUtils";
 import { ConversationList } from "../../components/chat/ConversationList";
 import { ChatWindow } from "../../components/chat/ChatWindow";
+import { ChatMediaLightbox } from "../../components/chat/ChatMediaLightbox";
 import { DirectInfoDrawer } from "../../components/chat/DirectInfoDrawer";
 import { GroupInfoDrawer } from "../../components/chat/GroupInfoDrawer";
 import { DirectChatModal } from "../../components/chat/DirectChatModal";
@@ -21,6 +22,7 @@ export default function ChatPage() {
     const drawerOpen = useChatStore((state) => state.drawerOpen);
     const setDrawerOpen = useChatStore((state) => state.setDrawerOpen);
     const onlineUserIds = useChatStore((state) => state.onlineUserIds);
+    const lastSeenByUserId = useChatStore((state) => state.lastSeenByUserId);
 
     const isConnected = useChatStore((state) => state.socketConnected);
     const isReconnecting = useChatStore((state) => state.socketReconnecting);
@@ -84,8 +86,10 @@ export default function ChatPage() {
                             <DirectInfoDrawer
                                 open={drawerOpen}
                                 onClose={() => setDrawerOpen(false)}
+                                conversationId={activeConversation.id}
                                 participant={otherParticipant}
                                 isOnline={otherParticipant ? onlineUserIds.has(otherParticipant.userId) : false}
+                                lastSeenAt={otherParticipant ? lastSeenByUserId[otherParticipant.userId] : null}
                             />
                         ) : (
                             <GroupInfoDrawer
@@ -102,6 +106,7 @@ export default function ChatPage() {
             {/* Standalone Modals triggered by ChatWindow empty state */}
             <DirectChatModal open={openDirectModal} onClose={() => setOpenDirectModal(false)} />
             <CreateGroupModal open={openGroupModal} onClose={() => setOpenGroupModal(false)} />
+            <ChatMediaLightbox />
         </div>
     );
 }

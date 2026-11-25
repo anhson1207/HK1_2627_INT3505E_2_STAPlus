@@ -27,8 +27,10 @@ public class OtpResetService {
 
     @Transactional
     public String validateAndReset(ResetPasswordRequest r) {
+        String normalizedEmail = r.getEmail() != null ? r.getEmail().trim().toLowerCase() : "";
+        String normalizedToken = r.getToken() != null ? r.getToken().trim() : "";
 
-        User u = users.findByEmailForUpdate(r.getEmail())
+        User u = users.findByEmailForUpdate(normalizedEmail)
                 .orElse(null);
 
         if (u == null) {
@@ -56,7 +58,7 @@ public class OtpResetService {
             return "Mã OTP đã bị khóa do nhập sai quá 5 lần. Vui lòng yêu cầu mã mới.";
         }
 
-        if (!encoder.matches(r.getToken(), t.getToken())) {
+        if (!encoder.matches(normalizedToken, t.getToken())) {
 
             int attempts = t.getAttemptCount() + 1;
             t.setAttemptCount(attempts);
@@ -77,11 +79,11 @@ public class OtpResetService {
 
         // Valid OTP: change password
         u.setPassword(encoder.encode(r.getNewPassword()));
-        users.save(u);
+        users.saveAndFlush(u);
 
         // Prevent OTP reuse
         t.setUsed(true);
-        resetTokens.save(t);
+        resetTokens.saveAndFlush(t);
 
         // Revoke previous refresh tokens
         refreshTokens.revokeAllByUserId(u.getId());

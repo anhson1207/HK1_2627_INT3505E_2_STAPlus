@@ -1,5 +1,5 @@
 import { Alert, CircularProgress, Tab, Tabs } from "@mui/material";
-import { Activity, ArrowLeft, BadgeDollarSign, BriefcaseBusiness, Pencil, TicketCheck, Trash2 } from "lucide-react";
+import { Activity, ArrowLeft, BadgeDollarSign, BriefcaseBusiness, Clock, Pencil, TicketCheck, Trash2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -10,9 +10,11 @@ import CustomerActivities from "../../components/customers/CustomerActivities";
 import CustomerDeals from "../../components/customers/CustomerDeals";
 import CustomerOverview from "../../components/customers/CustomerOverview";
 import CustomerTickets from "../../components/customers/CustomerTickets";
-import { mockCustomerActivities, mockCustomerDeals, mockCustomerTickets } from "../../mocks/customer360";
 import { customerService, getCustomerErrorMessage } from "../../services/customerService";
+import { dealService } from "../../services/dealService";
+import { ticketService } from "../../services/ticketService";
 import type { Customer } from "../../types/customer";
+import type { ActivityType, CustomerActivity, CustomerDeal, CustomerTicket } from "../../types/customer360";
 
 const TAB_LABELS = ["Tổng quan", "Cơ hội (Deal)", "Hoạt động", "Ticket hỗ trợ"] as const;
 const currencyFormatter = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" });
@@ -47,9 +49,9 @@ export default function CustomerDetailPage() {
     const [activeTab, setActiveTab] = useState(0);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [deleting, setDeleting] = useState(false);
-    const deals = mockCustomerDeals.filter((deal) => deal.customerId === customerId);
-    const activities = mockCustomerActivities.filter((activityItem) => activityItem.customerId === customerId);
-    const tickets = mockCustomerTickets.filter((ticket) => ticket.customerId === customerId);
+    const [deals, setDeals] = useState<CustomerDeal[]>([]);
+    const [activities, setActivities] = useState<CustomerActivity[]>([]);
+    const [tickets, setTickets] = useState<CustomerTicket[]>([]);
     const totalDealValue = deals.reduce((total, deal) => total + deal.value, 0);
     const openTickets = tickets.filter((ticket) => ticket.status === "OPEN").length;
 
@@ -65,7 +67,46 @@ export default function CustomerDetailPage() {
 
             try {
                 const data = await customerService.getCustomerById(customerId);
-                if (active) setCustomer(data);
+                if (!active) return;
+                setCustomer(data);
+
+                const [dealsResult, activitiesResult, ticketsResult] = await Promise.allSettled([
+                    dealService.getDealsByCustomerId(customerId),
+                    customerService.getCustomerActivities(customerId),
+                    ticketService.getTicketsByCustomerId(customerId),
+                ]);
+
+                if (!active) return;
+
+                if (dealsResult.status === "fulfilled") {
+                    setDeals(
+                        dealsResult.value.map((d) => ({
+                            id: d.id,
+                            customerId: d.customerId || customerId,
+                            name: d.name,
+                            value: d.value,
+                            stage: d.stage,
+                            expectedCloseDate: d.expectedCloseDate,
+                        })),
+                    );
+                }
+
+                if (activitiesResult.status === "fulfilled") {
+                    setActivities(activitiesResult.value);
+                }
+
+                if (ticketsResult.status === "fulfilled") {
+                    setTickets(
+                        ticketsResult.value.map((t) => ({
+                            id: t.id,
+                            customerId: t.customerId || customerId,
+                            subject: t.subject,
+                            priority: t.priority,
+                            status: t.status,
+                            createdAt: t.createdAt,
+                        })),
+                    );
+                }
             } catch (loadError) {
                 if (active) setError(getCustomerErrorMessage(loadError));
             } finally {
@@ -76,6 +117,16 @@ export default function CustomerDetailPage() {
         void loadCustomer();
         return () => { active = false; };
     }, [customerId]);
+
+    const handleCreateActivity = async (payload: { type: ActivityType; title: string; description?: string }) => {
+        const created = await customerService.createCustomerActivity(customerId, payload);
+        setActivities((prev) => [created, ...prev]);
+    };
+
+    const handleDeleteActivity = async (activityId: number) => {
+        await customerService.deleteCustomerActivity(customerId, activityId);
+        setActivities((prev) => prev.filter((item) => item.id !== activityId));
+    };
 
     const handleDelete = async () => {
         setDeleting(true);
@@ -117,7 +168,14 @@ export default function CustomerDetailPage() {
                         <span className="text-sm text-(--crm-text-secondary)">Owner: <span className="font-medium text-(--crm-text)">{customer.ownerName || "—"}</span></span>
                     </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        onClick={() => navigate(`/reminders/new?entityType=CUSTOMER&entityId=${customerId}`)}
+                        className="crm-btn crm-btn--secondary"
+                    >
+                        <Clock size={16} /> Đặt lịch nhắc hẹn
+                    </button>
                     <button type="button" onClick={() => navigate(`/customers/${customerId}/edit`)} className="crm-btn crm-btn--secondary">
                         <Pencil size={16} /> Chỉnh sửa
                     </button>
@@ -141,9 +199,15 @@ export default function CustomerDetailPage() {
             </div>
 
             {activeTab === 0 && <CustomerOverview customer={customer} />}
-            {activeTab === 1 && <CustomerDeals deals={deals} />}
-            {activeTab === 2 && <CustomerActivities activities={activities} />}
-            {activeTab === 3 && <CustomerTickets tickets={tickets} />}
+            {activeTab === 1 && <CustomerDeals deals={deals} customerId={customerId} />}
+            {activeTab === 2 && (
+                <CustomerActivities
+                    activities={activities}
+                    onCreate={handleCreateActivity}
+                    onDelete={handleDeleteActivity}
+                />
+            )}
+            {activeTab === 3 && <CustomerTickets tickets={tickets} customerId={customerId} />}
 
             <ConfirmDialog
                 open={confirmDelete}

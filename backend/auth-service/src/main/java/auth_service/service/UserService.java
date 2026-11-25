@@ -12,6 +12,10 @@ public interface UserService {
 
     UserResponse findById(Long id);
 
+    UserResponse createUser(CreateUserRequest r, User actor);
+
+    UserResponse updateUser(Long id, UpdateUserRequest r, User actor);
+
     UserResponse updateRole(Long id, UpdateRoleRequest r, User actor);
 
     UserResponse updateStatus(Long id, UpdateUserStatusRequest r, User actor);

@@ -8,9 +8,14 @@ import {
     ArrowLeft,
     CalendarDays,
     Check,
+    CheckCircle2,
+    Clock,
     FileText,
+    MessageSquare,
+    PartyPopper,
     Pencil,
     Send,
+    TicketCheck,
     Trash2,
     UserRound,
     Users,
@@ -273,6 +278,15 @@ export default function DealDetailPage() {
                 <div className="flex flex-wrap gap-2">
                     <button
                         type="button"
+                        onClick={() => navigate(`/reminders/new?entityType=DEAL&entityId=${dealId}`)}
+                        className="crm-btn crm-btn--secondary"
+                    >
+                        <Clock size={16} />
+                        Đặt nhắc việc
+                    </button>
+
+                    <button
+                        type="button"
                         onClick={() => navigate(`/deals/${dealId}/edit`)}
                         className="crm-btn crm-btn--secondary"
                     >
@@ -310,9 +324,76 @@ export default function DealDetailPage() {
                         </p>
                     </div>
 
-                    <DealStageBadge stage={deal.stage} />
+                    <div className="flex items-center gap-2">
+                        <DealStageBadge stage={deal.stage} />
+                        {deal.stage !== "WON" && (
+                            <button
+                                type="button"
+                                disabled={actionLoading}
+                                onClick={async () => {
+                                    setActionLoading(true);
+                                    try {
+                                        const updated = await dealService.updateDeal(dealId, {
+                                            name: deal.name,
+                                            customerId: deal.customerId,
+                                            value: deal.value,
+                                            stage: "WON",
+                                            probability: 100,
+                                            expectedCloseDate: deal.expectedCloseDate,
+                                            ownerName: deal.ownerName,
+                                            description: deal.description,
+                                        });
+                                        setDeal(updated);
+                                    } catch (e) {
+                                        setError(getDealErrorMessage(e));
+                                    } finally {
+                                        setActionLoading(false);
+                                    }
+                                }}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition cursor-pointer shadow-xs"
+                            >
+                                <CheckCircle2 size={15} /> Chốt Deal (Won)
+                            </button>
+                        )}
+                    </div>
                 </div>
             </section>
+
+            {deal.stage === "WON" && (
+                <div className="mb-5 rounded-xl border border-emerald-300 bg-emerald-50/70 p-4 dark:border-emerald-800 dark:bg-emerald-950/30">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs">
+                                <PartyPopper size={20} />
+                            </span>
+                            <div>
+                                <h3 className="text-sm font-bold text-emerald-900 dark:text-emerald-200">
+                                    Deal đã chốt thành công (Won)!
+                                </h3>
+                                <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                                    Doanh thu đã được ghi nhận. Chuyển sang quy trình bàn giao & chăm sóc sau bán cho bộ phận CSKH.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => navigate(`/tickets/new?customerId=${deal.customerId}`)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition cursor-pointer shadow-xs"
+                            >
+                                <TicketCheck size={15} /> Tạo Ticket CSKH / Triển khai
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => navigate("/chat")}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400 bg-white px-3.5 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 transition dark:bg-emerald-900 dark:text-emerald-100 cursor-pointer shadow-xs"
+                            >
+                                <MessageSquare size={15} /> Mở Chat bàn giao nội bộ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="crm-card crm-card__body">

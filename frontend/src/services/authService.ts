@@ -162,10 +162,12 @@ const DEMO_ACCOUNTS: Record<string, { role: "ADMIN" | "SALES" | "SUPPORT"; pass:
     admin: { role: "ADMIN", pass: ["Admin@123456", "123456", "admin"], username: "admin" },
     "admin@crm.local": { role: "ADMIN", pass: ["Admin@123456", "123456", "admin"], username: "admin" },
     "son@crm.com": { role: "ADMIN", pass: ["123456", "Admin@123456"], username: "son" },
-    sales: { role: "SALES", pass: ["123456", "Admin@123456"], username: "sales" },
-    "sales@crm.com": { role: "SALES", pass: ["123456", "Admin@123456"], username: "sales" },
-    support: { role: "SUPPORT", pass: ["123456", "Admin@123456"], username: "support" },
-    "support@crm.com": { role: "SUPPORT", pass: ["123456", "Admin@123456"], username: "support" },
+    sales: { role: "SALES", pass: ["Sales@123456", "123456", "Admin@123456"], username: "sales" },
+    "sales@crm.local": { role: "SALES", pass: ["Sales@123456", "123456", "Admin@123456"], username: "sales" },
+    "sales@crm.com": { role: "SALES", pass: ["Sales@123456", "123456", "Admin@123456"], username: "sales" },
+    support: { role: "SUPPORT", pass: ["Support@123456", "123456", "Admin@123456"], username: "support" },
+    "support@crm.local": { role: "SUPPORT", pass: ["Support@123456", "123456", "Admin@123456"], username: "support" },
+    "support@crm.com": { role: "SUPPORT", pass: ["Support@123456", "123456", "Admin@123456"], username: "support" },
 };
 
 export const authService = {
@@ -174,9 +176,9 @@ export const authService = {
 
         // 1. Thử gửi request tới Backend Auth Service thật (nếu backend đang chạy)
         try {
-            const email = data.username.includes("@") ? data.username : `${data.username}@crm.local`;
+            const identifier = data.username.trim();
             const response = await authApi.post<Record<string, unknown>>("/api/v1/auth/login", {
-                email,
+                email: identifier,
                 password: data.password,
             });
 
@@ -186,9 +188,9 @@ export const authService = {
 
             return {
                 userId: typeof raw.userId === "number" ? raw.userId : undefined,
-                username: (raw.username as string) || data.username,
+                username: (raw.username as string) || identifier,
                 fullName: (raw.fullName as string) || undefined,
-                email: (raw.email as string) || email,
+                email: (raw.email as string) || identifier,
                 role,
                 status: (raw.status as UserStatus) || "ACTIVE",
                 isOwner: Boolean(raw.isOwner),
@@ -199,6 +201,13 @@ export const authService = {
         } catch (apiErr: unknown) {
             // Nếu backend đang chạy và trả về lỗi thật (400, 401, 403, 404, 500)
             if (apiErr instanceof ApiError && apiErr.status > 0) {
+                const lower = apiErr.message.toLowerCase();
+                if (apiErr.status === 401 && lower.includes("invalid credentials")) {
+                    throw new Error("Tài khoản hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.");
+                }
+                if (apiErr.status === 404 && lower.includes("user not found")) {
+                    throw new Error("Tài khoản không tồn tại trong hệ thống.");
+                }
                 throw new Error(apiErr.message);
             }
 
@@ -284,47 +293,29 @@ export const authService = {
     },
 
     async register(data: RegisterRequest): Promise<RegisterResponse> {
+        const normalizedEmail = data.email.trim().toLowerCase();
+        const trimmedUsername = data.username.trim();
         // Gửi tới backend nếu backend có chạy
         try {
             const response = await authApi.post<Record<string, unknown>>("/api/v1/auth/register", {
-                username: data.username,
-                email: data.email,
+                username: trimmedUsername,
+                email: normalizedEmail,
                 password: data.password,
             });
             const raw = response.data;
             const normalized = {
-                username: (raw.username as string) || data.username,
+                username: (raw.username as string) || trimmedUsername,
                 role: (raw.role as UserRole) || "UNASSIGNED",
                 token: null,
                 message: (raw.message as string) || "Đăng ký thành công",
             };
             const result = registerResponseSchema.safeParse(normalized);
             if (result.success) {
-                const newUser: StoredAuthUser = {
-                    id: Date.now(),
-                    username: data.username,
-                    fullName: data.username,
-                    email: data.email,
-                    password: data.password,
-                    role: "UNASSIGNED",
-                    status: "PENDING",
-                    createdAt: new Date().toISOString(),
-                };
-                saveStoredAuthUser(newUser);
-                saveToCrmUsers({
-                    id: newUser.id,
-                    fullName: newUser.fullName,
-                    email: newUser.email,
-                    role: newUser.role,
-                    status: newUser.status,
-                    createdAt: newUser.createdAt,
-                    department: "Chưa phân bổ",
-                });
                 return result.data;
             }
         } catch (apiError: unknown) {
-            // Nếu Backend trả về lỗi (ví dụ 409 Conflict: Email already exists hoặc 400 Bad Request)
-            if (apiError instanceof Error) {
+            // Nếu Backend trả về lỗi (409, 422, 400, 500...) -> ném lỗi thật ra UI
+            if (apiError instanceof ApiError && apiError.status > 0) {
                 const msg = apiError.message.toLowerCase();
                 if (msg.includes("email already exists") || (msg.includes("email") && msg.includes("exists"))) {
                     throw new Error("Email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.", { cause: apiError });
@@ -332,10 +323,12 @@ export const authService = {
                 if (msg.includes("username already exists") || (msg.includes("username") && msg.includes("exists"))) {
                     throw new Error("Tên đăng nhập này đã tồn tại. Vui lòng chọn tên đăng nhập khác.", { cause: apiError });
                 }
-                // Nếu là lỗi server khác hoặc 409, ném tiếp lỗi của backend
-                if ("status" in apiError && (apiError as { status: number }).status === 409) {
-                    throw apiError;
-                }
+                throw apiError;
+            }
+            if (import.meta.env.VITE_AUTH_API_BASE_URL) {
+                throw apiError instanceof Error
+                    ? apiError
+                    : new Error("Không thể kết nối đến Auth Service để đăng ký.");
             }
         }
 
@@ -381,17 +374,18 @@ export const authService = {
     },
 
     async registerEmployee(data: EmployeeRegisterData): Promise<RegisterResponse> {
+        const normalizedEmail = data.email.trim().toLowerCase();
         try {
             const response = await authApi.post<Record<string, unknown>>("/api/v1/auth/register/employee", {
-                fullName: data.fullName,
-                email: data.email,
+                fullName: data.fullName.trim(),
+                email: normalizedEmail,
                 password: data.password,
                 confirmPassword: data.confirmPassword || data.password,
-                invitationCode: data.invitationCode,
+                invitationCode: data.invitationCode.trim().toUpperCase(),
             });
             const raw = response.data;
             return {
-                username: (raw.username as string) || data.email.split("@")[0],
+                username: (raw.username as string) || normalizedEmail.split("@")[0],
                 role: "UNASSIGNED",
                 status: "PENDING",
                 token: null,
@@ -409,9 +403,9 @@ export const authService = {
     },
 
     async forgotPassword(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
-        const trimmedEmail = data.email.trim();
+        const trimmedEmail = data.email.trim().toLowerCase();
 
-        // 1. Thử gọi backend Auth Service thật
+        // 1. Gọi backend Auth Service thật
         try {
             await authApi.post<{ message?: string }>("/api/v1/auth/forgot-password", {
                 email: trimmedEmail,
@@ -421,19 +415,16 @@ export const authService = {
                 message: "Mã OTP đã được gửi về email của bạn.",
             };
         } catch (apiError) {
-            // Nếu là lỗi nghiệp vụ từ backend 4xx (ví dụ 404 Email chưa đăng ký, 400, v.v.)
-            if (apiError instanceof ApiError) {
-                if (apiError.status >= 400 && apiError.status < 500) {
-                    throw apiError;
-                }
-            } else if (apiError instanceof Error && "status" in apiError) {
-                const status = (apiError as { status: number }).status;
-                if (status >= 400 && status < 500) {
-                    throw apiError;
-                }
+            if (apiError instanceof ApiError && apiError.status > 0) {
+                throw apiError;
+            }
+            if (import.meta.env.VITE_AUTH_API_BASE_URL) {
+                throw apiError instanceof Error
+                    ? apiError
+                    : new Error("Không thể kết nối đến Auth Service để gửi OTP.");
             }
 
-            // 2. Chế độ Offline / Fallback khi backend chưa chạy
+            // 2. Chế độ Offline khi chưa cấu hình VITE_AUTH_API_BASE_URL
             const registeredEmails = [
                 "admin@crm.local",
                 "son@crm.com",
@@ -443,15 +434,15 @@ export const authService = {
             ];
             const storedUsers = getStoredAuthUsers();
             const exists =
-                registeredEmails.includes(trimmedEmail.toLowerCase()) ||
-                storedUsers.some((u) => u.email && u.email.toLowerCase() === trimmedEmail.toLowerCase());
+                registeredEmails.includes(trimmedEmail) ||
+                storedUsers.some((u) => u.email && u.email.toLowerCase() === trimmedEmail);
 
             if (!exists) {
                 throw new Error("Email này chưa được đăng ký trong hệ thống.");
             }
 
             const mockToken = `demo-token-${Date.now().toString(36)}`;
-            localStorage.setItem(`crm-soa.reset-token.${mockToken}`, trimmedEmail.toLowerCase());
+            localStorage.setItem(`crm-soa.reset-token.${mockToken}`, trimmedEmail);
 
             return {
                 message: "Mã OTP đã được gửi về email của bạn.",
@@ -461,60 +452,52 @@ export const authService = {
     },
 
     async resetPassword(data: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+        const trimmedEmail = data.email.trim().toLowerCase();
         const trimmedToken = data.token.trim();
         const newPassword = data.newPassword;
 
-        // 1. Thử gọi backend Auth Service thật
+        if (trimmedToken.startsWith("demo-token-") && !import.meta.env.VITE_AUTH_API_BASE_URL) {
+            const associatedEmail = localStorage.getItem(`crm-soa.reset-token.${trimmedToken}`);
+            if (!associatedEmail) {
+                throw new Error("Mã xác thực token không hợp lệ hoặc đã hết hạn.");
+            }
+            const list = getStoredAuthUsers();
+            const index = list.findIndex((u) => (u.email || "").toLowerCase() === associatedEmail.toLowerCase());
+            if (index >= 0) {
+                list[index].password = newPassword;
+                localStorage.setItem(AUTH_USERS_STORAGE_KEY, JSON.stringify(list));
+            }
+            localStorage.removeItem(`crm-soa.reset-token.${trimmedToken}`);
+            return { message: "Đặt lại mật khẩu thành công (Chế độ Demo)." };
+        }
+
+        // Gọi backend Auth Service thật — tuyệt đối không nuốt lỗi để báo thành công giả
         try {
             const response = await authApi.post<{ message?: string }>("/api/v1/auth/reset-password", {
-                email: data.email.trim(),
+                email: trimmedEmail,
                 token: trimmedToken,
                 newPassword,
             });
+
+            // Xóa cache mock password cũ nếu tồn tại trong localStorage
+            const list = getStoredAuthUsers();
+            const filtered = list.filter((u) => (u.email || "").toLowerCase() !== trimmedEmail);
+            if (filtered.length !== list.length) {
+                localStorage.setItem(AUTH_USERS_STORAGE_KEY, JSON.stringify(filtered));
+            }
 
             return {
                 message: response.data?.message || "Đặt lại mật khẩu thành công.",
             };
         } catch (apiError) {
-            // Nếu là lỗi nghiệp vụ từ backend (ví dụ 401: Invalid or expired OTP hoặc 422 Validation failed)
-            if (apiError instanceof Error && "status" in apiError) {
-                const status = (apiError as { status: number }).status;
-                if (status >= 400 && status < 500) {
-                    const rawMsg = apiError.message;
-                    if (rawMsg.toLowerCase().includes("invalid or expired otp")) {
-                        throw new Error("Mã OTP không chính xác hoặc đã hết hạn. Vui lòng kiểm tra lại.", { cause: apiError });
-                    }
-                    throw apiError;
+            if (apiError instanceof Error) {
+                const rawMsg = apiError.message;
+                if (rawMsg.toLowerCase().includes("invalid or expired otp")) {
+                    throw new Error("Mã OTP không chính xác hoặc đã hết hạn. Vui lòng kiểm tra lại.", { cause: apiError });
                 }
+                throw apiError;
             }
-
-            // 2. Chế độ Offline / Mock Token fallback
-            const associatedEmail = localStorage.getItem(`crm-soa.reset-token.${trimmedToken}`);
-            if (associatedEmail) {
-                const list = getStoredAuthUsers();
-                const index = list.findIndex(
-                    (u) => (u.email || "").toLowerCase() === associatedEmail.toLowerCase()
-                );
-                if (index >= 0) {
-                    list[index].password = newPassword;
-                    localStorage.setItem(AUTH_USERS_STORAGE_KEY, JSON.stringify(list));
-                }
-                localStorage.removeItem(`crm-soa.reset-token.${trimmedToken}`);
-                return {
-                    message: "Đặt lại mật khẩu thành công (Chế độ Demo).",
-                };
-            }
-
-            // Nếu không tìm thấy token trong localStorage và cũng không kết nối được backend
-            if (!trimmedToken) {
-                throw new Error("Mã xác thực token không hợp lệ hoặc đã hết hạn.", {
-                    cause: apiError,
-                });
-            }
-
-            return {
-                message: "Đặt lại mật khẩu thành công.",
-            };
+            throw new Error("Không thể đặt lại mật khẩu. Vui lòng thử lại.");
         }
     },
 
@@ -563,7 +546,7 @@ export const authService = {
                 notifyTicket: true,
                 notifySystem: true,
                 reminderBefore: "15m",
-                themeMode: "dark",
+                themeMode: "light",
                 tableDensity: "comfortable",
                 sidebarCollapsed: false,
                 dateFormat: "dd/MM/yyyy",

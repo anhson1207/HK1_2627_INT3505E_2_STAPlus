@@ -26,36 +26,89 @@ public class AdminSeeder implements CommandLineRunner {
     @Value("${app.admin.username}")
     String username;
 
+    @Value("${app.demo-users.enabled:false}")
+    boolean demoUsersEnabled;
+
+    @Value("${app.sales.email:sales@crm.local}")
+    String salesEmail;
+
+    @Value("${app.sales.username:sales}")
+    String salesUsername;
+
+    @Value("${app.sales.password:Sales@123456}")
+    String salesPassword;
+
+    @Value("${app.support.email:support@crm.local}")
+    String supportEmail;
+
+    @Value("${app.support.username:support}")
+    String supportUsername;
+
+    @Value("${app.support.password:Support@123456}")
+    String supportPassword;
+
+    @Override
     public void run(String... args) {
-        User u = users.findByEmail(email).orElse(null);
+        seedAccount(username, email, password, null, null, Role.ADMIN);
+        if (demoUsersEnabled) {
+            seedAccount(
+                    salesUsername,
+                    salesEmail,
+                    salesPassword,
+                    "Nhân viên Kinh doanh (Demo)",
+                    "Kinh doanh",
+                    Role.SALES
+            );
+            seedAccount(
+                    supportUsername,
+                    supportEmail,
+                    supportPassword,
+                    "Nhân viên Hỗ trợ (Demo)",
+                    "Chăm sóc khách hàng",
+                    Role.SUPPORT
+            );
+        }
+    }
+
+    private void seedAccount(
+            String targetUsername,
+            String targetEmail,
+            String rawPassword,
+            String fullName,
+            String department,
+            Role role
+    ) {
+        User u = users.findByEmail(targetEmail)
+                .or(() -> users.findByUsernameIgnoreCase(targetUsername))
+                .orElse(null);
 
         if (u == null) {
             users.save(
                     User.builder()
-                            .username(username)
-                            .email(email)
-                            .password(encoder.encode(password))
-                            .role(Role.ADMIN)
+                            .username(targetUsername)
+                            .email(targetEmail)
+                            .password(encoder.encode(rawPassword))
+                            .fullName(fullName)
+                            .department(department)
+                            .role(role)
                             .status(UserStatus.ACTIVE)
                             .createdAt(LocalDateTime.now())
                             .build()
             );
-        } else {
-            boolean changed = false;
+            return;
+        }
 
-            if (u.getRole() != Role.ADMIN) {
-                u.setRole(Role.ADMIN);
-                changed = true;
-            }
-
-            if (u.getStatus() != UserStatus.ACTIVE) {
-                u.setStatus(UserStatus.ACTIVE);
-                changed = true;
-            }
-
-            if (changed) {
-                users.save(u);
-            }
+        boolean changed = false;
+        if (u.getRole() != role) {
+            u.setRole(role);
+            changed = true;
+        }
+        if (u.getStatus() != UserStatus.ACTIVE) {
+            u.setStatus(UserStatus.ACTIVE);
+            changed = true;
+        }
+        if (changed) {
+            users.save(u);
         }
     }
 }

@@ -4,8 +4,10 @@ import { ApiError } from "./api";
 import type {
     ChatAttachmentResponse,
     ChatConversation,
+    ChatConversationArchive,
     ChatMessage,
     ChatParticipant,
+    ChatPresenceSnapshot,
     ChatUser,
     CursorPage,
     MessageType,
@@ -238,6 +240,24 @@ export const chatService = {
      */
     async getUnreadSummary(): Promise<UnreadSummary> {
         const response = await chatApi.get<UnreadSummary>("/chat/unread-summary");
+        return response.data;
+    },
+
+    /**
+     * Lấy kho lưu trữ ảnh, video, tệp và liên kết trong cuộc trò chuyện
+     */
+    async getConversationArchive(conversationId: number): Promise<ChatConversationArchive> {
+        const response = await chatApi.get<ChatConversationArchive>(
+            `/chat/conversations/${conversationId}/archive`
+        );
+        return response.data;
+    },
+
+    /**
+     * Lấy trạng thái hoạt động hiện tại (online & lần hoạt động gần nhất)
+     */
+    async getPresence(): Promise<ChatPresenceSnapshot> {
+        const response = await chatApi.get<ChatPresenceSnapshot>("/chat/presence");
         return response.data;
     },
 

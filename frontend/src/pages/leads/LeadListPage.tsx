@@ -5,11 +5,13 @@ import { FileSpreadsheet, Plus, Radio, RefreshCw, Search, SlidersHorizontal } fr
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import ConfirmDialog from "../../components/common/ConfirmDialog";
+import ConvertLeadModal from "../../components/leads/ConvertLeadModal";
 import LeadAssignmentModal from "../../components/leads/LeadAssignmentModal";
 import LeadChannelsModal from "../../components/leads/LeadChannelsModal";
 import LeadImportModal from "../../components/leads/LeadImportModal";
 import LeadTable from "../../components/leads/LeadTable";
 import { getErrorMessage, leadService, type LeadListResponse } from "../../services/leadService";
+import { useAuthStore } from "../../stores/authStore";
 import type { Lead, LeadSource, LeadStatus } from "../../types/lead";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS } from "../../utils/constants";
 
@@ -33,6 +35,7 @@ export default function LeadListPage() {
     const [source, setSource] = useState<LeadSource | "">("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [leadToConvert, setLeadToConvert] = useState<Lead | null>(null);
     const [refreshKey, setRefreshKey] = useState(0);
     const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
     const [deleting, setDeleting] = useState(false);
@@ -40,6 +43,9 @@ export default function LeadListPage() {
     const [importOpen, setImportOpen] = useState(false);
     const [channelsOpen, setChannelsOpen] = useState(false);
     const [assignmentOpen, setAssignmentOpen] = useState(false);
+
+    const user = useAuthStore((state) => state.user);
+    const isSales = user?.role === "SALES";
 
     useEffect(() => {
         let active = true;
@@ -54,6 +60,7 @@ export default function LeadListPage() {
                     search: deferredSearch,
                     status,
                     source,
+                    assignedUserId: isSales ? user?.id : undefined,
                 });
                 if (active) setResult(data);
             } catch (loadError) {
@@ -65,7 +72,7 @@ export default function LeadListPage() {
 
         void loadLeads();
         return () => { active = false; };
-    }, [deferredSearch, page, pageSize, refreshKey, source, status]);
+    }, [deferredSearch, page, pageSize, refreshKey, source, status, isSales, user?.id]);
 
     const pageNumbers = useMemo(() => {
         if (result.totalPages <= 1) return result.totalPages === 1 ? [0] : [];
@@ -99,27 +106,31 @@ export default function LeadListPage() {
                 description="Quản lý khách hàng tiềm năng"
                 actions={
                     <div className="flex flex-wrap items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setAssignmentOpen(true)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-(--crm-surface) px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
-                        >
-                            <SlidersHorizontal size={14} className="text-(--crm-primary)" /> Phân bổ tự động
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setChannelsOpen(true)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-(--crm-surface) px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
-                        >
-                            <Radio size={14} className="text-(--crm-primary)" /> Kênh thu thập
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setImportOpen(true)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-(--crm-surface) px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
-                        >
-                            <FileSpreadsheet size={14} className="text-emerald-600" /> Nhập Excel/CSV
-                        </button>
+                        {!isSales && (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => setAssignmentOpen(true)}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-(--crm-surface) px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
+                                >
+                                    <SlidersHorizontal size={14} className="text-(--crm-primary)" /> Phân bổ tự động
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setChannelsOpen(true)}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-(--crm-surface) px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
+                                >
+                                    <Radio size={14} className="text-(--crm-primary)" /> Kênh thu thập
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setImportOpen(true)}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-(--crm-border) bg-(--crm-surface) px-3 py-2 text-xs font-semibold text-(--crm-text) hover:bg-(--crm-surface-hover) shadow-xs"
+                                >
+                                    <FileSpreadsheet size={14} className="text-emerald-600" /> Nhập Excel/CSV
+                                </button>
+                            </>
+                        )}
                         <button
                             type="button"
                             onClick={() => navigate("/leads/new")}
@@ -197,6 +208,7 @@ export default function LeadListPage() {
                         onView={(lead) => navigate(`/leads/${lead.id}`)}
                         onEdit={(lead) => navigate(`/leads/${lead.id}/edit`)}
                         onDelete={setLeadToDelete}
+                        onConvert={setLeadToConvert}
                     />
                 )}
 
@@ -240,29 +252,43 @@ export default function LeadListPage() {
                 onConfirm={handleDelete}
             />
 
-            <LeadImportModal
-                open={importOpen}
-                onClose={() => setImportOpen(false)}
-                onSuccess={(count) => {
-                    setMessage(`Đã import thành công ${count} Lead mới vào hệ thống!`);
-                    setRefreshKey((k) => k + 1);
-                }}
-            />
+            {!isSales && (
+                <>
+                    <LeadImportModal
+                        open={importOpen}
+                        onClose={() => setImportOpen(false)}
+                        onSuccess={(count) => {
+                            setMessage(`Đã import thành công ${count} Lead mới vào hệ thống!`);
+                            setRefreshKey((k) => k + 1);
+                        }}
+                    />
 
-            <LeadChannelsModal
-                open={channelsOpen}
-                onClose={() => setChannelsOpen(false)}
-                onSuccess={(msg) => {
-                    setMessage(msg);
-                    setRefreshKey((k) => k + 1);
-                }}
-            />
+                    <LeadChannelsModal
+                        open={channelsOpen}
+                        onClose={() => setChannelsOpen(false)}
+                        onSuccess={(msg) => {
+                            setMessage(msg);
+                            setRefreshKey((k) => k + 1);
+                        }}
+                    />
 
-            <LeadAssignmentModal
-                open={assignmentOpen}
-                onClose={() => setAssignmentOpen(false)}
-                onSuccess={(msg) => {
-                    setMessage(msg);
+                    <LeadAssignmentModal
+                        open={assignmentOpen}
+                        onClose={() => setAssignmentOpen(false)}
+                        onSuccess={(msg) => {
+                            setMessage(msg);
+                            setRefreshKey((k) => k + 1);
+                        }}
+                    />
+                </>
+            )}
+
+            <ConvertLeadModal
+                open={Boolean(leadToConvert)}
+                lead={leadToConvert}
+                onClose={() => setLeadToConvert(null)}
+                onSuccess={(res) => {
+                    setMessage(`Chuyển đổi thành công! Đã tạo khách hàng "${res.customerName}".`);
                     setRefreshKey((k) => k + 1);
                 }}
             />

@@ -1,13 +1,17 @@
 package customer_service.service;
 
+import customer_service.dto.CustomerActivityRequest;
+import customer_service.dto.CustomerActivityResponse;
 import customer_service.dto.CustomerPatch;
 import customer_service.dto.CustomerRequest;
 import customer_service.dto.CustomerResponse;
 import customer_service.entity.Customer;
+import customer_service.entity.CustomerActivity;
 import customer_service.entity.CustomerStatus;
 import customer_service.exception.BadRequestException;
 import customer_service.exception.ResourceNotFoundException;
 import customer_service.mapper.CustomerMapper;
+import customer_service.repository.CustomerActivityRepository;
 import customer_service.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,12 +19,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class CustomerServiceImpl implements CustomerService {
 
+    private static final Set<String> ALLOWED_ACTIVITY_TYPES = Set.of("CALL", "EMAIL", "MEETING", "NOTE");
+
     private final CustomerRepository repository;
+    private final CustomerActivityRepository activityRepository;
     private final CustomerMapper mapper;
 
     @Override
@@ -109,6 +119,57 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public void delete(Long id) {
         repository.delete(find(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CustomerActivityResponse> getActivities(Long customerId) {
+        find(customerId);
+        return activityRepository.findByCustomerIdOrderByCreatedAtDesc(customerId)
+                .stream()
+                .map(a -> new CustomerActivityResponse(
+                        a.getId(),
+                        a.getCustomerId(),
+                        a.getType(),
+                        a.getTitle(),
+                        a.getDescription(),
+                        a.getCreatedBy(),
+                        a.getCreatedAt()
+                ))
+                .toList();
+    }
+
+    @Override
+    public CustomerActivityResponse createActivity(Long customerId, CustomerActivityRequest request, String createdBy) {
+        find(customerId);
+        String normalizedType = request.type() != null ? request.type().trim().toUpperCase() : "NOTE";
+        if (!ALLOWED_ACTIVITY_TYPES.contains(normalizedType)) {
+            normalizedType = "NOTE";
+        }
+        CustomerActivity activity = new CustomerActivity();
+        activity.setCustomerId(customerId);
+        activity.setType(normalizedType);
+        activity.setTitle(request.title().trim());
+        activity.setDescription(request.description() != null ? request.description().trim() : "");
+        activity.setCreatedBy(createdBy != null && !createdBy.isBlank() ? createdBy : "Nhân viên CRM");
+
+        CustomerActivity saved = activityRepository.save(activity);
+        return new CustomerActivityResponse(
+                saved.getId(),
+                saved.getCustomerId(),
+                saved.getType(),
+                saved.getTitle(),
+                saved.getDescription(),
+                saved.getCreatedBy(),
+                saved.getCreatedAt()
+        );
+    }
+
+    @Override
+    public void deleteActivity(Long customerId, Long activityId) {
+        CustomerActivity activity = activityRepository.findByIdAndCustomerId(activityId, customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Activity not found: " + activityId));
+        activityRepository.delete(activity);
     }
 
     private Customer find(Long id) {

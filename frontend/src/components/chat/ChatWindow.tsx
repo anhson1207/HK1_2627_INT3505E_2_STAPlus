@@ -11,13 +11,13 @@ import {
     Loader2,
     X,
     Sparkles,
-    Download,
 } from "lucide-react";
 import { useChatStore } from "../../stores/chatStore";
 import { useAuthStore } from "../../stores/authStore";
 import { parseJwt } from "../../utils/jwt";
 import {
     formatDateDivider,
+    formatLastSeenStatus,
     getConversationDisplayName,
     getMessageReaders,
     getOtherParticipant,
@@ -55,6 +55,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     const drawerOpen = useChatStore((state) => state.drawerOpen);
     const setDrawerOpen = useChatStore((state) => state.setDrawerOpen);
     const onlineUserIds = useChatStore((state) => state.onlineUserIds);
+    const lastSeenByUserId = useChatStore((state) => state.lastSeenByUserId);
+    const [nowMs, setNowMs] = useState(() => Date.now());
+
+    useEffect(() => {
+        const timer = window.setInterval(() => setNowMs(Date.now()), 30_000);
+        return () => window.clearInterval(timer);
+    }, []);
 
     // Active conversation object
     const activeConversation = conversations.find((c) => c.id === activeConversationId);
@@ -67,8 +74,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     const [searchResults, setSearchResults] = useState<ChatMessage[]>([]);
     const [isSearching, setIsSearching] = useState(false);
 
-    // Lightbox image preview state
-    const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
+    const setPreviewMedia = useChatStore((state) => state.setPreviewMedia);
 
     // Scroll state management
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -188,17 +194,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         await sendMessage(activeConversationId, msg.content);
     };
 
-    // Close preview lightbox with Escape key
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && previewImage) {
-                setPreviewImage(null);
-            }
-        };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [previewImage]);
-
     // 5. Empty State: Chưa chọn cuộc trò chuyện
     if (!activeConversation) {
         return (
@@ -238,6 +233,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     const displayName = getConversationDisplayName(activeConversation, currentUserId);
     const otherParticipant = !isGroup ? getOtherParticipant(activeConversation, currentUserId) : undefined;
     const isDirectOnline = otherParticipant ? onlineUserIds.has(otherParticipant.userId) : false;
+    const otherLastSeen = otherParticipant ? lastSeenByUserId[otherParticipant.userId] : undefined;
+    const directPresence = formatLastSeenStatus(isDirectOnline, otherLastSeen, nowMs);
 
     // Count online participants in group
     const groupOnlineCount = isGroup
@@ -297,15 +294,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                                         <>
                                             <span>•</span>
                                             <span className="text-emerald-600 font-medium">
-                                                {groupOnlineCount} trực tuyến
+                                                {groupOnlineCount} đang hoạt động
                                             </span>
                                         </>
                                     )}
                                 </>
-                            ) : isDirectOnline ? (
-                                <span className="text-emerald-600 font-medium">Đang trực tuyến</span>
+                            ) : directPresence.isOnline ? (
+                                <span className="text-emerald-600 font-medium">{directPresence.label}</span>
                             ) : (
-                                <span>Ngoại tuyến</span>
+                                <span>{directPresence.label}</span>
                             )}
                         </p>
                     </div>
@@ -511,7 +508,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                                     isRead={isReadByRecipient}
                                     readers={readers}
                                     onRetry={handleRetry}
-                                    onPreviewImage={(url, name) => setPreviewImage({ url, name })}
+                                    onPreviewImage={(url, name, kind = "image") =>
+                                        setPreviewMedia({
+                                            url,
+                                            attachmentUrl: msg.attachmentUrl,
+                                            name,
+                                            kind,
+                                        })
+                                    }
                                 />
                             </div>
                         </React.Fragment>
@@ -548,49 +552,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     placeholder={`Nhắn tin cho ${displayName}... (Enter để gửi, Shift + Enter để xuống dòng)`}
                 />
             </footer>
-
-            {/* Lightbox Modal Xem Ảnh Toàn Màn Hình */}
-            {previewImage && (
-                <div
-                    className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in duration-200"
-                    onClick={() => setPreviewImage(null)}
-                >
-                    <div
-                        className="relative max-w-4xl max-h-[90vh] flex flex-col items-center select-none"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="absolute -top-12 right-0 flex items-center gap-3">
-                            <a
-                                href={previewImage.url}
-                                download={previewImage.name}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer"
-                                title="Tải ảnh về máy"
-                            >
-                                <Download size={20} />
-                            </a>
-                            <button
-                                type="button"
-                                onClick={() => setPreviewImage(null)}
-                                className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer"
-                                title="Đóng (Esc)"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        <img
-                            src={previewImage.url}
-                            alt={previewImage.name}
-                            className="max-h-[82vh] max-w-full rounded-lg object-contain shadow-2xl"
-                        />
-                        <p className="mt-3 text-xs text-white/80 font-medium truncate max-w-md text-center">
-                            {previewImage.name}
-                        </p>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

@@ -20,6 +20,10 @@ public class OrganizationResponse {
     private String website;
     private String address;
     private String timezone;
+    private String crmName;
+    private String currency;
+    private String language;
+    private String dateFormat;
     private Long ownerUserId;
     private String ownerName;
     private String ownerEmail;

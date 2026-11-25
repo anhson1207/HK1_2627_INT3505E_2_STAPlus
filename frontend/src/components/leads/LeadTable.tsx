@@ -1,4 +1,4 @@
-import { Eye, MoreHorizontal, Pencil, Trash2, UserRoundSearch } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Trash2, UserCheck, UserRoundSearch } from "lucide-react";
 import { IconButton, Menu, MenuItem } from "@mui/material";
 import { useState, type MouseEvent } from "react";
 
@@ -11,9 +11,10 @@ interface LeadTableProps {
     onView: (lead: Lead) => void;
     onEdit: (lead: Lead) => void;
     onDelete: (lead: Lead) => void;
+    onConvert?: (lead: Lead) => void;
 }
 
-export default function LeadTable({ leads, onView, onEdit, onDelete }: LeadTableProps) {
+export default function LeadTable({ leads, onView, onEdit, onDelete, onConvert }: LeadTableProps) {
     const [menu, setMenu] = useState<{ anchor: HTMLElement; lead: Lead } | null>(null);
 
     const openMenu = (event: MouseEvent<HTMLElement>, lead: Lead) => {
@@ -96,6 +97,11 @@ export default function LeadTable({ leads, onView, onEdit, onDelete }: LeadTable
             <Menu anchorEl={menu?.anchor} open={Boolean(menu)} onClose={() => setMenu(null)}>
                 <MenuItem onClick={() => runAction(onView)}><Eye size={16} className="mr-2" /> Xem chi tiết</MenuItem>
                 <MenuItem onClick={() => runAction(onEdit)}><Pencil size={16} className="mr-2" /> Chỉnh sửa</MenuItem>
+                {menu?.lead.status !== "CONVERTED" && onConvert && (
+                    <MenuItem onClick={() => runAction(onConvert)} sx={{ color: "teal", fontWeight: 600 }}>
+                        <UserCheck size={16} className="mr-2" /> Chuyển đổi thành Khách hàng
+                    </MenuItem>
+                )}
                 <MenuItem onClick={() => runAction(onDelete)} sx={{ color: "error.main" }}>
                     <Trash2 size={16} className="mr-2" /> Xóa
                 </MenuItem>

@@ -168,6 +168,12 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Override
     @Transactional
     public synchronized OrganizationResponse initializeSetup(InitializeSetupRequest request) {
+        if (organizationRepository.findFirstByOrderByIdAsc()
+                .map(org -> Boolean.TRUE.equals(org.getSetupCompleted()))
+                .orElse(false)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Hệ thống đã được khởi tạo doanh nghiệp.");
+        }
+
         // 1. Validate passwords match
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu xác nhận không khớp.");
@@ -263,6 +269,10 @@ public class OrganizationServiceImpl implements OrganizationService {
         if (request.getWebsite() != null) org.setWebsite(request.getWebsite().trim());
         if (request.getAddress() != null) org.setAddress(request.getAddress().trim());
         if (request.getTimezone() != null) org.setTimezone(request.getTimezone().trim());
+        if (request.getCrmName() != null && !request.getCrmName().isBlank()) org.setCrmName(request.getCrmName().trim());
+        if (request.getCurrency() != null && !request.getCurrency().isBlank()) org.setCurrency(request.getCurrency().trim());
+        if (request.getLanguage() != null && !request.getLanguage().isBlank()) org.setLanguage(request.getLanguage().trim());
+        if (request.getDateFormat() != null && !request.getDateFormat().isBlank()) org.setDateFormat(request.getDateFormat().trim());
 
         Organization saved = organizationRepository.save(org);
 
@@ -316,6 +326,10 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .website(org.getWebsite())
                 .address(org.getAddress())
                 .timezone(org.getTimezone())
+                .crmName(org.getCrmName() != null ? org.getCrmName() : "STAplus crm")
+                .currency(org.getCurrency() != null ? org.getCurrency() : "VND")
+                .language(org.getLanguage() != null ? org.getLanguage() : "vi")
+                .dateFormat(org.getDateFormat() != null ? org.getDateFormat() : "dd/MM/yyyy")
                 .ownerUserId(org.getOwnerUserId())
                 .ownerName(ownerName)
                 .ownerEmail(ownerEmail)

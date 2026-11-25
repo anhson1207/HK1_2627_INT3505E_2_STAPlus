@@ -35,6 +35,8 @@ public interface ChatService {
 
     CursorPageResponse<ChatMessageResponse> searchMessages(ChatPrincipal currentUser, Long conversationId, String query, int limit);
 
+    ChatConversationArchiveResponse getConversationArchive(ChatPrincipal currentUser, Long conversationId);
+
     ChatMessageResponse sendMessage(ChatPrincipal currentUser, Long conversationId, SendMessageRequest request);
 
     void markAsRead(ChatPrincipal currentUser, Long conversationId, Long messageId);

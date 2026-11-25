@@ -6,7 +6,7 @@ export default function RegisterChoicePage() {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen flex flex-col justify-between bg-slate-50/70 text-slate-800 font-sans antialiased">
+        <div className="min-h-screen flex flex-col justify-between bg-slate-50 text-slate-800 font-sans antialiased">
             {/* Header */}
             <header className="bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-4">
                 <div className="max-w-6xl mx-auto flex items-center justify-between">

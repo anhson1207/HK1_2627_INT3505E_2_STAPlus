@@ -59,7 +59,7 @@ public class UserPreference {
 
     @Builder.Default
     @Column(name = "theme_mode", length = 20)
-    private String themeMode = "dark";
+    private String themeMode = "light";
 
     @Builder.Default
     @Column(name = "table_density", length = 20)

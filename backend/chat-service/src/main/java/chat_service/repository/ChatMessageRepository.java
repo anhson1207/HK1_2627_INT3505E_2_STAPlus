@@ -15,6 +15,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     Optional<ChatMessage> findByConversationIdAndClientMessageId(Long conversationId, String clientMessageId);
 
+    Optional<ChatMessage> findTopByConversationIdOrderByIdDesc(Long conversationId);
+
     @Query("SELECT m FROM ChatMessage m " +
            "WHERE m.conversation.id = :conversationId " +
            "AND (:beforeId IS NULL OR m.id < :beforeId) " +
@@ -41,5 +43,31 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     @Query("SELECT m FROM ChatMessage m WHERE m.attachmentUrl LIKE CONCAT('%/files/', :attachmentId)")
     List<ChatMessage> findByAttachmentId(@Param("attachmentId") Long attachmentId);
+
+    @Query("SELECT m FROM ChatMessage m " +
+           "WHERE m.conversation.id = :conversationId " +
+           "AND m.id >= :visibleFromId " +
+           "AND (m.attachmentUrl IS NOT NULL " +
+           "  OR m.type IN (chat_service.entity.enums.MessageType.IMAGE, " +
+           "               chat_service.entity.enums.MessageType.VIDEO, " +
+           "               chat_service.entity.enums.MessageType.FILE)) " +
+           "ORDER BY m.id DESC")
+    List<ChatMessage> findArchiveAttachmentMessages(
+            @Param("conversationId") Long conversationId,
+            @Param("visibleFromId") Long visibleFromId,
+            Pageable pageable
+    );
+
+    @Query("SELECT m FROM ChatMessage m " +
+           "WHERE m.conversation.id = :conversationId " +
+           "AND m.id >= :visibleFromId " +
+           "AND m.type <> chat_service.entity.enums.MessageType.SYSTEM " +
+           "AND (LOWER(m.content) LIKE '%http://%' OR LOWER(m.content) LIKE '%https://%' OR LOWER(m.content) LIKE '%www.%') " +
+           "ORDER BY m.id DESC")
+    List<ChatMessage> findArchiveLinkMessages(
+            @Param("conversationId") Long conversationId,
+            @Param("visibleFromId") Long visibleFromId,
+            Pageable pageable
+    );
 }
 

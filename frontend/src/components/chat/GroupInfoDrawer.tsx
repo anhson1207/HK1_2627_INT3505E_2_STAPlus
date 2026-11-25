@@ -15,6 +15,7 @@ import {
 import { chatService } from "../../services/chatService";
 import { useChatStore } from "../../stores/chatStore";
 import { ChatAvatar } from "./ChatAvatar";
+import { ConversationMediaArchive } from "./ConversationMediaArchive";
 import type { ChatConversation, ChatUser } from "../../types/chat";
 
 interface GroupInfoDrawerProps {
@@ -254,88 +255,93 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
                 </button>
             </div>
 
-            {/* Group Overview */}
-            <div className="p-5 flex flex-col items-center text-center border-b border-(--crm-border-subtle) bg-(--crm-surface-subtle)/50">
-                <ChatAvatar
-                    name={conversation.name}
-                    avatarUrl={conversation.avatarUrl}
-                    isGroup={true}
-                    size="xl"
-                    className="mb-3 ring-4 ring-white shadow-sm"
-                />
+            {/* Scrollable Body: Overview, Media Archive, Members */}
+            <div className="flex-1 overflow-y-auto crm-scrollbar">
+                {/* Group Overview */}
+                <div className="p-5 flex flex-col items-center text-center border-b border-(--crm-border-subtle) bg-(--crm-surface-subtle)/50">
+                    <ChatAvatar
+                        name={conversation.name}
+                        avatarUrl={conversation.avatarUrl}
+                        isGroup={true}
+                        size="xl"
+                        className="mb-3 ring-4 ring-white shadow-sm"
+                    />
 
-                {isEditingName ? (
-                    <div className="flex items-center gap-1.5 w-full mt-1">
-                        <input
-                            type="text"
-                            value={groupName}
-                            onChange={(e) => setGroupName(e.target.value)}
-                            className="flex-1 px-2.5 py-1 text-sm rounded-lg border border-(--crm-primary) focus:outline-none"
-                            autoFocus
-                        />
-                        <button
-                            type="button"
-                            onClick={handleSaveName}
-                            disabled={isSavingName}
-                            className="p-1.5 rounded-lg bg-(--crm-primary) text-white"
-                        >
-                            <Check size={14} />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setGroupName(conversation.name || "");
-                                setIsEditingName(false);
-                            }}
-                            className="p-1.5 rounded-lg bg-slate-200 text-slate-700"
-                        >
-                            <X size={14} />
-                        </button>
-                    </div>
-                ) : (
-                    <div className="flex items-center justify-center gap-1.5">
-                        <h4 className="text-base font-bold text-(--crm-heading) truncate max-w-56">
-                            {conversation.name || "Nhóm chưa đặt tên"}
-                        </h4>
-                        {canManage && (
+                    {isEditingName ? (
+                        <div className="flex items-center gap-1.5 w-full mt-1">
+                            <input
+                                type="text"
+                                value={groupName}
+                                onChange={(e) => setGroupName(e.target.value)}
+                                className="flex-1 px-2.5 py-1 text-sm rounded-lg border border-(--crm-primary) focus:outline-none"
+                                autoFocus
+                            />
                             <button
                                 type="button"
-                                onClick={() => setIsEditingName(true)}
-                                className="p-1 rounded-md text-(--crm-text-muted) hover:text-(--crm-primary)"
-                                title="Đổi tên nhóm"
+                                onClick={handleSaveName}
+                                disabled={isSavingName}
+                                className="p-1.5 rounded-lg bg-(--crm-primary) text-white"
                             >
-                                <Pencil size={13} />
+                                <Check size={14} />
                             </button>
-                        )}
-                    </div>
-                )}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setGroupName(conversation.name || "");
+                                    setIsEditingName(false);
+                                }}
+                                className="p-1.5 rounded-lg bg-slate-200 text-slate-700"
+                            >
+                                <X size={14} />
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center gap-1.5">
+                            <h4 className="text-base font-bold text-(--crm-heading) truncate max-w-56">
+                                {conversation.name || "Nhóm chưa đặt tên"}
+                            </h4>
+                            {canManage && (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditingName(true)}
+                                    className="p-1 rounded-md text-(--crm-text-muted) hover:text-(--crm-primary)"
+                                    title="Đổi tên nhóm"
+                                >
+                                    <Pencil size={13} />
+                                </button>
+                            )}
+                        </div>
+                    )}
 
-                <p className="text-xs text-(--crm-text-secondary) mt-1">
-                    {activeParticipants.length} thành viên tham gia
-                </p>
-            </div>
+                    <p className="text-xs text-(--crm-text-secondary) mt-1">
+                        {activeParticipants.length} thành viên tham gia
+                    </p>
+                </div>
 
-            {/* Member Management Section */}
-            <div className="p-4 flex items-center justify-between border-b border-(--crm-border-subtle)">
-                <span className="text-xs font-bold text-(--crm-heading) uppercase tracking-wider">
-                    Thành viên ({activeParticipants.length})
-                </span>
-                {canManage && (
-                    <button
-                        type="button"
-                        aria-label="Thêm thành viên"
-                        title="Thêm thành viên"
-                        onClick={handleOpenAddMembers}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-(--crm-primary) hover:underline cursor-pointer"
-                    >
-                        <UserPlus size={14} />
-                        <span>Thêm</span>
-                    </button>
-                )}
-            </div>
+                {/* Messenger-style Media, Files & Links Archive */}
+                <ConversationMediaArchive conversationId={conversation.id} />
 
-            {/* Members List */}
-            <div className="flex-1 overflow-y-auto p-2 divide-y divide-(--crm-border-subtle)/40 crm-scrollbar">
+                {/* Member Management Section */}
+                <div className="p-4 flex items-center justify-between border-t border-b border-(--crm-border-subtle)">
+                    <span className="text-xs font-bold text-(--crm-heading) uppercase tracking-wider">
+                        Thành viên ({activeParticipants.length})
+                    </span>
+                    {canManage && (
+                        <button
+                            type="button"
+                            aria-label="Thêm thành viên"
+                            title="Thêm thành viên"
+                            onClick={handleOpenAddMembers}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-(--crm-primary) hover:underline cursor-pointer"
+                        >
+                            <UserPlus size={14} />
+                            <span>Thêm</span>
+                        </button>
+                    )}
+                </div>
+
+                {/* Members List */}
+                <div className="p-2 divide-y divide-(--crm-border-subtle)/40">
                 {activeParticipants.map((p) => {
                     const isCurrentUser = p.userId === currentUserId;
                     const isOnline = onlineUserIds.has(p.userId);
@@ -450,6 +456,7 @@ export const GroupInfoDrawer: React.FC<GroupInfoDrawerProps> = ({
                         </div>
                     );
                 })}
+            </div>
             </div>
 
             {/* Footer: Rời nhóm */}

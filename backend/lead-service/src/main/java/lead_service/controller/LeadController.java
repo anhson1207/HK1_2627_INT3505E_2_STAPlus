@@ -69,6 +69,14 @@ public class LeadController {
         return ResponseEntity.ok(service.importBatch(requests));
     }
 
+    @PostMapping("/{id}/convert")
+    public ResponseEntity<lead_service.dto.ConvertLeadResponse> convert(
+            @PathVariable Long id,
+            @RequestBody(required = false) lead_service.dto.ConvertLeadRequest request,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        return ResponseEntity.ok(service.convert(id, request, authHeader));
+    }
+
     @GetMapping("/{id}")
     public LeadResponse getById(@PathVariable Long id) {
         return service.getById(id);
@@ -83,7 +91,13 @@ public class LeadController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String direction) {
+            @RequestParam(defaultValue = "desc") String direction,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId,
+            @RequestHeader(value = "X-User-Role", required = false) String currentUserRole) {
+
+        if ("SALES".equalsIgnoreCase(currentUserRole) && currentUserId != null) {
+            assignedUserId = currentUserId;
+        }
 
         if (page < 0) throw new BadRequestException("page must be >= 0");
         if (size < 1 || size > 100) throw new BadRequestException("size must be between 1 and 100");

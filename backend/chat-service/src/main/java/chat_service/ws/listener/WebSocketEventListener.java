@@ -1,13 +1,9 @@
 package chat_service.ws.listener;
 
-import chat_service.ws.event.ChatDomainEvent;
-import chat_service.ws.event.ChatEvent;
-import chat_service.ws.event.ChatUserPresencePayload;
 import chat_service.ws.model.WsPrincipal;
 import chat_service.ws.service.ChatPresenceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
@@ -18,9 +14,7 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -28,7 +22,6 @@ import java.util.stream.Collectors;
 public class WebSocketEventListener {
 
     private final ChatPresenceService presenceService;
-    private final ApplicationEventPublisher eventPublisher;
 
     private final Map<Long, String> usernameCache = new ConcurrentHashMap<>();
 
@@ -41,9 +34,9 @@ public class WebSocketEventListener {
         if (principal instanceof WsPrincipal wsPrincipal && sessionId != null) {
             Long userId = wsPrincipal.getUserId();
             usernameCache.put(userId, wsPrincipal.getUsername());
-            boolean becameOnline = presenceService.registerSession(sessionId, userId);
+            boolean becameOnline = presenceService.registerSession(sessionId, userId, wsPrincipal.getUsername());
             if (becameOnline) {
-                broadcastPresence(userId, wsPrincipal.getUsername(), "ONLINE", null);
+                presenceService.broadcastPresence(userId, wsPrincipal.getUsername(), "ONLINE", LocalDateTime.now());
             }
         }
     }
@@ -60,35 +53,8 @@ public class WebSocketEventListener {
                 LocalDateTime lastSeen = presenceService.getLastSeen(userId);
                 String username = usernameCache.getOrDefault(userId, "User#" + userId);
 
-                broadcastPresence(userId, username, "OFFLINE", lastSeen);
+                presenceService.broadcastPresence(userId, username, "OFFLINE", lastSeen);
             }
-        }
-    }
-
-    private void broadcastPresence(Long userId, String username, String status, LocalDateTime lastSeen) {
-        ChatUserPresencePayload payload = ChatUserPresencePayload.builder()
-                .userId(userId)
-                .username(username)
-                .status(status)
-                .timestamp(lastSeen != null ? lastSeen.toString() : LocalDateTime.now().toString())
-                .build();
-
-        ChatEvent<ChatUserPresencePayload> chatEvent = ChatEvent.of(
-                "chat:user:presence",
-                null,
-                payload
-        );
-
-        // Notify all online users
-        Set<Long> recipientIds = presenceService.getOnlineUserIds().stream()
-                .filter(id -> !id.equals(userId))
-                .collect(Collectors.toSet());
-
-        if (!recipientIds.isEmpty()) {
-            eventPublisher.publishEvent(ChatDomainEvent.builder()
-                    .recipientUserIds(recipientIds)
-                    .payload(chatEvent)
-                    .build());
         }
     }
 }

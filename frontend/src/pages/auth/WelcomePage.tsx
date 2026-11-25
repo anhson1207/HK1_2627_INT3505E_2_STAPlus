@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import BrandLogo from "../../components/common/BrandLogo";
 import {
@@ -13,22 +12,13 @@ import {
     ArrowRight,
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
-import { useThemeStore, applyThemeToDOM } from "../../stores/themeStore";
 
 export default function WelcomePage() {
     const navigate = useNavigate();
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-    const savedMode = useThemeStore((state) => state.mode);
-
-    useEffect(() => {
-        applyThemeToDOM("light");
-        return () => {
-            applyThemeToDOM(savedMode);
-        };
-    }, [savedMode]);
 
     return (
-        <div className="min-h-screen flex flex-col justify-between bg-slate-50/70 text-slate-800 font-sans antialiased">
+        <div className="min-h-screen flex flex-col justify-between bg-slate-50 text-slate-800 font-sans antialiased">
             {/* Top Navigation: Clean Header with BrandLogo Only (plus Dashboard shortcut if logged in) */}
             <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-4">
                 <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -56,7 +46,7 @@ export default function WelcomePage() {
                         {/* Main Headline */}
                         <h1 className="text-3xl sm:text-4xl xl:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.18]">
                             Nền tảng quản trị khách hàng cho{" "}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#007f9b] via-[#0284c7] to-[#0369a1]">
+                            <span className="text-[#007f9b]">
                                 doanh nghiệp tăng trưởng
                             </span>
                         </h1>

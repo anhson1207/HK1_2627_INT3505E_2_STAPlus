@@ -15,12 +15,12 @@ public class Ticket {
     @Column(name = "subject", nullable = false)
     private String subject;
 
-    @Column(name = "description", nullable = false)
+    @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "priority", nullable = false)
-    private Priority priority; //what's an enum ?
+    private Priority priority;
 
     @Column(name = "status", nullable = false)
     private String status;
@@ -28,15 +28,31 @@ public class Ticket {
     @Column(name = "sales_id", nullable = false)
     private Long salesId;
 
-    @Column(name="support_id")
+    @Column(name = "support_id")
     private Long supportId;
 
-    @Column(name="created_at", nullable = false)
+    @Column(name = "assigned_to")
+    private String assignedTo;
+
+    @Column(name = "sla_deadline")
+    private LocalDateTime slaDeadline;
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    public static LocalDateTime calculateSlaDeadline(Priority priority, LocalDateTime baseTime) {
+        LocalDateTime start = baseTime != null ? baseTime : LocalDateTime.now();
+        if (priority == null) return start.plusHours(24);
+        return switch (priority) {
+            case URGENT -> start.plusHours(4);
+            case HIGH -> start.plusHours(8);
+            case MEDIUM -> start.plusHours(24);
+            case LOW -> start.plusHours(48);
+        };
+    }
 
     public Long getId() {
         return id;
@@ -88,6 +104,22 @@ public class Ticket {
 
     public void setSupportId(Long supportId) {
         this.supportId = supportId;
+    }
+
+    public String getAssignedTo() {
+        return assignedTo;
+    }
+
+    public void setAssignedTo(String assignedTo) {
+        this.assignedTo = assignedTo;
+    }
+
+    public LocalDateTime getSlaDeadline() {
+        return slaDeadline;
+    }
+
+    public void setSlaDeadline(LocalDateTime slaDeadline) {
+        this.slaDeadline = slaDeadline;
     }
 
     public LocalDateTime getCreatedAt() {

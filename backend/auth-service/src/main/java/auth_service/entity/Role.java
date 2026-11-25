@@ -1,2 +1,8 @@
 package auth_service.entity;
-public enum Role { ADMIN, SALES, SUPPORT }
+
+public enum Role {
+    ADMIN,
+    MANAGER,
+    SALES,
+    SUPPORT
+}

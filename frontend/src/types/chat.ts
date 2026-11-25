@@ -3,7 +3,7 @@ import type { UserRole } from "./auth";
 export type ConversationType = "DIRECT" | "GROUP";
 export type ParticipantRole = "OWNER" | "ADMIN" | "MEMBER";
 export type ParticipantStatus = "ACTIVE" | "LEFT" | "REMOVED";
-export type MessageType = "TEXT" | "IMAGE" | "FILE" | "SYSTEM";
+export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "FILE" | "SYSTEM";
 
 export interface ChatUser {
     id: number;
@@ -63,6 +63,8 @@ export interface ChatConversation {
     avatarUrl: string | null;
     creatorId: number | null;
     lastMessageId: number | null;
+    lastMessagePreview?: string | null;
+    lastMessageSenderName?: string | null;
     lastMessageAt: string | null;
     unreadCount: number;
     participants: ChatParticipant[];
@@ -70,6 +72,27 @@ export interface ChatConversation {
     myRole: ParticipantRole | null;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface ChatPresenceSnapshot {
+    onlineUserIds: number[];
+    lastSeenByUserId: Record<string, string>;
+}
+
+export interface ChatLinkItem {
+    messageId: number;
+    url: string;
+    domain: string;
+    snippet: string;
+    senderId: number | null;
+    senderUsername: string;
+    createdAt: string;
+}
+
+export interface ChatConversationArchive {
+    media: ChatMessage[];
+    files: ChatMessage[];
+    links: ChatLinkItem[];
 }
 
 export interface CursorPage<T> {

@@ -122,11 +122,11 @@ export default function PendingApprovalPage() {
             footerNote={
                 isRejected
                     ? "Nếu có sự nhầm lẫn, vui lòng liên hệ trực tiếp với người quản trị để được hỗ trợ."
-                    : "👑 Lưu ý: Quản trị viên sẽ nhận được thông báo xét duyệt tại mục Cài đặt > Yêu cầu tham gia."
+                    : "Lưu ý: Quản trị viên sẽ xét duyệt và phân quyền cho bạn tại mục Cài đặt > Quản lý người dùng."
             }
         >
             {/* Account & Workspace Info Card */}
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 space-y-3 text-xs">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3 text-xs">
                 <div className="flex items-center justify-between pb-2.5 border-b border-slate-200/80">
                     <span className="flex items-center gap-1.5 text-slate-500 font-medium">
                         <Building2 size={15} className="text-[#007f9b]" /> Doanh nghiệp:

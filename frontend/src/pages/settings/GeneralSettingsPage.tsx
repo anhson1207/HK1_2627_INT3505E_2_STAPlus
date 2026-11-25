@@ -13,37 +13,116 @@ import {
     Save,
     Settings,
 } from "lucide-react";
-import { useState } from "react";
+import { isAxiosError } from "axios";
+import { useEffect, useState } from "react";
 
+import { organizationService } from "../../services/organizationService";
 import { useSettingsStore, type GeneralSettings } from "../../stores/settingsStore";
+import type { Organization } from "../../types/auth";
 
 export default function GeneralSettingsPage() {
     const saved = useSettingsStore((state) => state.general);
     const saveGeneral = useSettingsStore((state) => state.saveGeneral);
 
+    const [org, setOrg] = useState<Organization | null>(null);
     const [form, setForm] = useState<GeneralSettings>(saved);
+    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
+    useEffect(() => {
+        let active = true;
+        setLoading(true);
+        organizationService
+            .getOrganization()
+            .then((data) => {
+                if (!active) return;
+                setOrg(data);
+                const nextSettings: GeneralSettings = {
+                    crmName: data.crmName?.trim() || saved.crmName || "STAplus crm",
+                    companyName: data.name?.trim() || saved.companyName,
+                    currency: data.currency === "USD" ? "USD" : "VND",
+                    timezone: data.timezone?.trim() || saved.timezone || "Asia/Ho_Chi_Minh",
+                    language: data.language === "en" ? "en" : "vi",
+                    dateFormat:
+                        data.dateFormat === "MM/dd/yyyy" || data.dateFormat === "yyyy-MM-dd"
+                            ? data.dateFormat
+                            : "dd/MM/yyyy",
+                };
+                setForm(nextSettings);
+                saveGeneral(nextSettings);
+                setError("");
+            })
+            .catch((err) => {
+                if (!active) return;
+                const msg = isAxiosError<{ message?: string }>(err)
+                    ? err.response?.data?.message || err.message
+                    : "Không thể tải cấu hình hệ thống.";
+                setError(msg);
+            })
+            .finally(() => {
+                if (active) setLoading(false);
+            });
+        return () => {
+            active = false;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     const update = <K extends keyof GeneralSettings>(key: K, value: GeneralSettings[K]) =>
         setForm((current) => ({ ...current, [key]: value }));
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!form.crmName.trim() || !form.companyName.trim()) {
             setError("Vui lòng nhập tên CRM và tên công ty / tổ chức.");
             return;
         }
 
         setSaving(true);
-        saveGeneral({
-            ...form,
-            crmName: form.crmName.trim(),
-            companyName: form.companyName.trim(),
-        });
         setError("");
-        setMessage("Cập nhật cấu hình hệ thống thành công!");
-        setSaving(false);
+        setMessage("");
+        try {
+            const updatedOrg = await organizationService.updateOrganization({
+                name: form.companyName.trim(),
+                industry: org?.industry ?? undefined,
+                companySize: org?.companySize ?? undefined,
+                logoUrl: org?.logoUrl ?? undefined,
+                phone: org?.phone ?? undefined,
+                email: org?.email ?? undefined,
+                website: org?.website ?? undefined,
+                address: org?.address ?? undefined,
+                timezone: form.timezone,
+                crmName: form.crmName.trim(),
+                currency: form.currency,
+                language: form.language,
+                dateFormat: form.dateFormat,
+            });
+            setOrg(updatedOrg);
+            const normalized: GeneralSettings = {
+                crmName: updatedOrg.crmName?.trim() || form.crmName.trim(),
+                companyName: updatedOrg.name?.trim() || form.companyName.trim(),
+                currency: updatedOrg.currency === "USD" ? "USD" : "VND",
+                timezone: updatedOrg.timezone?.trim() || form.timezone,
+                language: updatedOrg.language === "en" ? "en" : "vi",
+                dateFormat:
+                    updatedOrg.dateFormat === "MM/dd/yyyy" || updatedOrg.dateFormat === "yyyy-MM-dd"
+                        ? updatedOrg.dateFormat
+                        : "dd/MM/yyyy",
+            };
+            setForm(normalized);
+            saveGeneral(normalized);
+            setMessage("Cập nhật cấu hình hệ thống thành công!");
+        } catch (err) {
+            const msg = isAxiosError<{ message?: string }>(err)
+                ? err.response?.data?.message || err.message
+                : err instanceof Error
+                  ? err.message
+                  : "Không thể lưu cấu hình hệ thống.";
+            setError(msg);
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -54,7 +133,7 @@ export default function GeneralSettingsPage() {
                     Cấu hình hệ thống chung (Admin)
                 </h2>
                 <p className="mt-1 text-sm text-(--crm-text-secondary)">
-                    Thiết lập định danh tổ chức, đơn vị tiền tệ mặc định và múi giờ vận hành của STAPlus CRM.
+                    Thiết lập định danh tổ chức, đơn vị tiền tệ mặc định và múi giờ vận hành của STAplus crm.
                 </p>
             </div>
 
@@ -152,7 +231,7 @@ export default function GeneralSettingsPage() {
                 <div className="mt-6 flex justify-end border-t border-(--crm-border-subtle) pt-5">
                     <Button
                         variant="contained"
-                        disabled={saving}
+                        disabled={saving || loading}
                         onClick={handleSave}
                         startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <Save size={16} />}
                         sx={{ textTransform: "none", fontWeight: 600, px: 3, py: 1 }}

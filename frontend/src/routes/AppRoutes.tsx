@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 
 import MainLayout from "../layouts/MainLayout";
 import LeadListPage from "../pages/leads/LeadListPage";
@@ -45,14 +45,20 @@ import CompanySetupPage from "../pages/auth/CompanySetupPage";
 import EmployeeJoinPage from "../pages/auth/EmployeeJoinPage";
 import PendingApprovalPage from "../pages/auth/PendingApprovalPage";
 import WelcomePage from "../pages/auth/WelcomePage";
+import ReminderListPage from "../pages/reminders/ReminderListPage";
+import ReminderCreatePage from "../pages/reminders/ReminderCreatePage";
+import ReminderEditPage from "../pages/reminders/ReminderEditPage";
 import CompanySettingsPage from "../pages/settings/CompanySettingsPage";
 import CompanyInvitationsPage from "../pages/settings/CompanyInvitationsPage";
-import JoinRequestsPage from "../pages/settings/JoinRequestsPage";
+
+function LegacyJoinRedirect() {
+    const { search } = useLocation();
+    return <Navigate to={`/register/employee${search}`} replace />;
+}
 
 export default function AppRoutes() {
     return (
-        <BrowserRouter>
-            <Routes>
+        <Routes>
                 
                 <Route element={<PublicOnlyRoute />}>
                     <Route path="/" element={<WelcomePage />} />
@@ -63,7 +69,7 @@ export default function AppRoutes() {
                     <Route path="/register/company" element={<CompanySetupPage />} />
                     <Route path="/register/employee" element={<EmployeeJoinPage />} />
                     <Route path="/setup" element={<Navigate to="/register/company" replace />} />
-                    <Route path="/join" element={<Navigate to="/register/employee" replace />} />
+                    <Route path="/join" element={<LegacyJoinRedirect />} />
                     <Route path="/verify-email-pending" element={<VerifyEmailPendingPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -86,7 +92,7 @@ export default function AppRoutes() {
                             <Route element={<RoleGuard allowedRoles={["ADMIN"]} fallback={<Navigate to="/settings/profile" replace />}><Outlet /></RoleGuard>}>
                                 <Route path="company" element={<CompanySettingsPage />} />
                                 <Route path="invitations" element={<CompanyInvitationsPage />} />
-                                <Route path="join-requests" element={<JoinRequestsPage />} />
+                                <Route path="join-requests" element={<Navigate to="/settings/users" replace />} />
                                 <Route path="users" element={<UserManagementPage />} />
                                 <Route path="audit-logs" element={<AuditLogPage />} />
                                 <Route path="audit" element={<Navigate to="/settings/audit-logs" replace />} />
@@ -96,6 +102,9 @@ export default function AppRoutes() {
                         </Route>
                         <Route path="/profile" element={<Navigate to="/settings/profile" replace />} />
                         <Route path="/notifications" element={<NotificationPage />} />
+                        <Route path="/reminders" element={<ReminderListPage />} />
+                        <Route path="/reminders/new" element={<ReminderCreatePage />} />
+                        <Route path="/reminders/:id/edit" element={<ReminderEditPage />} />
                         <Route path="/dashboard" element={<DashboardPage />} />
 
                         <Route element={<RoleGuard allowedRoles={rolesWithPermission("chat")} fallback={<Navigate to="/dashboard" replace />}><Outlet /></RoleGuard>}>
@@ -103,7 +112,9 @@ export default function AppRoutes() {
                         </Route>
 
                         <Route path="/leads" element={<LeadListPage />} />
-                        <Route path="/leads/new" element={<LeadCreatePage />} />
+                        <Route element={<RoleGuard allowedRoles={["ADMIN", "MANAGER", "SALES"]} fallback={<Navigate to="/leads" replace />}><Outlet /></RoleGuard>}>
+                            <Route path="/leads/new" element={<LeadCreatePage />} />
+                        </Route>
                         <Route path="/leads/:id" element={<LeadDetailPage />} />
                         <Route path="/leads/:id/edit" element={<LeadEditPage />} />
 
@@ -112,9 +123,12 @@ export default function AppRoutes() {
                         <Route path="/customers/:id" element={<CustomerDetailPage />} />
                         <Route path="/customers/:id/edit" element={<CustomerEditPage />} />
 
+                        <Route element={<RoleGuard allowedRoles={rolesWithPermission("analytics")} fallback={<Navigate to="/dashboard" replace />}><Outlet /></RoleGuard>}>
+                            <Route path="/analytics" element={<AnalyticsPage />} />
+                        </Route>
+
                         <Route element={<RoleGuard allowedRoles={rolesWithPermission("deals")} fallback={<Navigate to="/dashboard" replace />}><Outlet /></RoleGuard>}>
                             <Route path="/sales" element={<Navigate to="/deals" replace />} />
-                            <Route path="/analytics" element={<AnalyticsPage />} />
                             <Route path="/deals" element={<DealListPage />} />
                             <Route path="/deals/new" element={<DealCreatePage />} />
                             <Route path="/deals/kanban" element={<DealKanbanPage />} />
@@ -137,6 +151,5 @@ export default function AppRoutes() {
                     element={<Navigate to="/" replace />}
                 />
             </Routes>
-        </BrowserRouter>
     );
 }

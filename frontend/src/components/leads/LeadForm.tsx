@@ -7,6 +7,7 @@ import { leadSchema, type LeadFormData } from "../../utils/leadSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LEAD_SOURCE_OPTIONS, LEAD_STATUS_OPTIONS } from "../../utils/constants";
 import { SALES_REPRESENTATIVES } from "../../services/leadService";
+import { useAuthStore } from "../../stores/authStore";
 
 interface LeadFormProps {
     onSubmit: (data: LeadFormData) => void | Promise<void>;
@@ -23,6 +24,9 @@ export default function LeadForm({
     submitLabel = "Lưu Lead",
     serverError,
 }: LeadFormProps) {
+    const user = useAuthStore((state) => state.user);
+    const isSales = user?.role === "SALES";
+
     const {
         control,
         handleSubmit,
@@ -37,7 +41,7 @@ export default function LeadForm({
             company: initialData?.company ?? "",
             source: initialData?.source ?? "WEBSITE",
             status: initialData?.status ?? "NEW",
-            ownerName: initialData?.ownerName ?? "",
+            ownerName: initialData?.ownerName ?? (isSales ? user?.fullName ?? "" : ""),
         },
     });
 
@@ -127,30 +131,40 @@ export default function LeadForm({
                     )}
                 />
 
-                <Controller
-                    name="ownerName"
-                    control={control}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            select
-                            label="Người phụ trách"
-                            fullWidth
-                            error={!!errors.ownerName}
-                            helperText={errors.ownerName?.message || "Chọn người phụ trách hoặc để trống để hệ thống tự động phân bổ"}
-                            disabled={isSubmitting}
-                        >
-                            <MenuItem value="">
-                                <em>Chưa phân công (Tự động phân bổ)</em>
-                            </MenuItem>
-                            {Object.entries(SALES_REPRESENTATIVES).map(([id, sales]) => (
-                                <MenuItem key={id} value={sales.name}>
-                                    {sales.name} ({sales.email})
+                {!isSales ? (
+                    <Controller
+                        name="ownerName"
+                        control={control}
+                        render={({ field }) => (
+                            <TextField
+                                {...field}
+                                select
+                                label="Người phụ trách"
+                                fullWidth
+                                error={!!errors.ownerName}
+                                helperText={errors.ownerName?.message || "Chọn người phụ trách hoặc để trống để hệ thống tự động phân bổ"}
+                                disabled={isSubmitting}
+                            >
+                                <MenuItem value="">
+                                    <em>Chưa phân công (Tự động phân bổ)</em>
                                 </MenuItem>
-                            ))}
-                        </TextField>
-                    )}
-                />
+                                {Object.entries(SALES_REPRESENTATIVES).map(([id, sales]) => (
+                                    <MenuItem key={id} value={sales.name}>
+                                        {sales.name} ({sales.email})
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        )}
+                    />
+                ) : (
+                    <TextField
+                        label="Người phụ trách"
+                        value={user?.fullName || `Nhân viên Kinh doanh (Sales #${user?.id || 1919})`}
+                        fullWidth
+                        disabled
+                        helperText="Lead do bạn tạo sẽ tự động được gán cho chính bạn phụ trách"
+                    />
+                )}
 
                 <Controller
                     name="source"

@@ -5,7 +5,7 @@ export type CRMResource = "dashboard" | "leads" | "customers" | "deals" | "ticke
 
 export const rolePermissions: Record<UserRole, readonly CRMResource[]> = {
     ADMIN: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "chat", "settings", "profile", "notifications", "security", "appearance", "users", "roles", "general", "reminders", "audit-logs"],
-    SALES: ["dashboard", "leads", "customers", "deals", "analytics", "chat", "settings", "profile", "notifications", "security", "appearance", "reminders"],
+    SALES: ["dashboard", "leads", "customers", "deals", "chat", "settings", "profile", "notifications", "security", "appearance", "reminders"],
     SUPPORT: ["dashboard", "customers", "tickets", "chat", "settings", "profile", "notifications", "security", "appearance"],
     MANAGER: ["dashboard", "leads", "customers", "deals", "tickets", "analytics", "chat", "settings", "profile", "notifications", "security", "appearance", "reminders"],
     UNASSIGNED: ["profile", "security", "appearance"],

@@ -18,7 +18,7 @@ export const organizationService = {
             return {
                 setupCompleted: true,
                 hasOrganization: true,
-                organizationName: "STAPlus CRM",
+                organizationName: "STAplus crm",
                 allowPublicSetup: false,
                 userCount: 1,
             };

@@ -1,8 +1,40 @@
+import { isAxiosError } from "axios";
 import api from "./api";
+import { getSalesOwnerName } from "./leadService";
 import { customerMockApi } from "../mocks/customerMockApi";
 import type { Customer, CustomerPayload, CustomerStatus } from "../types/customer";
+import type { ActivityType, CustomerActivity } from "../types/customer360";
 
-const useCustomerMockApi = import.meta.env.VITE_USE_CUSTOMER_MOCK_API !== "false";
+const useCustomerMockApi = import.meta.env.VITE_USE_CUSTOMER_MOCK_API === "true";
+
+interface BackendCustomerActivity {
+    id: number;
+    customerId: number;
+    type: ActivityType | string;
+    title: string;
+    description?: string | null;
+    createdBy?: string | null;
+    createdAt: string;
+}
+
+function normalizeActivityType(value: string): ActivityType {
+    const upper = value.toUpperCase();
+    if (upper === "CALL" || upper === "EMAIL" || upper === "MEETING" || upper === "NOTE") {
+        return upper;
+    }
+    return "NOTE";
+}
+
+function mapActivityFromApi(item: BackendCustomerActivity): CustomerActivity {
+    return {
+        id: item.id,
+        customerId: item.customerId,
+        type: normalizeActivityType(item.type),
+        title: item.title,
+        description: item.description ?? "",
+        createdAt: item.createdAt,
+    };
+}
 
 export interface CustomerListResponse {
     content: Customer[];
@@ -44,7 +76,8 @@ function mapBackendCustomerToFrontend(item: BackendCustomer): Customer {
         company: item.company || "",
         address: item.notes || undefined,
         status: item.status,
-        ownerName: item.assignedUserId ? `User #${item.assignedUserId}` : undefined,
+        ownerId: item.assignedUserId || undefined,
+        ownerName: item.assignedUserId ? getSalesOwnerName(item.assignedUserId) || `User #${item.assignedUserId}` : undefined,
         createdAt: item.createdAt,
     };
 }
@@ -62,47 +95,63 @@ function mapFrontendCustomerToBackend(data: CustomerPayload) {
 }
 
 export function getCustomerErrorMessage(error: unknown): string {
+    if (isAxiosError<{ message?: string; error?: string }>(error)) {
+        const msg = error.response?.data?.message || error.response?.data?.error;
+        if (msg) return msg;
+    }
     return error instanceof Error ? error.message : "Đã xảy ra lỗi. Vui lòng thử lại.";
 }
 
 export const customerService = {
-    getCustomers: async (page = 0, size = 10, search?: string, status?: CustomerStatus): Promise<CustomerListResponse> => {
-        if (useCustomerMockApi) return customerMockApi.getCustomers(page, size, search, status);
+    getCustomers: async (page = 0, size = 10, search?: string, status?: CustomerStatus, assignedUserId?: number): Promise<CustomerListResponse> => {
+        if (useCustomerMockApi) return customerMockApi.getCustomers(page, size, search, status, assignedUserId);
 
-        try {
-            const safePage = Math.max(0, page);
-            const safeSize = Math.min(Math.max(1, size), 100);
-            const response = await api.get<BackendPageResponse<BackendCustomer>>("/customers", {
-                params: {
-                    page: safePage,
-                    size: safeSize,
-                    q: search?.trim() || undefined,
-                    status: status || undefined,
-                },
-            });
-            return {
-                content: response.data.content.map(mapBackendCustomerToFrontend),
-                page: response.data.page,
-                size: response.data.size,
-                totalElements: response.data.totalElements,
-                totalPages: response.data.totalPages,
-            };
-        } catch (error) {
-            console.warn("Failed to fetch customers from API, falling back to mock:", error);
-            return customerMockApi.getCustomers(page, size, search, status);
-        }
+        const safePage = Math.max(0, page);
+        const safeSize = Math.min(Math.max(1, size), 100);
+        const response = await api.get<BackendPageResponse<BackendCustomer>>("/customers", {
+            params: {
+                page: safePage,
+                size: safeSize,
+                q: search?.trim() || undefined,
+                status: status || undefined,
+                assignedUserId: assignedUserId || undefined,
+            },
+        });
+        return {
+            content: response.data.content.map(mapBackendCustomerToFrontend),
+            page: response.data.page,
+            size: response.data.size,
+            totalElements: response.data.totalElements,
+            totalPages: response.data.totalPages,
+        };
     },
 
     getCustomerById: async (id: number): Promise<Customer> => {
         if (useCustomerMockApi) return customerMockApi.getCustomerById(id);
 
-        try {
-            const response = await api.get<BackendCustomer>(`/customers/${id}`);
-            return mapBackendCustomerToFrontend(response.data);
-        } catch (error) {
-            console.warn(`Failed to fetch customer ${id} from API, falling back to mock:`, error);
-            return customerMockApi.getCustomerById(id);
-        }
+        const response = await api.get<BackendCustomer>(`/customers/${id}`);
+        return mapBackendCustomerToFrontend(response.data);
+    },
+
+    getCustomerActivities: async (customerId: number): Promise<CustomerActivity[]> => {
+        const response = await api.get<BackendCustomerActivity[]>(`/customers/${customerId}/activities`);
+        return Array.isArray(response.data) ? response.data.map(mapActivityFromApi) : [];
+    },
+
+    createCustomerActivity: async (
+        customerId: number,
+        payload: { type: ActivityType; title: string; description?: string },
+    ): Promise<CustomerActivity> => {
+        const response = await api.post<BackendCustomerActivity>(`/customers/${customerId}/activities`, {
+            type: payload.type,
+            title: payload.title.trim(),
+            description: payload.description?.trim() || "",
+        });
+        return mapActivityFromApi(response.data);
+    },
+
+    deleteCustomerActivity: async (customerId: number, activityId: number): Promise<void> => {
+        await api.delete(`/customers/${customerId}/activities/${activityId}`);
     },
 
     createCustomer: async (data: CustomerPayload): Promise<Customer> => {

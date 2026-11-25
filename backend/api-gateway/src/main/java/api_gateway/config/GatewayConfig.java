@@ -121,7 +121,10 @@ public class GatewayConfig {
     @Bean
     public RouterFunction<ServerResponse> notificationRoute() {
         return GatewayRouterFunctions.route("notification-service")
-                .route(request -> request.path().startsWith("/api/v1/notifications"), http())
+                .route(request ->
+                                request.path().startsWith("/api/v1/notifications")
+                                        || request.path().startsWith("/api/v1/reminders"),
+                        http())
                 .before(uri(notificationServiceUrl))
                 .after(dedupeResponseHeader("Access-Control-Allow-Origin", DedupeStrategy.RETAIN_UNIQUE))
                 .after(dedupeResponseHeader("Access-Control-Allow-Credentials", DedupeStrategy.RETAIN_UNIQUE))

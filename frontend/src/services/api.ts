@@ -65,16 +65,30 @@ api.interceptors.request.use((config) => {
 });
 configureErrors(api, true);
 
+const PUBLIC_AUTH_PATHS = [
+    "/api/v1/auth/login",
+    "/api/v1/auth/register",
+    "/api/v1/auth/forgot-password",
+    "/api/v1/auth/reset-password",
+    "/api/v1/auth/refresh",
+    "/api/v1/setup/",
+    "/api/v1/invitations/",
+];
+
 // Auth goes directly to auth-service until the gateway implements Auth routing.
 // Public login/register requests must not carry a stale Authorization header.
 export const authApi = axios.create({
     baseURL: import.meta.env.VITE_AUTH_API_BASE_URL,
-    timeout: 10000,
+    timeout: 25000,
 });
 authApi.interceptors.request.use((config) => {
     if (!config.baseURL) throw new ApiError("Chưa cấu hình VITE_AUTH_API_BASE_URL cho Auth Service.", 0);
-    const token = authHandlers?.getToken();
-    if (token) config.headers.set("Authorization", `Bearer ${token}`);
+    const url = config.url ?? "";
+    const isPublicAuth = PUBLIC_AUTH_PATHS.some((path) => url.startsWith(path));
+    if (!isPublicAuth) {
+        const token = authHandlers?.getToken();
+        if (token) config.headers.set("Authorization", `Bearer ${token}`);
+    }
     return config;
 });
 configureErrors(authApi, false);

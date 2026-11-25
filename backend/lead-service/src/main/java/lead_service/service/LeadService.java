@@ -35,4 +35,6 @@ public interface LeadService {
     LeadResponse captureWebhook(String channel, LeadWebhookRequest request);
 
     BatchLeadResponse importBatch(List<LeadRequest> requests);
+
+    lead_service.dto.ConvertLeadResponse convert(Long id, lead_service.dto.ConvertLeadRequest request, String authHeader);
 }

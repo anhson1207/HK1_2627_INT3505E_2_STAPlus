@@ -6,13 +6,20 @@ const STORAGE_KEY = "crm-theme-mode";
 
 export function isAuthPath(pathname?: string): boolean {
     if (typeof window === "undefined") return false;
-    const path = pathname || window.location.pathname;
+    const rawPath = (pathname || window.location.pathname).replace(/\/+$/, "") || "/";
     return (
-        path === "/login" ||
-        path === "/register" ||
-        path.startsWith("/forgot-password") ||
-        path.startsWith("/reset-password") ||
-        path.startsWith("/verify-email")
+        rawPath === "/" ||
+        rawPath === "/welcome" ||
+        rawPath === "/get-started" ||
+        rawPath === "/login" ||
+        rawPath === "/register" ||
+        rawPath.startsWith("/register/") ||
+        rawPath === "/setup" ||
+        rawPath === "/join" ||
+        rawPath.startsWith("/forgot-password") ||
+        rawPath.startsWith("/reset-password") ||
+        rawPath.startsWith("/verify-email") ||
+        rawPath === "/pending-approval"
     );
 }
 
@@ -71,7 +78,9 @@ export const useThemeStore = create<ThemeState>((set) => ({
             } catch {
                 // Ignore storage errors
             }
-            applyThemeToDOM(nextMode);
+            if (!isAuthPath()) {
+                applyThemeToDOM(nextMode);
+            }
             return { mode: nextMode };
         });
     },
@@ -81,7 +90,9 @@ export const useThemeStore = create<ThemeState>((set) => ({
         } catch {
             // Ignore storage errors
         }
-        applyThemeToDOM(nextMode);
+        if (!isAuthPath()) {
+            applyThemeToDOM(nextMode);
+        }
         set({ mode: nextMode });
     },
 }));

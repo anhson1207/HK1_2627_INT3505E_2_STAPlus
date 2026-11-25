@@ -28,14 +28,21 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ChatServiceImpl implements ChatService {
+
+    private static final Pattern LINK_PATTERN = Pattern.compile("(?i)(https?://[^\\s<>\"']+|www\\.[^\\s<>\"']+)");
+    private static final Set<String> VIDEO_EXTS = Set.of("mp4", "webm", "mov");
+    private static final Set<String> IMAGE_EXTS = Set.of("jpg", "jpeg", "png", "webp", "gif");
 
     private final ChatConversationRepository conversationRepository;
     private final ChatParticipantRepository participantRepository;
@@ -707,6 +714,99 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ChatConversationArchiveResponse getConversationArchive(ChatPrincipal currentUser, Long conversationId) {
+        ChatParticipant participant = findActiveParticipantOrThrow(conversationId, currentUser.getUserId());
+        Long visibleFromId = (participant.getVisibleFromMessageId() != null)
+                ? participant.getVisibleFromMessageId() : 0L;
+
+        List<ChatMessage> attachmentMessages = messageRepository.findArchiveAttachmentMessages(
+                conversationId, visibleFromId, PageRequest.of(0, 200)
+        );
+        List<ChatMessageResponse> media = new ArrayList<>();
+        List<ChatMessageResponse> files = new ArrayList<>();
+
+        for (ChatMessage msg : attachmentMessages) {
+            ChatMessageResponse dto = mapToMessageResponse(msg, currentUser.getUserId());
+            if (isVisualMediaMessage(msg)) {
+                media.add(dto);
+            } else {
+                files.add(dto);
+            }
+        }
+
+        List<ChatMessage> linkMessages = messageRepository.findArchiveLinkMessages(
+                conversationId, visibleFromId, PageRequest.of(0, 200)
+        );
+        List<ChatLinkItemResponse> links = new ArrayList<>();
+        for (ChatMessage msg : linkMessages) {
+            String rawContent = msg.getContent();
+            if (rawContent == null || rawContent.isBlank()) continue;
+            Matcher matcher = LINK_PATTERN.matcher(rawContent);
+            Set<String> seenInMsg = new LinkedHashSet<>();
+            while (matcher.find()) {
+                String cleaned = stripTrailingPunctuation(matcher.group(1));
+                if (cleaned.isEmpty()) continue;
+                String normalizedUrl = cleaned.toLowerCase(Locale.ROOT).startsWith("www.")
+                        ? "https://" + cleaned
+                        : cleaned;
+                if (!seenInMsg.add(normalizedUrl)) continue;
+                links.add(ChatLinkItemResponse.builder()
+                        .messageId(msg.getId())
+                        .url(normalizedUrl)
+                        .domain(extractDomain(normalizedUrl))
+                        .snippet(rawContent.trim())
+                        .senderId(msg.getSenderId())
+                        .senderUsername(msg.getSenderName())
+                        .createdAt(msg.getCreatedAt())
+                        .build());
+            }
+        }
+
+        return ChatConversationArchiveResponse.builder()
+                .media(media)
+                .files(files)
+                .links(links)
+                .build();
+    }
+
+    private boolean isVisualMediaMessage(ChatMessage msg) {
+        if (msg.getType() == MessageType.IMAGE || msg.getType() == MessageType.VIDEO) {
+            return true;
+        }
+        String name = msg.getAttachmentName();
+        if (name == null) return false;
+        int dot = name.lastIndexOf('.');
+        if (dot < 0 || dot == name.length() - 1) return false;
+        String ext = name.substring(dot + 1).toLowerCase(Locale.ROOT);
+        return IMAGE_EXTS.contains(ext) || VIDEO_EXTS.contains(ext);
+    }
+
+    private String stripTrailingPunctuation(String url) {
+        String result = url;
+        while (!result.isEmpty()) {
+            char last = result.charAt(result.length() - 1);
+            if (last == '.' || last == ',' || last == ';' || last == ':' || last == '!' || last == '?' || last == ')') {
+                result = result.substring(0, result.length() - 1);
+            } else {
+                break;
+            }
+        }
+        return result;
+    }
+
+    private String extractDomain(String url) {
+        try {
+            String host = URI.create(url).getHost();
+            if (host != null && !host.isBlank()) {
+                return host.startsWith("www.") ? host.substring(4) : host;
+            }
+        } catch (Exception ignored) {
+        }
+        return url;
+    }
+
+    @Override
     @Transactional
     public ChatMessageResponse sendMessage(ChatPrincipal currentUser, Long conversationId, SendMessageRequest request) {
         ChatParticipant participant = findActiveParticipantOrThrow(conversationId, currentUser.getUserId());
@@ -996,11 +1096,19 @@ public class ChatServiceImpl implements ChatService {
 
         String lastMsgPreview = null;
         String lastMsgSender = null;
-        if (conv.getLastMessageId() != null) {
-            Optional<ChatMessage> lastMsgOpt = messageRepository.findById(conv.getLastMessageId());
-            if (lastMsgOpt.isPresent()) {
-                ChatMessage lastMsg = lastMsgOpt.get();
-                lastMsgPreview = lastMsg.getContent();
+        ChatMessageResponse lastMessageDto = null;
+        Long visibleFromId = (myParticipant != null && myParticipant.getVisibleFromMessageId() != null)
+                ? myParticipant.getVisibleFromMessageId() : 0L;
+
+        Optional<ChatMessage> lastMsgOpt = conv.getLastMessageId() != null
+                ? messageRepository.findById(conv.getLastMessageId())
+                : messageRepository.findTopByConversationIdOrderByIdDesc(conv.getId());
+
+        if (lastMsgOpt.isPresent()) {
+            ChatMessage lastMsg = lastMsgOpt.get();
+            if (lastMsg.getId() != null && lastMsg.getId() >= visibleFromId) {
+                lastMessageDto = mapToMessageResponse(lastMsg, currentUserId);
+                lastMsgPreview = formatMessagePreview(lastMsg);
                 lastMsgSender = lastMsg.getSenderName();
             }
         }
@@ -1012,10 +1120,11 @@ public class ChatServiceImpl implements ChatService {
                 .name(displayName)
                 .avatarUrl(conv.getAvatarUrl())
                 .creatorId(conv.getCreatorId())
-                .lastMessageId(conv.getLastMessageId())
+                .lastMessageId(lastMessageDto != null ? lastMessageDto.getId() : null)
                 .lastMessagePreview(lastMsgPreview)
-                .lastMessageAt(conv.getLastMessageAt())
+                .lastMessageAt(lastMessageDto != null ? lastMessageDto.getCreatedAt() : conv.getLastMessageAt())
                 .lastMessageSenderName(lastMsgSender)
+                .lastMessage(lastMessageDto)
                 .unreadCount(unreadCount)
                 .myRole(myRole)
                 .participants(participants)
@@ -1023,6 +1132,29 @@ public class ChatServiceImpl implements ChatService {
                 .createdAt(conv.getCreatedAt())
                 .updatedAt(conv.getUpdatedAt())
                 .build();
+    }
+
+    private String formatMessagePreview(ChatMessage msg) {
+        String content = msg.getContent() != null ? msg.getContent().trim() : "";
+        if (!content.isEmpty()) {
+            return content;
+        }
+        if (msg.getType() == MessageType.IMAGE) {
+            return msg.getAttachmentName() != null && !msg.getAttachmentName().isBlank()
+                    ? "[Hình ảnh] " + msg.getAttachmentName()
+                    : "[Hình ảnh]";
+        }
+        if (msg.getType() == MessageType.VIDEO) {
+            return msg.getAttachmentName() != null && !msg.getAttachmentName().isBlank()
+                    ? "[Video] " + msg.getAttachmentName()
+                    : "[Video]";
+        }
+        if (msg.getType() == MessageType.FILE) {
+            return msg.getAttachmentName() != null && !msg.getAttachmentName().isBlank()
+                    ? "[Tệp] " + msg.getAttachmentName()
+                    : "[Tệp đính kèm]";
+        }
+        return "";
     }
 
     private int rolePriority(ParticipantRole role) {

@@ -6,6 +6,8 @@ import auth_service.entity.User;
 import auth_service.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,10 +26,25 @@ public class UserController {
  }
 
  @GetMapping("/{id}")
- UserResponse one(
-         @PathVariable Long id
- ) {
+ UserResponse one(@PathVariable Long id) {
   return service.findById(id);
+ }
+
+ @PostMapping
+ ResponseEntity<UserResponse> create(
+         @Valid @RequestBody CreateUserRequest r,
+         @AuthenticationPrincipal User actor
+ ) {
+  return ResponseEntity.status(HttpStatus.CREATED).body(service.createUser(r, actor));
+ }
+
+ @PutMapping("/{id}")
+ UserResponse update(
+         @PathVariable Long id,
+         @Valid @RequestBody UpdateUserRequest r,
+         @AuthenticationPrincipal User actor
+ ) {
+  return service.updateUser(id, r, actor);
  }
 
  @PatchMapping("/{id}/role")

@@ -50,4 +50,25 @@ public class NotificationController {
         notificationService.markAllAsRead(userId);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteNotification(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId) {
+        Long userId = resolveUserId(currentUserId);
+        notificationService.deleteNotification(id, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/follow-up")
+    public ResponseEntity<Notification> createFollowUp(
+            @RequestBody(required = false) java.util.Map<String, String> body,
+            @RequestHeader(value = "X-User-Id", required = false) Long currentUserId) {
+        Long userId = resolveUserId(currentUserId);
+        String title = body != null ? body.get("title") : null;
+        String message = body != null ? body.get("message") : null;
+        String targetUrl = body != null ? body.get("targetUrl") : null;
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+                .body(notificationService.createFollowUpNotification(userId, title, message, targetUrl));
+    }
 }

@@ -1,6 +1,6 @@
+import { isAxiosError } from "axios";
 import api from "./api";
 import { customerService } from "./customerService";
-import { dealMockApi } from "../mocks/deals";
 import { useAuthStore } from "../stores/authStore";
 import type {
     Deal,
@@ -34,6 +34,7 @@ export interface DealListResponse {
 export interface BackendDeal {
     id: number;
     salesId?: number | null;
+    customerId?: number | null;
     dealName?: string | null;
     name?: string | null;
     owner?: string | null;
@@ -59,10 +60,13 @@ export interface BackendDealPayload {
     owner: string;
     amount: number;
     stage: DealStage;
-    salesId?: number;
+    customerId?: number;
     expectedClosingDate?: string;
     description?: string;
     probability?: number;
+    discountPercent?: number;
+    discountReason?: string;
+    approvalStatus?: DiscountApprovalStatus;
 }
 
 export interface BackendDealListResponse {
@@ -96,13 +100,14 @@ async function ensureCustomerNamesLoaded(customerIds: number[]) {
 // Backend -> Frontend
 // Map: amount (Backend) -> value (Frontend)
 // Map: expectedClosingDate (Backend) -> expectedCloseDate (Frontend)
-// Map: salesId (Backend) -> customerId (Frontend)
+// Map: customerId (Backend, fallback legacy salesId) -> customerId (Frontend)
 export function mapDealFromApi(data: BackendDeal, customerName = ""): Deal {
     const rawAmount = data.amount ?? data.value ?? 0;
     const rawExpectedCloseDate = data.expectedClosingDate ?? data.expectedCloseDate ?? "";
     const rawName = data.dealName ?? data.name ?? "";
     const rawOwner = data.owner ?? data.ownerName ?? "";
-    const customerId = data.salesId ?? 0;
+    const customerId =
+        data.customerId && data.customerId > 0 ? data.customerId : (data.salesId ?? 0);
     const cName =
         customerName ||
         (customerId ? customerNameCache.get(customerId) || `Khách hàng #${customerId}` : "");
@@ -132,23 +137,27 @@ export function mapDealFromApi(data: BackendDeal, customerName = ""): Deal {
 }
 
 // Frontend -> Backend
-// Map: value (Frontend) -> amount (Backend)
-// Map: expectedCloseDate (Frontend) -> expectedClosingDate (Backend)
-// Map: customerId (Frontend) -> salesId (Backend)
 export function mapDealToApi(data: DealPayload): BackendDealPayload {
     return {
         dealName: data.name,
         owner: data.ownerName ?? "",
         amount: data.value,
         stage: data.stage,
-        salesId: data.customerId,
+        customerId: data.customerId,
         expectedClosingDate: data.expectedCloseDate || undefined,
         description: data.description,
         probability: data.probability,
+        discountPercent: data.discountPercent,
+        discountReason: data.discountReason,
+        approvalStatus: data.approvalStatus,
     };
 }
 
 export function getDealErrorMessage(error: unknown) {
+    if (isAxiosError<{ message?: string; error?: string }>(error)) {
+        const msg = error.response?.data?.message || error.response?.data?.error;
+        if (msg) return msg;
+    }
     return error instanceof Error
         ? error.message
         : "Đã xảy ra lỗi. Vui lòng thử lại.";
@@ -192,122 +201,107 @@ export const dealService = {
         search = "",
         stage: DealStage | "" = "",
     ): Promise<DealListResponse> => {
-        try {
-            const response = await api.get<BackendDealListResponse>(getDealsUrl(), {
-                params: {
-                    pgNum: page,
-                    pgSize: size,
-                    stage: stage || undefined,
-                    order: "desc",
-                    sortedBy: "createdAt",
-                },
-            });
+        const response = await api.get<BackendDealListResponse>(getDealsUrl(), {
+            params: {
+                pgNum: page,
+                pgSize: size,
+                stage: stage || undefined,
+                order: "desc",
+                sortedBy: "createdAt",
+            },
+        });
 
-            const backendList = response.data.content || [];
-            const customerIds = backendList
-                .map((d) => d.salesId)
-                .filter((id): id is number => Boolean(id));
-            await ensureCustomerNamesLoaded(customerIds);
+        const backendList = response.data.content || [];
+        const customerIds = backendList
+            .map((d) => (d.customerId && d.customerId > 0 ? d.customerId : d.salesId))
+            .filter((id): id is number => Boolean(id));
+        await ensureCustomerNamesLoaded(customerIds);
 
-            let content = backendList.map((d) => mapDealFromApi(d));
+        let content = backendList.map((d) => mapDealFromApi(d));
 
-            if (search.trim()) {
-                const query = search.trim().toLowerCase();
-                content = content.filter(
-                    (deal) =>
-                        deal.name.toLowerCase().includes(query) ||
-                        deal.customerName.toLowerCase().includes(query) ||
-                        (deal.ownerName && deal.ownerName.toLowerCase().includes(query)) ||
-                        String(deal.id).includes(query),
-                );
-            }
-
-            return {
-                content,
-                page: response.data.number ?? page,
-                size: response.data.size ?? size,
-                totalElements: response.data.totalElements ?? content.length,
-                totalPages: response.data.totalPages ?? (content.length > 0 ? 1 : 0),
-            };
-        } catch (error) {
-            console.warn("Backend GET /deals unavailable, falling back:", error);
-            return dealMockApi.getDeals(page, size, search, stage);
+        if (search.trim()) {
+            const query = search.trim().toLowerCase();
+            content = content.filter(
+                (deal) =>
+                    deal.name.toLowerCase().includes(query) ||
+                    deal.customerName.toLowerCase().includes(query) ||
+                    (deal.ownerName && deal.ownerName.toLowerCase().includes(query)) ||
+                    String(deal.id).includes(query),
+            );
         }
+
+        return {
+            content,
+            page: response.data.number ?? page,
+            size: response.data.size ?? size,
+            totalElements: response.data.totalElements ?? content.length,
+            totalPages: response.data.totalPages ?? (content.length > 0 ? 1 : 0),
+        };
     },
 
     // GET /deals/{id}
     getDealById: async (id: number): Promise<Deal> => {
-        try {
-            const response = await api.get<BackendDeal>(getDealsUrl(`/${id}`));
-            const data = response.data;
-            if (data.salesId && !customerNameCache.has(data.salesId)) {
-                try {
-                    const customer = await customerService.getCustomerById(data.salesId);
-                    if (customer?.name) customerNameCache.set(data.salesId, customer.name);
-                } catch {
-                    // ignore
-                }
+        const response = await api.get<BackendDeal>(getDealsUrl(`/${id}`));
+        const data = response.data;
+        const resolvedCustomerId =
+            data.customerId && data.customerId > 0 ? data.customerId : data.salesId;
+        if (resolvedCustomerId && !customerNameCache.has(resolvedCustomerId)) {
+            try {
+                const customer = await customerService.getCustomerById(resolvedCustomerId);
+                if (customer?.name) customerNameCache.set(resolvedCustomerId, customer.name);
+            } catch {
+                // ignore
             }
-            return mapDealFromApi(data);
-        } catch (error) {
-            console.warn(`Backend GET /deals/${id} unavailable, falling back:`, error);
-            return dealMockApi.getDealById(id);
         }
+        return mapDealFromApi(data);
+    },
+
+    // GET /deals/customer/{customerId}
+    getDealsByCustomerId: async (customerId: number): Promise<Deal[]> => {
+        const response = await api.get<BackendDeal[]>(getDealsUrl(`/customer/${customerId}`));
+        const list = Array.isArray(response.data) ? response.data : [];
+        if (customerId > 0 && !customerNameCache.has(customerId)) {
+            try {
+                const customer = await customerService.getCustomerById(customerId);
+                if (customer?.name) customerNameCache.set(customerId, customer.name);
+            } catch {
+                // ignore
+            }
+        }
+        return list.map((d) => mapDealFromApi(d));
     },
 
     // POST /deals
     createDeal: async (data: DealPayload): Promise<Deal> => {
-        try {
-            const payload = mapDealToApi(data);
-            const response = await api.post<BackendDeal>(getDealsUrl(), payload);
-            if (data.customerId && !customerNameCache.has(data.customerId)) {
-                try {
-                    const customer = await customerService.getCustomerById(data.customerId);
-                    if (customer?.name) customerNameCache.set(data.customerId, customer.name);
-                } catch {
-                    // ignore
-                }
+        const payload = mapDealToApi(data);
+        const response = await api.post<BackendDeal>(getDealsUrl(), payload);
+        if (data.customerId && !customerNameCache.has(data.customerId)) {
+            try {
+                const customer = await customerService.getCustomerById(data.customerId);
+                if (customer?.name) customerNameCache.set(data.customerId, customer.name);
+            } catch {
+                // ignore
             }
-            return mapDealFromApi(response.data);
-        } catch (error) {
-            console.warn("Backend POST /deals unavailable, falling back:", error);
-            const customer = await customerService.getCustomerById(data.customerId);
-            return dealMockApi.createDeal(data, customer.name);
         }
+        return mapDealFromApi(response.data);
     },
 
     // PUT /deals/{id}
     updateDeal: async (id: number, data: DealPayload): Promise<Deal> => {
-        try {
-            const payload = mapDealToApi(data);
-            const response = await api.put<BackendDeal>(getDealsUrl(`/${id}`), payload);
-            return mapDealFromApi(response.data);
-        } catch (error) {
-            console.warn(`Backend PUT /deals/${id} unavailable, falling back:`, error);
-            const customer = await customerService.getCustomerById(data.customerId);
-            return dealMockApi.updateDeal(id, data, customer.name);
-        }
+        const payload = mapDealToApi(data);
+        const response = await api.put<BackendDeal>(getDealsUrl(`/${id}`), payload);
+        return mapDealFromApi(response.data);
     },
 
     // DELETE /deals/{id}
     deleteDeal: async (id: number): Promise<void> => {
-        try {
-            await api.delete(getDealsUrl(`/${id}`));
-        } catch (error) {
-            console.warn(`Backend DELETE /deals/${id} unavailable, falling back:`, error);
-            await dealMockApi.deleteDeal(id);
-        }
+        await api.delete(getDealsUrl(`/${id}`));
     },
 
-    // PATCH /deals/{id}
+    // PATCH /deals/{id}/stage
     updateDealStage: async (id: number, stage: DealStage): Promise<Deal> => {
-        try {
-            const response = await api.patch<BackendDeal>(getDealsUrl(`/${id}`), { stage });
-            return mapDealFromApi(response.data);
-        } catch (error) {
-            console.warn(`Backend PATCH /deals/${id} unavailable, falling back:`, error);
-            return dealMockApi.updateDealStage(id, stage);
-        }
+        const response = await api.patch<BackendDeal>(getDealsUrl(`/${id}`), { stage });
+        return mapDealFromApi(response.data);
     },
 
     // GET /deals/pipeline/summary
@@ -385,29 +379,25 @@ export const dealService = {
     },
 
     // Request discount approval
-    requestDiscountApproval: async (id: number): Promise<Deal> => {
+    requestDiscountApproval: async (id: number, discountPercent?: number, reason?: string): Promise<Deal> => {
         requireSales();
 
-        try {
-            const response = await api.post<BackendDeal>(getDealsUrl(`/${id}/discount-approval`));
-            return mapDealFromApi(response.data);
-        } catch {
-            return dealMockApi.requestDiscountApproval(id);
-        }
+        const body =
+            discountPercent !== undefined || reason !== undefined
+                ? { discountPercent, reason }
+                : undefined;
+        const response = await api.post<BackendDeal>(getDealsUrl(`/${id}/discount-approval`), body);
+        return mapDealFromApi(response.data);
     },
 
     // Approve discount
     approveDiscount: async (id: number): Promise<Deal> => {
         requireApprover();
 
-        try {
-            const response = await api.patch<BackendDeal>(getDealsUrl(`/${id}/discount-approval`), {
-                status: "APPROVED",
-            });
-            return mapDealFromApi(response.data);
-        } catch {
-            return dealMockApi.approveDiscount(id, getCurrentUser().username);
-        }
+        const response = await api.patch<BackendDeal>(getDealsUrl(`/${id}/discount-approval`), {
+            status: "APPROVED",
+        });
+        return mapDealFromApi(response.data);
     },
 
     // Reject discount
@@ -418,14 +408,10 @@ export const dealService = {
             throw new Error("Vui lòng nhập lý do từ chối.");
         }
 
-        try {
-            const response = await api.patch<BackendDeal>(getDealsUrl(`/${id}/discount-approval`), {
-                status: "REJECTED",
-                reason: reason.trim(),
-            });
-            return mapDealFromApi(response.data);
-        } catch {
-            return dealMockApi.rejectDiscount(id, getCurrentUser().username, reason.trim());
-        }
+        const response = await api.patch<BackendDeal>(getDealsUrl(`/${id}/discount-approval`), {
+            status: "REJECTED",
+            reason: reason.trim(),
+        });
+        return mapDealFromApi(response.data);
     },
 };

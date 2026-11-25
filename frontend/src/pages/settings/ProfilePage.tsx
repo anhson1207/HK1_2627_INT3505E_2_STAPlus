@@ -79,8 +79,11 @@ export default function ProfilePage() {
                         username: me.username,
                         email: me.email,
                         fullName: me.fullName || "",
+                        phone: me.phone || "",
+                        department: me.department || "",
                         role: me.role,
                         status: me.status,
+                        isOwner: me.isOwner,
                     });
                 }
             } catch {
@@ -138,9 +141,6 @@ export default function ProfilePage() {
                 <h2 className="text-xl font-bold tracking-tight text-(--crm-heading)">
                     Hồ sơ cá nhân
                 </h2>
-                <p className="mt-1 text-sm text-(--crm-text-secondary)">
-                    Xem và quản lý thông tin tài khoản, phòng ban và liên hệ cá nhân của bạn.
-                </p>
             </div>
 
             {error && (
@@ -189,7 +189,7 @@ export default function ProfilePage() {
                     {/* System Identity Grid (Read-only) */}
                     <div className="border-b border-(--crm-border) bg-(--crm-surface) p-6 sm:px-7">
                         <p className="mb-3.5 text-xs font-bold uppercase tracking-wider text-(--crm-text-muted)">
-                            Định danh hệ thống (Chỉ xem)
+                            Định danh hệ thống
                         </p>
                         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
                             <div className="rounded-xl border border-(--crm-border-subtle) bg-(--crm-surface-subtle) p-3.5">
@@ -253,9 +253,6 @@ export default function ProfilePage() {
                                         className="w-full bg-transparent py-2.5 pr-3.5 text-sm text-(--crm-heading) outline-none placeholder:text-(--crm-text-muted)"
                                     />
                                 </div>
-                                <p className="text-[11px] text-(--crm-text-muted)">
-                                    Tên này sẽ hiển thị trên Header, Chat và toàn bộ giao diện làm việc.
-                                </p>
                             </div>
 
                             {/* Phone Number */}
@@ -301,6 +298,11 @@ export default function ProfilePage() {
                                                 {dept}
                                             </option>
                                         ))}
+                                        {formData.department && !DEPARTMENT_OPTIONS.includes(formData.department) && (
+                                            <option key={formData.department} value={formData.department} className="bg-(--crm-surface) text-(--crm-heading)">
+                                                {formData.department}
+                                            </option>
+                                        )}
                                     </select>
                                     <div className="pointer-events-none absolute right-3.5 text-(--crm-text-muted)">
                                         <ChevronDown size={16} />

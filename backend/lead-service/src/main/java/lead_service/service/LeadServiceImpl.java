@@ -1,5 +1,7 @@
 package lead_service.service;
 
+import lead_service.dto.ConvertLeadRequest;
+import lead_service.dto.ConvertLeadResponse;
 import lead_service.dto.LeadPatch;
 import lead_service.dto.LeadRequest;
 import lead_service.dto.LeadResponse;
@@ -11,15 +13,30 @@ import lead_service.exception.ResourceNotFoundException;
 import lead_service.mapper.LeadMapper;
 import lead_service.repository.LeadRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClient;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class LeadServiceImpl implements LeadService {
+
+    @Value("${services.customer.url:http://localhost:8083}")
+    private String customerServiceUrl;
+
+    @Value("${services.sales.url:http://localhost:8084}")
+    private String salesServiceUrl;
+
+    private final RestClient restClient = RestClient.create();
 
     private final LeadRepository repository;
     private final LeadMapper mapper;
@@ -200,6 +217,100 @@ public class LeadServiceImpl implements LeadService {
         }
 
         return lead_service.dto.BatchLeadResponse.partial(requests.size(), success, errors);
+    }
+
+    @Override
+    public ConvertLeadResponse convert(Long id, ConvertLeadRequest request, String authHeader) {
+        Lead lead = find(id);
+        if (lead.getStatus() == LeadStatus.CONVERTED) {
+            throw new BadRequestException("Lead này đã được chuyển đổi thành khách hàng rồi.");
+        }
+
+        // 1. Create Customer in customer-service
+        Long targetUserId = (request != null && request.assignedUserId() != null)
+                ? request.assignedUserId()
+                : lead.getAssignedUserId();
+
+        Map<String, Object> customerPayload = new HashMap<>();
+        customerPayload.put("fullName", lead.getFullName());
+        customerPayload.put("email", lead.getEmail());
+        customerPayload.put("phone", lead.getPhone());
+        customerPayload.put("company", lead.getCompany());
+        customerPayload.put("status", "ACTIVE");
+        customerPayload.put("notes", (request != null && hasText(request.customerNotes()))
+                ? request.customerNotes()
+                : lead.getNotes());
+        customerPayload.put("assignedUserId", targetUserId);
+
+        Long customerId = null;
+        String customerName = lead.getFullName();
+        try {
+            RestClient.RequestBodySpec spec = restClient.post()
+                    .uri(customerServiceUrl + "/api/v1/customers")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(customerPayload);
+            if (authHeader != null && !authHeader.isBlank()) {
+                spec = spec.header("Authorization", authHeader);
+            }
+            Map<String, Object> customerRes = spec.retrieve().body(new ParameterizedTypeReference<Map<String, Object>>() {});
+            if (customerRes != null && customerRes.get("id") != null) {
+                customerId = Long.valueOf(customerRes.get("id").toString());
+                if (customerRes.get("fullName") != null) {
+                    customerName = customerRes.get("fullName").toString();
+                }
+            }
+        } catch (Exception e) {
+            throw new BadRequestException("Không thể tạo khách hàng từ Lead: " + e.getMessage());
+        }
+
+        // 2. Optionally create Deal in sales-service if dealName is present
+        Long dealId = null;
+        String dealName = null;
+        if (request != null && hasText(request.dealName())) {
+            dealName = request.dealName().trim();
+            Map<String, Object> dealPayload = new HashMap<>();
+            dealPayload.put("dealName", dealName);
+            dealPayload.put("amount", request.dealAmount() != null ? request.dealAmount() : 0.0);
+            dealPayload.put("stage", hasText(request.dealStage()) ? request.dealStage() : "PROSPECT");
+            dealPayload.put("customerId", customerId);
+            dealPayload.put("salesId", targetUserId != null ? targetUserId : 1L);
+            dealPayload.put("description", "Chuyển đổi từ Lead #" + lead.getId() + " - " + lead.getFullName());
+
+            try {
+                RestClient.RequestBodySpec dealSpec = restClient.post()
+                        .uri(salesServiceUrl + "/deals")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(dealPayload);
+                if (authHeader != null && !authHeader.isBlank()) {
+                    dealSpec = dealSpec.header("Authorization", authHeader);
+                }
+                if (targetUserId != null) {
+                    dealSpec = dealSpec.header("X-User-Id", targetUserId.toString());
+                }
+                Map<String, Object> dealRes = dealSpec.retrieve().body(new ParameterizedTypeReference<Map<String, Object>>() {});
+                if (dealRes != null && dealRes.get("id") != null) {
+                    dealId = Long.valueOf(dealRes.get("id").toString());
+                    if (dealRes.get("dealName") != null) {
+                        dealName = dealRes.get("dealName").toString();
+                    }
+                }
+            } catch (Exception e) {
+                // Log and continue
+            }
+        }
+
+        // 3. Update Lead status to CONVERTED
+        lead.setStatus(LeadStatus.CONVERTED);
+        repository.save(lead);
+
+        return new ConvertLeadResponse(
+                lead.getId(),
+                customerId,
+                customerName,
+                dealId,
+                dealName,
+                "Chuyển đổi Lead thành Khách hàng thành công!"
+        );
     }
 
     private Lead find(Long id) {

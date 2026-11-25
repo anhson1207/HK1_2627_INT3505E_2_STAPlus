@@ -18,7 +18,7 @@ export default function JoinLayout({
     onBack,
 }: JoinLayoutProps) {
     return (
-        <div className="min-h-screen flex flex-col justify-between bg-slate-50/70 text-slate-800 font-sans antialiased">
+        <div className="min-h-screen flex flex-col justify-between bg-slate-50 text-slate-800 font-sans antialiased">
             {/* Top Bar */}
             <header className="bg-white border-b border-slate-200/80 px-4 sm:px-8 py-3.5">
                 <div className="max-w-4xl mx-auto flex items-center justify-between">

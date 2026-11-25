@@ -175,7 +175,7 @@ export default function CompanyInvitationsPage() {
                             </thead>
                             <tbody className="divide-y divide-(--crm-border)">
                                 {invitations.map((item) => {
-                                    const joinLink = `${window.location.origin}/join?code=${item.code}`;
+                                    const joinLink = `${window.location.origin}/register/employee?code=${encodeURIComponent(item.code)}`;
                                     const isUsable = item.usable;
 
                                     return (

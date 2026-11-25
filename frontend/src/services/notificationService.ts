@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import api from "./api";
 import { mockNotifications } from "../mocks/notifications";
 import type { Notification, NotificationType } from "../types/notification";
@@ -109,12 +110,14 @@ export const notificationService = {
         notifyChange();
     },
 
-    // DELETE /api/v1/notifications/{id} (or local fallback)
+    // DELETE /api/v1/notifications/{id}
     deleteNotification: async (id: number): Promise<void> => {
         try {
             await api.delete(`/notifications/${id}`);
-        } catch {
-            // notification-service doesn't implement delete, remove locally
+        } catch (error) {
+            if (!isAxiosError(error) || error.response?.status !== 404) {
+                throw error;
+            }
         }
         localCache = localCache.filter((candidate) => candidate.id !== id);
         notifyChange();
